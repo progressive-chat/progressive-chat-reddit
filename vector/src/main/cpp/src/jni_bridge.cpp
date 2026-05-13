@@ -40,6 +40,7 @@
 #include "progressive/chat_tools.hpp"
 #include "progressive/lang_detect.hpp"
 #include "progressive/avatar_history.hpp"
+#include "progressive/event_link.hpp"
 
 // --- Singleton keyword filter ---
 static progressive::KeywordFilter g_keywordFilter;
@@ -2769,6 +2770,77 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsRoomAlias(
     auto input = jInput ? std::string(env->GetStringUTFChars(jInput, nullptr)) : "";
     if (jInput) env->ReleaseStringUTFChars(jInput, input.c_str());
     return progressive::isRoomAlias(input) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Event Links ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeExtractEventLinks(
+    JNIEnv* env, jclass, jstring jBody
+) {
+    auto body = jBody ? std::string(env->GetStringUTFChars(jBody, nullptr)) : "";
+    if (jBody) env->ReleaseStringUTFChars(jBody, body.c_str());
+
+    auto links = progressive::extractEventLinks(body);
+
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out;
+        for (char c : s) { if (c == '"') out += "\\\""; else out += c; }
+        return out;
+    };
+
+    std::ostringstream json;
+    json << "[";
+    for (size_t i = 0; i < links.size(); ++i) {
+        if (i > 0) json << ",";
+        json << R"({"eventId": ")" << esc(links[i].eventId) << R"(")";
+        json << R"(,"startPos": )" << links[i].startPos;
+        json << R"(,"endPos": )" << links[i].endPos;
+        json << R"(,"originalText": ")" << esc(links[i].originalText) << R"(")";
+        json << "}";
+    }
+    json << "]";
+    return env->NewStringUTF(json.str().c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatResolvedEvent(
+    JNIEnv* env, jclass, jstring jSender, jstring jBody
+) {
+    auto sender = jSender ? std::string(env->GetStringUTFChars(jSender, nullptr)) : "";
+    auto body   = jBody ? std::string(env->GetStringUTFChars(jBody, nullptr)) : "";
+    if (jSender) env->ReleaseStringUTFChars(jSender, sender.c_str());
+    if (jBody)   env->ReleaseStringUTFChars(jBody, body.c_str());
+
+    auto s = progressive::formatResolvedEventText(sender, body);
+    return env->NewStringUTF(s.c_str());
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsEventId(
+    JNIEnv* env, jclass, jstring jText
+) {
+    auto text = jText ? std::string(env->GetStringUTFChars(jText, nullptr)) : "";
+    if (jText) env->ReleaseStringUTFChars(jText, text.c_str());
+    return progressive::isEventId(text) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Timestamps with Seconds ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatTimestamp(
+    JNIEnv* env, jclass, jlong jEpochMs, jboolean jIncludeSeconds
+) {
+    auto s = progressive::formatTimestamp(jEpochMs, jIncludeSeconds);
+    return env->NewStringUTF(s.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatFullTimestamp(
+    JNIEnv* env, jclass, jlong jEpochMs
+) {
+    auto s = progressive::formatFullTimestamp(jEpochMs);
+    return env->NewStringUTF(s.c_str());
 }
 
 } // extern "C"

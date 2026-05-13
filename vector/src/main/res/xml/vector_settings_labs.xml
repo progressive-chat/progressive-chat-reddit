@@ -500,4 +500,16 @@
         android:summary="@string/labs_enable_jumptoroom_summary"
         android:title="@string/labs_enable_jumptoroom" />
 
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_EVENT_LINK_RESOLVE_KEY"
+        android:summary="@string/labs_enable_event_link_resolve_summary"
+        android:title="@string/labs_enable_event_link_resolve" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_SECONDS_TIMESTAMPS_KEY"
+        android:summary="@string/labs_enable_seconds_timestamps_summary"
+        android:title="@string/labs_enable_seconds_timestamps" />
+
 </androidx.preference.PreferenceScreen>

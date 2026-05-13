@@ -47,6 +47,7 @@ add_library(
     src/chat_tools.cpp
     src/lang_detect.cpp
     src/avatar_history.cpp
+    src/event_link.cpp
     src/jni_bridge.cpp
 )
 

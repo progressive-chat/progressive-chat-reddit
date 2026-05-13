@@ -488,6 +488,17 @@ object ProgressiveNative {
     @JvmStatic external fun nativeIsRoomId(input: String): Boolean
     @JvmStatic external fun nativeIsRoomAlias(input: String): Boolean
 
+    // --- Event Links ---
+
+    @JvmStatic external fun nativeExtractEventLinks(body: String): String
+    @JvmStatic external fun nativeFormatResolvedEvent(sender: String, body: String): String
+    @JvmStatic external fun nativeIsEventId(text: String): Boolean
+
+    // --- Timestamps ---
+
+    @JvmStatic external fun nativeFormatTimestamp(epochMs: Long, includeSeconds: Boolean): String
+    @JvmStatic external fun nativeFormatFullTimestamp(epochMs: Long): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

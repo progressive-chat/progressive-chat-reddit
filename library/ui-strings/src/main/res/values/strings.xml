@@ -3159,6 +3159,11 @@
      <string name="labs_enable_jumptoroom">/jumptoroom command</string>
      <string name="labs_enable_jumptoroom_summary">Jump to a room by alias, ID, or partial name. Shows picker dialog if multiple matches.</string>
      <string name="jumptoroom_prompt">Enter room alias, ID, or name</string>
+     <string name="labs_enable_event_link_resolve">Event link resolution</string>
+     <string name="labs_enable_event_link_resolve_summary">Per-room low-priority statusbar. Tap to replace all visible $eventId links with the referenced message content (highlighted). Tap again to collapse.</string>
+     <string name="labs_enable_event_link_max_concurrent">Max concurrent resolves</string>
+     <string name="labs_enable_seconds_timestamps">Timestamps with seconds</string>
+     <string name="labs_enable_seconds_timestamps_summary">Show all timestamps as HH:MM:SS instead of HH:MM. C++ native formatting.</string>
      <string name="jump_to_source">Jump to source</string>
 
 

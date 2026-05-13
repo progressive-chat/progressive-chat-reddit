@@ -127,6 +127,8 @@ class VectorPreferences @Inject constructor(
         const val SETTINGS_LABS_EMOJI_BLACKLIST_KEY = "SETTINGS_LABS_EMOJI_BLACKLIST_KEY"
         const val SETTINGS_LABS_AVATAR_HISTORY_KEY = "SETTINGS_LABS_AVATAR_HISTORY_KEY"
         const val SETTINGS_LABS_JUMPTOROOM_KEY = "SETTINGS_LABS_JUMPTOROOM_KEY"
+        const val SETTINGS_LABS_EVENT_LINK_RESOLVE_KEY = "SETTINGS_LABS_EVENT_LINK_RESOLVE_KEY"
+        const val SETTINGS_LABS_SECONDS_TIMESTAMPS_KEY = "SETTINGS_LABS_SECONDS_TIMESTAMPS_KEY"
         const val SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY"
@@ -1559,6 +1561,14 @@ class VectorPreferences @Inject constructor(
 
     fun isJumpToRoomEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_JUMPTOROOM_KEY, false)
+    }
+
+    fun isEventLinkResolveEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_EVENT_LINK_RESOLVE_KEY, false)
+    }
+
+    fun isSecondsTimestampsEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_SECONDS_TIMESTAMPS_KEY, false)
     }
 
     fun showIpAddressInSessionManagerScreens(): Boolean {
