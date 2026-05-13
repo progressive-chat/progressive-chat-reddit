@@ -52,6 +52,7 @@
 #include "progressive/matrix_patterns.hpp"
 #include "progressive/desync_detector.hpp"
 #include "progressive/latency_stats.hpp"
+#include "progressive/string_utils.hpp"
 #include <sstream>
 #include <chrono>
 
@@ -3273,7 +3274,7 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeBuildMatrixToUrl(
 
 JNIEXPORT jstring JNICALL
 Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeComputeNotifPriority(
-    JNIEnv*, jclass,
+    JNIEnv* env, jclass,
     jboolean jIsDM, jboolean jIsMention, jboolean jIsRoomMention,
     jboolean jIsKeyword, jboolean jIsCall, jboolean jIsBackground,
     jboolean jDnd, jboolean jFavorite
@@ -3457,6 +3458,27 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeLatencyStatsText(
     auto stats = g_latencyTracker.computeStats();
     auto text = progressive::LatencyTracker::statsToText(stats);
     return env->NewStringUTF(text.c_str());
+}
+
+// --- String Utils ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeSanitizeRoomName(
+    JNIEnv* env, jclass, jstring jInput
+) {
+    auto input = jInput ? std::string(env->GetStringUTFChars(jInput, nullptr)) : "";
+    if (jInput) env->ReleaseStringUTFChars(jInput, input.c_str());
+    auto s = progressive::sanitizeRoomName(input);
+    return env->NewStringUTF(s.c_str());
+}
+
+JNIEXPORT jint JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeWordCount(
+    JNIEnv* env, jclass, jstring jInput
+) {
+    auto input = jInput ? std::string(env->GetStringUTFChars(jInput, nullptr)) : "";
+    if (jInput) env->ReleaseStringUTFChars(jInput, input.c_str());
+    return progressive::wordCount(input);
 }
 
 } // extern "C"

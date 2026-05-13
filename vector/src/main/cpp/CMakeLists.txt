@@ -58,6 +58,7 @@ add_library(
     src/matrix_patterns.cpp
     src/desync_detector.cpp
     src/latency_stats.cpp
+    src/string_utils.cpp
     src/jni_bridge.cpp
 )
 

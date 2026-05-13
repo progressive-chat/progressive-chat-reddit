@@ -586,6 +586,11 @@ object ProgressiveNative {
     @JvmStatic external fun nativeLatencyStats(): String
     @JvmStatic external fun nativeLatencyStatsText(): String
 
+    // --- String Utils ---
+
+    @JvmStatic external fun nativeSanitizeRoomName(input: String): String
+    @JvmStatic external fun nativeWordCount(input: String): Int
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
