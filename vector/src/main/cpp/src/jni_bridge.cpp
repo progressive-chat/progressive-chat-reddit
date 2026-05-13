@@ -439,7 +439,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .mx_EventTile_reaction { font-style: italic; color: #666; }
 .mx_EventTile_content { white-space: pre-wrap; word-wrap: break-word; }
 hr { border: none; border-top: 1px solid #e0e0e0; margin: 16px 0; }
-</style>\n";
+</style>)" << "\n";
     html << "</head>\n<body>\n";
     html << "<div class=\"mx_ExportHeader\">\n";
     html << "  <h1>" << escapeHtml(roomName) << "</h1>\n";
