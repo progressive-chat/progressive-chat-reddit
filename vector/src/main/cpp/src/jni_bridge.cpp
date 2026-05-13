@@ -75,6 +75,7 @@
 #include "progressive/username_validator.hpp"
 #include "progressive/emoji_analyzer.hpp"
 #include "progressive/identity_utils.hpp"
+#include "progressive/notif_analyzer.hpp"
 #include <sstream>
 #include <chrono>
 
@@ -3922,6 +3923,39 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetInitials(
     if (jName) env->ReleaseStringUTFChars(jName, name.c_str());
     auto s = progressive::getInitials(name);
     return env->NewStringUTF(s.c_str());
+}
+
+// --- Notification Analyzer ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeSuggestQuietHours(
+    JNIEnv* env, jclass, jstring jByHourJson
+) {
+    // Parse byHour array from JSON
+    NotifAnalytics a;
+    a.byHour.resize(24, 0);
+    auto json = jByHourJson ? std::string(env->GetStringUTFChars(jByHourJson, nullptr)) : "[]";
+    if (jByHourJson) env->ReleaseStringUTFChars(jByHourJson, json.c_str());
+
+    // Simple array parse [1,2,3,...]
+    size_t pos = json.find('[');
+    if (pos != std::string::npos) {
+        ++pos;
+        int hour = 0;
+        while (hour < 24 && pos < json.size()) {
+            auto comma = json.find_first_of(",]", pos);
+            if (comma != std::string::npos) {
+                auto val = json.substr(pos, comma - pos);
+                a.byHour[hour++] = std::stoi(val);
+                pos = comma + 1;
+            } else break;
+        }
+    }
+
+    auto [start, end] = progressive::suggestQuietHours(a);
+    std::ostringstream out;
+    out << R"({"startHour": )" << start << R"(,"endHour": )" << end << "}";
+    return env->NewStringUTF(out.str().c_str());
 }
 
 } // extern "C"

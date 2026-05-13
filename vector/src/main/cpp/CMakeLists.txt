@@ -82,6 +82,7 @@ add_library(
     src/username_validator.cpp
     src/emoji_analyzer.cpp
     src/identity_utils.cpp
+    src/notif_analyzer.cpp
     src/jni_bridge.cpp
 )
 

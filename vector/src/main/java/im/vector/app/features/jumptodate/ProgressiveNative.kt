@@ -700,6 +700,10 @@ object ProgressiveNative {
     @JvmStatic external fun nativeResolveMatrixId(input: String): String
     @JvmStatic external fun nativeGetInitials(name: String): String
 
+    // --- Notification Analyzer ---
+
+    @JvmStatic external fun nativeSuggestQuietHours(byHourJson: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
