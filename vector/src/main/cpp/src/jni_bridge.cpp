@@ -47,6 +47,7 @@
 #include "progressive/profile_swiper.hpp"
 #include "progressive/rainbow.hpp"
 #include "progressive/text_formats.hpp"
+#include "progressive/url_tools.hpp"
 
 // --- Singleton keyword filter ---
 static progressive::KeywordFilter g_keywordFilter;
@@ -3214,6 +3215,73 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeTruncateText(
     auto text = jText ? std::string(env->GetStringUTFChars(jText, nullptr)) : "";
     if (jText) env->ReleaseStringUTFChars(jText, text.c_str());
     auto s = progressive::truncateText(text, jMaxLen);
+    return env->NewStringUTF(s.c_str());
+}
+
+// --- URL Tools ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseUrl(
+    JNIEnv* env, jclass, jstring jUrl
+) {
+    auto url = jUrl ? std::string(env->GetStringUTFChars(jUrl, nullptr)) : "";
+    if (jUrl) env->ReleaseStringUTFChars(jUrl, url.c_str());
+
+    auto p = progressive::parseUrl(url);
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out;
+        for (char c : s) { if (c == '"') out += "\\\""; else out += c; }
+        return out;
+    };
+    std::ostringstream json;
+    json << R"({"valid": )" << (p.valid ? "true" : "false");
+    json << R"(,"protocol": ")" << esc(p.protocol) << R"(")";
+    json << R"(,"host": ")" << esc(p.host) << R"(")";
+    json << R"(,"port": ")" << esc(p.port) << R"(")";
+    json << R"(,"path": ")" << esc(p.path) << R"(")";
+    json << R"(,"query": ")" << esc(p.query) << R"(")";
+    json << R"(,"fragment": ")" << esc(p.fragment) << R"(")";
+    json << "}";
+    return env->NewStringUTF(json.str().c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeExtractFirstUrl(
+    JNIEnv* env, jclass, jstring jText
+) {
+    auto text = jText ? std::string(env->GetStringUTFChars(jText, nullptr)) : "";
+    if (jText) env->ReleaseStringUTFChars(jText, text.c_str());
+    auto s = progressive::extractFirstUrl(text);
+    return env->NewStringUTF(s.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUrlEncode(
+    JNIEnv* env, jclass, jstring jInput
+) {
+    auto input = jInput ? std::string(env->GetStringUTFChars(jInput, nullptr)) : "";
+    if (jInput) env->ReleaseStringUTFChars(jInput, input.c_str());
+    auto s = progressive::urlEncode(input);
+    return env->NewStringUTF(s.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUrlDecode(
+    JNIEnv* env, jclass, jstring jInput
+) {
+    auto input = jInput ? std::string(env->GetStringUTFChars(jInput, nullptr)) : "";
+    if (jInput) env->ReleaseStringUTFChars(jInput, input.c_str());
+    auto s = progressive::urlDecode(input);
+    return env->NewStringUTF(s.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeBuildMatrixToUrl(
+    JNIEnv* env, jclass, jstring jRoomId
+) {
+    auto id = jRoomId ? std::string(env->GetStringUTFChars(jRoomId, nullptr)) : "";
+    if (jRoomId) env->ReleaseStringUTFChars(jRoomId, id.c_str());
+    auto s = progressive::buildMatrixToUrl(id);
     return env->NewStringUTF(s.c_str());
 }
 

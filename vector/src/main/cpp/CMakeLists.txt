@@ -53,6 +53,7 @@ add_library(
     src/profile_swiper.cpp
     src/rainbow.cpp
     src/text_formats.cpp
+    src/url_tools.cpp
     src/jni_bridge.cpp
 )
 

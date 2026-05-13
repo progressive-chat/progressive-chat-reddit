@@ -552,6 +552,14 @@ object ProgressiveNative {
     @JvmStatic external fun nativeIsEmojiOnly(text: String): Boolean
     @JvmStatic external fun nativeTruncateText(text: String, maxLen: Int): String
 
+    // --- URL Tools ---
+
+    @JvmStatic external fun nativeParseUrl(url: String): String
+    @JvmStatic external fun nativeExtractFirstUrl(text: String): String
+    @JvmStatic external fun nativeUrlEncode(input: String): String
+    @JvmStatic external fun nativeUrlDecode(input: String): String
+    @JvmStatic external fun nativeBuildMatrixToUrl(roomId: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
