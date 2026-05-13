@@ -72,8 +72,8 @@ std::string extractFirstUrl(const std::string& text) {
 std::vector<std::string> extractAllUrls(const std::string& text) {
     std::vector<std::string> urls;
     std::regex urlRe(R"((https?://|matrix://|ftp://)[^\s<>"]+)");
-    auto begin = std::sregex_iterator(text.begin(), text.end(), urlRe);
-    for (auto it = begin; it != std::sregex_iterator(); ++it) {
+    for (auto it = std::sregex_iterator(text.begin(), text.end(), urlRe);
+         it != std::sregex_iterator(); ++it) {
         urls.push_back(it->str());
     }
     return urls;
