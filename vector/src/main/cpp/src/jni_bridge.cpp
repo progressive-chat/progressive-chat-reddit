@@ -94,6 +94,7 @@
 #include "progressive/connection_monitor.hpp"
 #include "progressive/push_rules.hpp"
 #include "progressive/space_utils.hpp"
+#include "progressive/event_relations.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
 #include <chrono>
@@ -4329,6 +4330,28 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeBuildSpaceChildCo
     if (jOrder) env->ReleaseStringUTFChars(jOrder, order.c_str());
     auto s = progressive::buildSpaceChildContent(jSuggested, order, jAutoJoin, jCanonical);
     return env->NewStringUTF(s.c_str());
+}
+
+// --- Event Relations ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseRelation(
+    JNIEnv* env, jclass, jstring jContentJson
+) {
+    auto json = jContentJson ? std::string(env->GetStringUTFChars(jContentJson, nullptr)) : "";
+    if (jContentJson) env->ReleaseStringUTFChars(jContentJson, json.c_str());
+
+    auto rel = progressive::parseRelation(json);
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out; for (char c : s) { if (c == '"') out += "\\\""; else out += c; } return out;
+    };
+    std::ostringstream out;
+    out << R"({"relType": ")" << esc(rel.relType) << R"(")";
+    out << R"(,"eventId": ")" << esc(rel.eventId) << R"(")";
+    out << R"(,"key": ")" << esc(rel.key) << R"(")";
+    out << R"(,"description": ")" << progressive::formatRelationDescription(rel) << R"(")"";
+    out << "}";
+    return env->NewStringUTF(out.str().c_str());
 }
 
 } // extern "C"

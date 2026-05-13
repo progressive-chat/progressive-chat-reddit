@@ -784,6 +784,10 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeBuildSpaceChildContent(suggested: Boolean, order: String, autoJoin: Boolean, canonical: Boolean): String
 
+    // --- Event Relations ---
+
+    @JvmStatic external fun nativeParseRelation(contentJson: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
