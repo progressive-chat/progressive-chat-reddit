@@ -146,7 +146,7 @@ double SpellChecker::jaroWinkler(const std::string& a, const std::string& b) {
 
     // Winkler prefix bonus
     int prefix = 0;
-    for (size_t i = 0; i < std::min(4ul, std::min(a.size(), b.size())); ++i) {
+    for (size_t i = 0; i < (a.size() < (size_t)4 ? a.size() : (size_t)4) && i < b.size(); ++i) {
         if (a[i] == b[i]) prefix++;
         else break;
     }
