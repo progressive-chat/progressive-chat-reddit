@@ -91,6 +91,7 @@
 #include "progressive/event_validator.hpp"
 #include "progressive/room_encryption.hpp"
 #include "progressive/login_utils.hpp"
+#include "progressive/connection_monitor.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
 #include <chrono>
@@ -174,6 +175,9 @@ static progressive::DrawingCanvas g_drawCanvas;
 
 // --- Singleton profile swiper ---
 static progressive::ProfileSwiper g_profileSwiper;
+
+// --- Singleton connection monitor ---
+static progressive::ConnectionMonitor g_connectionMonitor;
 
 // --- Singleton desync detector ---
 static progressive::DesyncDetector g_desyncDetector;
@@ -4293,6 +4297,37 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeValidatePassword(
     json << R"(,"requiresLowercase": )" << (result.noLowerCase ? "true" : "false");
     json << R"(,"requiresDigit": )" << (result.noDigit ? "true" : "false");
     json << R"(,"requiresSpecial": )" << (result.noSpecialChar ? "true" : "false");
+    json << "}";
+    return env->NewStringUTF(json.str().c_str());
+}
+
+// --- Connection Monitor ---
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeConnMonitorOnConnected(
+    JNIEnv*, jclass
+) { g_connectionMonitor.onConnected(); }
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeConnMonitorOnDisconnected(
+    JNIEnv*, jclass
+) { g_connectionMonitor.onDisconnected(); }
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeConnMonitorGetStatus(
+    JNIEnv* env, jclass
+) {
+    auto state = g_connectionMonitor.getState();
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out; for (char c : s) { if (c == '"') out += "\\\""; else out += c; } return out;
+    };
+    std::ostringstream json;
+    json << R"({"connected": )" << (state.isConnected ? "true" : "false");
+    json << R"(,"downtimeMs": )" << state.downtimeMs;
+    json << R"(,"downtimeText": ")" << esc(state.downtimeText) << R"(")";
+    json << R"(,"statusText": ")" << esc(state.statusText) << R"(")";
+    json << R"(,"reconnectAttempts": )" << state.reconnectAttempts;
+    json << R"(,"bannerColor": ")" << progressive::ConnectionMonitor::getBannerColor(state.downtimeMs) << R"(")";
     json << "}";
     return env->NewStringUTF(json.str().c_str());
 }

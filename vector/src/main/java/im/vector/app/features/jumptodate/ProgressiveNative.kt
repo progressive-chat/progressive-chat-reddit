@@ -770,6 +770,12 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeValidatePassword(password: String, username: String): String
 
+    // --- Connection Monitor ---
+
+    @JvmStatic external fun nativeConnMonitorOnConnected()
+    @JvmStatic external fun nativeConnMonitorOnDisconnected()
+    @JvmStatic external fun nativeConnMonitorGetStatus(): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
