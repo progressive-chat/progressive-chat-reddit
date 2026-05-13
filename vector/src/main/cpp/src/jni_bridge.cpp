@@ -97,6 +97,7 @@
 #include "progressive/event_relations.hpp"
 #include "progressive/e2ee_decoration.hpp"
 #include "progressive/room_list.hpp"
+#include "progressive/media_utils.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
 #include <chrono>
@@ -4395,6 +4396,27 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetBadgeText(
     room.highlightCount = jHighlights;
     auto s = progressive::getBadgeText(room);
     return env->NewStringUTF(s.c_str());
+}
+
+// --- Media Utils ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeMimeToMsgType(
+    JNIEnv* env, jclass, jstring jMimeType
+) {
+    auto mime = jMimeType ? std::string(env->GetStringUTFChars(jMimeType, nullptr)) : "";
+    if (jMimeType) env->ReleaseStringUTFChars(jMimeType, mime.c_str());
+    auto s = progressive::mimeToMsgType(mime);
+    return env->NewStringUTF(s.c_str());
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsValidBlurhash(
+    JNIEnv* env, jclass, jstring jHash
+) {
+    auto hash = jHash ? std::string(env->GetStringUTFChars(jHash, nullptr)) : "";
+    if (jHash) env->ReleaseStringUTFChars(jHash, hash.c_str());
+    return progressive::isValidBlurhash(hash) ? JNI_TRUE : JNI_FALSE;
 }
 
 } // extern "C"

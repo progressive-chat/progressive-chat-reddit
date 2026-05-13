@@ -796,6 +796,11 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeGetBadgeText(count: Int, highlights: Int): String
 
+    // --- Media Utils ---
+
+    @JvmStatic external fun nativeMimeToMsgType(mimeType: String): String
+    @JvmStatic external fun nativeIsValidBlurhash(hash: String): Boolean
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
