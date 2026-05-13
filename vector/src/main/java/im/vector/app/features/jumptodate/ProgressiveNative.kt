@@ -788,6 +788,10 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeParseRelation(contentJson: String): String
 
+    // --- E2EE Decoration ---
+
+    @JvmStatic external fun nativeComputeE2eeDecoration(encrypted: Boolean, verified: Boolean, crossSigned: Boolean, decryptError: Boolean, blacklisted: Boolean, beforeJoined: Boolean, errorReason: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

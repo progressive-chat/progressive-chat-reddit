@@ -95,6 +95,7 @@
 #include "progressive/push_rules.hpp"
 #include "progressive/space_utils.hpp"
 #include "progressive/event_relations.hpp"
+#include "progressive/e2ee_decoration.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
 #include <chrono>
@@ -4352,6 +4353,34 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseRelation(
     out << R"(,"description": ")" << progressive::formatRelationDescription(rel) << R"(")"";
     out << "}";
     return env->NewStringUTF(out.str().c_str());
+}
+
+// --- E2EE Decoration ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeComputeE2eeDecoration(
+    JNIEnv* env, jclass,
+    jboolean jEncrypted, jboolean jVerified, jboolean jCrossSigned,
+    jboolean jDecryptError, jboolean jBlacklisted, jboolean jBeforeJoined,
+    jstring jErrorReason
+) {
+    auto err = jErrorReason ? std::string(env->GetStringUTFChars(jErrorReason, nullptr)) : "";
+    if (jErrorReason) env->ReleaseStringUTFChars(jErrorReason, err.c_str());
+
+    auto dec = progressive::computeE2eeDecoration(
+        jEncrypted, jVerified, jCrossSigned, jDecryptError, jBlacklisted, jBeforeJoined, err);
+
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out; for (char c : s) { if (c == '"') out += "\\\""; else out += c; } return out;
+    };
+    std::ostringstream json;
+    json << R"({"state": )" << static_cast<int>(dec.state);
+    json << R"(,"iconRes": ")" << dec.iconRes << R"(")";
+    json << R"(,"tintColor": ")" << dec.tintColor << R"(")";
+    json << R"(,"accessibility": ")" << esc(dec.accessibility) << R"(")";
+    json << R"(,"showShield": )" << (dec.showShield ? "true" : "false");
+    json << R"(,"isWarning": )" << (dec.isWarning ? "true" : "false") << "}";
+    return env->NewStringUTF(json.str().c_str());
 }
 
 } // extern "C"
