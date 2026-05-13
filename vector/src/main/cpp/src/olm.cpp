@@ -3,107 +3,27 @@
 #include <cstring>
 
 // libolm C API headers (from https://gitlab.matrix.org/matrix-org/olm)
-// To enable, add libolm to CMakeLists.txt:
-//   add_subdirectory(libolm)
-//   target_link_libraries(progressive_native olm)
-//
-// Then uncomment the includes below:
-// #include <olm/olm.h>
-// #include <olm/outbound_group_session.h>
-// #include <olm/inbound_group_session.h>
-// #include <olm/sas.h>
+#include <olm/olm.h>
+#include <olm/outbound_group_session.h>
+#include <olm/inbound_group_session.h>
+#include <olm/sas.h>
 
 namespace progressive {
 
-// Forward-declare libolm C functions (will be resolved when libolm is linked)
-extern "C" {
-    // OlmAccount
-    typedef struct OlmAccount OlmAccountC;
-    size_t olm_account_size(void);
-    OlmAccountC* olm_account(void* memory);
-    size_t olm_clear_account(OlmAccountC* account);
-    size_t olm_create_account_random_length(OlmAccountC* account);
-    int olm_create_account(OlmAccountC* account, const void* random, size_t random_length);
-    size_t olm_pickle_account_length(OlmAccountC* account);
-    size_t olm_pickle_account(OlmAccountC* account, const void* key, size_t key_len, void* pickled, size_t pickled_len);
-    size_t olm_unpickle_account(OlmAccountC* account, const void* key, size_t key_len, const void* pickled, size_t pickled_len);
-    size_t olm_account_identity_keys_length(OlmAccountC* account);
-    size_t olm_account_identity_keys(OlmAccountC* account, void* out, size_t out_length);
-    size_t olm_account_one_time_keys_length(OlmAccountC* account);
-    size_t olm_account_one_time_keys(OlmAccountC* account, void* out, size_t out_length);
-    size_t olm_account_generate_one_time_keys_random_length(OlmAccountC* account, size_t count);
-    size_t olm_account_generate_one_time_keys(OlmAccountC* account, size_t count, const void* random, size_t random_len);
-    size_t olm_account_sign_random_length(OlmAccountC* account);
-    size_t olm_account_sign(OlmAccountC* account, const void* message, size_t msg_len, void* sig, size_t sig_len);
-    size_t olm_account_last_error(OlmAccountC* account, const char** error);
-    size_t olm_account_max_number_of_one_time_keys(OlmAccountC* account);
+// Type aliases for libolm C opaque types
+typedef struct OlmAccount OlmAccountC;
+typedef struct OlmSession OlmSessionC;
+typedef struct OlmOutboundGroupSession OlmOutboundGroupSessionC;
+typedef struct OlmInboundGroupSession OlmInboundGroupSessionC;
 
-    // OlmSession
-    typedef struct OlmSession OlmSessionC;
-    size_t olm_session_size(void);
-    OlmSessionC* olm_session(void* memory);
-    size_t olm_clear_session(OlmSessionC* session);
-    size_t olm_create_outbound_session_random_length(OlmSessionC* session);
-    size_t olm_create_outbound_session(OlmSessionC* sess, OlmAccountC* acc,
-        const void* id_key, size_t id_key_len, const void* one_time_key, size_t otk_len,
-        const void* random, size_t random_len);
-    size_t olm_create_inbound_session_random_length(OlmSessionC* session);
-    size_t olm_create_inbound_session(OlmSessionC* sess, OlmAccountC* acc, const void* pre_key_msg, size_t msg_len,
-        const void* random, size_t random_len);
-    size_t olm_create_inbound_session_from(OlmSessionC* sess, OlmAccountC* acc,
-        const void* id_key, size_t id_key_len, const void* enc_msg, size_t msg_len);
-    size_t olm_encrypt_message_length(OlmSessionC* sess, size_t plaintext_len);
-    size_t olm_encrypt(OlmSessionC* sess, const void* plaintext, size_t pt_len, void* message, size_t msg_len);
-    size_t olm_decrypt_max_plaintext_length(OlmSessionC* sess, int msg_type, const void* message, size_t msg_len);
-    size_t olm_decrypt(OlmSessionC* sess, int msg_type, const void* message, size_t msg_len, void* plaintext, size_t pt_len);
-    size_t olm_pickle_session(OlmSessionC* sess, const void* key, size_t key_len, void* pickled, size_t pickled_len);
-    size_t olm_pickle_session_length(OlmSessionC* sess);
-    size_t olm_unpickle_session(OlmSessionC* sess, const void* key, size_t key_len, const void* pickled, size_t pickled_len);
-    size_t olm_matches_inbound_session(OlmSessionC* sess, const void* pre_key_msg, size_t msg_len);
-    size_t olm_session_id_length(OlmSessionC* sess);
-    size_t olm_session_id(OlmSessionC* sess, void* id, size_t id_len);
-    size_t olm_session_last_error(OlmSessionC* sess, const char** error);
-    int olm_encrypt_message_type(OlmSessionC* session);
+// ---- Utility ----
 
-    // Megolm Outbound
-    typedef struct OlmOutboundGroupSession OlmOutboundGroupSessionC;
-    size_t olm_outbound_group_session_size(void);
-    OlmOutboundGroupSessionC* olm_outbound_group_session(void* memory);
-    size_t olm_clear_outbound_group_session(OlmOutboundGroupSessionC* sess);
-    size_t olm_init_outbound_group_session_random_length(OlmOutboundGroupSessionC* sess);
-    size_t olm_init_outbound_group_session(OlmOutboundGroupSessionC* sess, const void* random, size_t random_len);
-    size_t olm_outbound_group_session_message_index(OlmOutboundGroupSessionC* sess);
-    int olm_outbound_group_session_check_has_message_index(OlmOutboundGroupSessionC* sess, int index);
-    size_t olm_group_encrypt_message_length(OlmOutboundGroupSessionC* sess, size_t pt_len);
-    size_t olm_group_encrypt(OlmOutboundGroupSessionC* sess, const void* pt, size_t pt_len, void* msg, size_t msg_len);
-    size_t olm_outbound_group_session_id_length(OlmOutboundGroupSessionC* sess);
-    size_t olm_outbound_group_session_id(OlmOutboundGroupSessionC* sess, void* id, size_t id_len);
-    size_t olm_outbound_group_session_key_length(OlmOutboundGroupSessionC* sess);
-    size_t olm_outbound_group_session_key(OlmOutboundGroupSessionC* sess, void* key, size_t key_len);
-    size_t olm_pickle_outbound_group_session(OlmOutboundGroupSessionC* sess, const void* key, size_t key_len, void* pickled, size_t pickled_len);
-    size_t olm_pickle_outbound_group_session_length(OlmOutboundGroupSessionC* sess);
-    size_t olm_unpickle_outbound_group_session(OlmOutboundGroupSessionC* sess, const void* key, size_t key_len, const void* pickled, size_t pickled_len);
-    size_t olm_outbound_group_session_last_error(OlmOutboundGroupSessionC* sess, const char** error);
-
-    // Megolm Inbound
-    typedef struct OlmInboundGroupSession OlmInboundGroupSessionC;
-    size_t olm_inbound_group_session_size(void);
-    OlmInboundGroupSessionC* olm_inbound_group_session(void* memory);
-    size_t olm_clear_inbound_group_session(OlmInboundGroupSessionC* sess);
-    size_t olm_init_inbound_group_session(OlmInboundGroupSessionC* sess, int message_index, const void* session_key, size_t key_len);
-    size_t olm_import_inbound_group_session(OlmInboundGroupSessionC* sess, const void* session_key, size_t key_len);
-    size_t olm_export_inbound_group_session_length(OlmInboundGroupSessionC* sess);
-    size_t olm_export_inbound_group_session(OlmInboundGroupSessionC* sess, void* key, size_t key_len, int message_index);
-    size_t olm_group_decrypt_max_plaintext_length(OlmInboundGroupSessionC* sess, const void* message, size_t msg_len);
-    size_t olm_group_decrypt(OlmInboundGroupSessionC* sess, const void* msg, size_t msg_len, void* pt, size_t pt_len, int* message_index);
-    size_t olm_inbound_group_session_first_known_index(OlmInboundGroupSessionC* sess);
-    int olm_inbound_group_session_is_verified(OlmInboundGroupSessionC* sess);
-    size_t olm_pickle_inbound_group_session(OlmInboundGroupSessionC* sess, const void* key, size_t key_len, void* pickled, size_t pickled_len);
-    size_t olm_pickle_inbound_group_session_length(OlmInboundGroupSessionC* sess);
-    size_t olm_unpickle_inbound_group_session(OlmInboundGroupSessionC* sess, const void* key, size_t key_len, const void* pickled, size_t pickled_len);
-    size_t olm_inbound_group_session_id_length(OlmInboundGroupSessionC* sess);
-    size_t olm_inbound_group_session_id(OlmInboundGroupSessionC* sess, void* id, size_t id_len);
-    size_t olm_inbound_group_session_last_error(OlmInboundGroupSessionC* sess, const char** error);
+std::string generateRandomBytes(int count) {
+    std::string result(count, 0);
+    for (int i = 0; i < count; ++i) {
+        result[i] = static_cast<char>(rand() % 256);
+    }
+    return result;
 }
 
 // ---- Utility ----
@@ -304,11 +224,11 @@ OlmSessionResult OlmSession::createOutbound(OlmAccount& account,
     auto* acc = static_cast<OlmAccountC*>(account.account_);
     size_t randLen = olm_create_outbound_session_random_length(sess);
     auto random = generateRandomBytes(randLen);
-    int rc = olm_create_outbound_session(sess, acc,
+    size_t rc = olm_create_outbound_session(sess, acc,
         theirIdentityKey.data(), theirIdentityKey.size(),
         theirOneTimeKey.data(), theirOneTimeKey.size(),
         random.data(), random.size());
-    if (rc == -1) {
+    if (rc == static_cast<size_t>(-1)) {
         const char* err;
         olm_session_last_error(sess, &err);
         result.error = OlmError::BadMessageFormat;
@@ -322,7 +242,7 @@ OlmSessionResult OlmSession::createInbound(OlmAccount& account, const std::strin
     OlmSessionResult result;
     auto* sess = static_cast<OlmSessionC*>(session_);
     auto* acc = static_cast<OlmAccountC*>(account.account_);
-    int rc = olm_create_inbound_session(sess, acc, preKeyMessage.data(), preKeyMessage.size());
+    size_t rc = olm_create_inbound_session(sess, acc, (void*)preKeyMessage.data(), preKeyMessage.size());
     if (rc == static_cast<size_t>(-1)) {
         const char* err;
         olm_session_last_error(sess, &err);
@@ -338,10 +258,10 @@ OlmSessionResult OlmSession::createInboundFrom(OlmAccount& account,
     OlmSessionResult result;
     auto* sess = static_cast<OlmSessionC*>(session_);
     auto* acc = static_cast<OlmAccountC*>(account.account_);
-    int rc = olm_create_inbound_session_from(sess, acc,
+    size_t rc = olm_create_inbound_session_from(sess, acc,
         theirIdentityKey.data(), theirIdentityKey.size(),
-        encryptedMessage.data(), encryptedMessage.size());
-    if (rc == -1) {
+        (void*)encryptedMessage.data(), encryptedMessage.size());
+    if (rc == static_cast<size_t>(-1)) {
         result.error = OlmError::BadMessageFormat;
         return result;
     }
