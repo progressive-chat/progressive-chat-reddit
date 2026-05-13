@@ -51,6 +51,7 @@ add_library(
     src/scheduled_edit.cpp
     src/svg_draw.cpp
     src/profile_swiper.cpp
+    src/rainbow.cpp
     src/jni_bridge.cpp
 )
 

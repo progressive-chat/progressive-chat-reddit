@@ -537,6 +537,10 @@ object ProgressiveNative {
     @JvmStatic external fun nativeProfileSwiperNext(): String
     @JvmStatic external fun nativeProfileSwiperPrev(): String
 
+    // --- Rainbow Generator ---
+
+    @JvmStatic external fun nativeGenerateRainbow(text: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

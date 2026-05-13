@@ -45,6 +45,7 @@
 #include "progressive/scheduled_edit.hpp"
 #include "progressive/svg_draw.hpp"
 #include "progressive/profile_swiper.hpp"
+#include "progressive/rainbow.hpp"
 
 // --- Singleton keyword filter ---
 static progressive::KeywordFilter g_keywordFilter;
@@ -3118,6 +3119,18 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeProfileSwiperPrev
     auto state = g_profileSwiper.swipePrev();
     auto json = progressive::ProfileSwiper::stateToJson(state);
     return env->NewStringUTF(json.c_str());
+}
+
+// --- Rainbow Generator ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGenerateRainbow(
+    JNIEnv* env, jclass, jstring jText
+) {
+    auto text = jText ? std::string(env->GetStringUTFChars(jText, nullptr)) : "";
+    if (jText) env->ReleaseStringUTFChars(jText, text.c_str());
+    auto rainbow = progressive::generateRainbow(text);
+    return env->NewStringUTF(rainbow.c_str());
 }
 
 } // extern "C"
