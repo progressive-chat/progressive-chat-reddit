@@ -1,4 +1,5 @@
 #include "progressive/message_location.hpp"
+#include <vector>
 #include <sstream>
 #include <algorithm>
 #include <chrono>

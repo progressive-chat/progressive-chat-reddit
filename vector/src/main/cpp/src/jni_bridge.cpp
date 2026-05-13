@@ -118,6 +118,7 @@
 #include "progressive/timeline_utils.hpp"
 #include "progressive/cross_signing.hpp"
 #include "progressive/edit_history.hpp"
+#include "progressive/read_marker.hpp"
 #include "progressive/verification_utils.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
@@ -4758,6 +4759,143 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetEditBadgeText(
 ) {
     auto s = progressive::getEditBadgeText(jEditCount);
     return env->NewStringUTF(s.c_str());
+}
+
+// --- Read Marker / Unread Count ---
+// Ported from: TimelineViewModel.kt (read marker index math)
+//              ReadMarkers.kt (server-side management)
+//              RoomSummary.kt (unread count display)
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeComputeReadMarker(
+    JNIEnv* env, jclass,
+    jstring jLastReadEventId,
+    jobjectArray jLoadedEventIds,
+    jobjectArray jLoadedSenders,
+    jbooleanArray jIsMention,
+    jbooleanArray jIsHighlight,
+    jstring jMyUserId
+) {
+    std::string lastReadEventId = jLastReadEventId ? env->GetStringUTFChars(jLastReadEventId, nullptr) : "";
+    if (jLastReadEventId) env->ReleaseStringUTFChars(jLastReadEventId, lastReadEventId.c_str());
+
+    // Convert event IDs array
+    std::vector<std::string> eventIds;
+    jsize idCount = jLoadedEventIds ? env->GetArrayLength(jLoadedEventIds) : 0;
+    for (jsize i = 0; i < idCount; ++i) {
+        auto jId = (jstring)env->GetObjectArrayElement(jLoadedEventIds, i);
+        const char* c = env->GetStringUTFChars(jId, nullptr);
+        eventIds.push_back(c);
+        env->ReleaseStringUTFChars(jId, c);
+        env->DeleteLocalRef(jId);
+    }
+
+    // Convert senders array
+    std::vector<std::string> senders;
+    jsize senderCount = jLoadedSenders ? env->GetArrayLength(jLoadedSenders) : 0;
+    for (jsize i = 0; i < senderCount; ++i) {
+        auto jSender = (jstring)env->GetObjectArrayElement(jLoadedSenders, i);
+        const char* c = env->GetStringUTFChars(jSender, nullptr);
+        senders.push_back(c);
+        env->ReleaseStringUTFChars(jSender, c);
+        env->DeleteLocalRef(jSender);
+    }
+
+    // Convert mention boolean array
+    std::vector<bool> isMention;
+    jsize mentionCount = jIsMention ? env->GetArrayLength(jIsMention) : 0;
+    if (mentionCount > 0) {
+        jboolean* raw = env->GetBooleanArrayElements(jIsMention, nullptr);
+        for (jsize i = 0; i < mentionCount; ++i) isMention.push_back(raw[i]);
+        env->ReleaseBooleanArrayElements(jIsMention, raw, JNI_ABORT);
+    }
+
+    // Convert highlight boolean array
+    std::vector<bool> isHighlight;
+    jsize hlCount = jIsHighlight ? env->GetArrayLength(jIsHighlight) : 0;
+    if (hlCount > 0) {
+        jboolean* raw = env->GetBooleanArrayElements(jIsHighlight, nullptr);
+        for (jsize i = 0; i < hlCount; ++i) isHighlight.push_back(raw[i]);
+        env->ReleaseBooleanArrayElements(jIsHighlight, raw, JNI_ABORT);
+    }
+
+    std::string myUserId = jMyUserId ? env->GetStringUTFChars(jMyUserId, nullptr) : "";
+    if (jMyUserId) env->ReleaseStringUTFChars(jMyUserId, myUserId.c_str());
+
+    auto state = progressive::computeReadMarker(lastReadEventId, eventIds, senders, isMention, isHighlight, myUserId);
+    auto json = progressive::readMarkerToJson(state);
+    return env->NewStringUTF(json.c_str());
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeShouldShowJumpToUnread(
+    JNIEnv* env, jclass, jstring jReadMarkerJson
+) {
+    std::string json = jReadMarkerJson ? env->GetStringUTFChars(jReadMarkerJson, nullptr) : "{}";
+    if (jReadMarkerJson) env->ReleaseStringUTFChars(jReadMarkerJson, json.c_str());
+
+    // Quick parse of unread fields from JSON
+    bool hasUnread = json.find(R"("hasUnread": true)") != std::string::npos ||
+                     json.find(R"("hasUnread":true)") != std::string::npos;
+    bool hasIndex = json.find(R"("readMarkerIndex":)") != std::string::npos;
+    return hasUnread && hasIndex;
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatUnreadJumpLabel(
+    JNIEnv* env, jclass, jstring jReadMarkerJson
+) {
+    std::string json = jReadMarkerJson ? env->GetStringUTFChars(jReadMarkerJson, nullptr) : "{}";
+    if (jReadMarkerJson) env->ReleaseStringUTFChars(jReadMarkerJson, json.c_str());
+
+    // Quick parse unreadCount from JSON
+    int unreadCount = 0;
+    auto pos = json.find(R"("unreadCount")");
+    if (pos != std::string::npos) {
+        pos = json.find(':', pos);
+        if (pos != std::string::npos) {
+            pos++;
+            while (pos < json.size() && json[pos] == ' ') pos++;
+            while (pos < json.size() && json[pos] >= '0' && json[pos] <= '9') {
+                unreadCount = unreadCount * 10 + (json[pos] - '0');
+                pos++;
+            }
+        }
+    }
+
+    int unreadMentions = 0;
+    auto mp = json.find(R"("unreadMentions")");
+    if (mp != std::string::npos) {
+        mp = json.find(':', mp);
+        if (mp != std::string::npos) {
+            mp++;
+            while (mp < json.size() && json[mp] == ' ') mp++;
+            while (mp < json.size() && json[mp] >= '0' && json[mp] <= '9') {
+                unreadMentions = unreadMentions * 10 + (json[mp] - '0');
+                mp++;
+            }
+        }
+    }
+
+    std::ostringstream out;
+    out << unreadCount;
+    if (unreadCount == 1) out << " new message";
+    else out << " new messages";
+    if (unreadMentions > 0) out << " (" << unreadMentions << " mentions)";
+    auto label = out.str();
+    return env->NewStringUTF(label.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeAdvanceReadMarker(
+    JNIEnv* env, jclass, jstring jRoomId, jstring jLatestEventId
+) {
+    std::string roomId = jRoomId ? env->GetStringUTFChars(jRoomId, nullptr) : "";
+    if (jRoomId) env->ReleaseStringUTFChars(jRoomId, roomId.c_str());
+    std::string latestEventId = jLatestEventId ? env->GetStringUTFChars(jLatestEventId, nullptr) : "";
+    if (jLatestEventId) env->ReleaseStringUTFChars(jLatestEventId, latestEventId.c_str());
+    auto newMark = progressive::advanceReadMarker(roomId, latestEventId);
+    return env->NewStringUTF(newMark.c_str());
 }
 
 } // extern "C"

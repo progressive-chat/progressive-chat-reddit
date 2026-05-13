@@ -1,4 +1,5 @@
 #include "progressive/network_monitor.hpp"
+#include <vector>
 #include <sstream>
 #include <chrono>
 #include <algorithm>

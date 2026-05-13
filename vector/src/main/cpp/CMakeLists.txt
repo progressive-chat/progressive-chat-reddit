@@ -127,6 +127,7 @@ add_library(
     src/timeline_utils.cpp
     src/cross_signing.cpp
     src/edit_history.cpp
+    src/read_marker.cpp
     src/olm.cpp
     src/jni_bridge.cpp
 )

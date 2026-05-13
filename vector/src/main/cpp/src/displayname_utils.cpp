@@ -1,5 +1,6 @@
 #include "progressive/displayname_utils.hpp"
 #include <sstream>
+#include <iomanip>
 #include <cctype>
 #include <algorithm>
 #include <unordered_set>
@@ -83,7 +84,7 @@ std::string stringToColor(const std::string& input) {
     else if (hue < 300) { r = x; g = 0; b = c; }
     else                { r = c; g = 0; b = x; }
 
-    auto toHex = [](double v) -> int { return static_cast<int>((v + m) * 255); };
+    auto toHex = [m](double v) -> int { return static_cast<int>((v + m) * 255); };
 
     std::ostringstream out;
     out << "#";

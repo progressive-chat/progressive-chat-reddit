@@ -887,6 +887,93 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeGetEditBadgeText(editCount: Int): String
 
+    // --- Read Marker / Unread Count ---
+    // Ported from: TimelineViewModel.kt (read marker index math)
+    //              ReadMarkers.kt (server-side read marker management)
+    //              RoomSummary.kt (unread count display)
+
+    /**
+     * Compute the read marker position and unread statistics.
+     * @return JSON with lastReadEventId, firstUnreadEventId, unreadCount,
+     *         unreadMentions, hasUnread, readMarkerIndex
+     */
+    @JvmStatic external fun nativeComputeReadMarker(
+        lastReadEventId: String,
+        loadedEventIds: Array<String>,
+        loadedSenders: Array<String>,
+        isMention: BooleanArray,
+        isHighlight: BooleanArray,
+        myUserId: String
+    ): String
+
+    @JvmStatic external fun nativeShouldShowJumpToUnread(readMarkerJson: String): Boolean
+
+    @JvmStatic external fun nativeFormatUnreadJumpLabel(readMarkerJson: String): String
+
+    @JvmStatic external fun nativeAdvanceReadMarker(roomId: String, latestEventId: String): String
+
+    // --- Kotlin fallbacks for Read Marker ---
+
+    fun computeReadMarkerFallback(
+        lastReadEventId: String,
+        loadedEventIds: Array<String>,
+        loadedSenders: Array<String>,
+        isMention: BooleanArray,
+        isHighlight: BooleanArray,
+        myUserId: String
+    ): JSONObject {
+        val result = JSONObject()
+        result.put("lastReadEventId", lastReadEventId)
+        result.put("firstUnreadEventId", "")
+        result.put("unreadCount", 0)
+        result.put("unreadMentions", 0)
+        result.put("hasUnread", false)
+        result.put("readMarkerIndex", -1)
+
+        if (lastReadEventId.isEmpty() || loadedEventIds.isEmpty()) return result
+
+        val markerIndex = loadedEventIds.indexOf(lastReadEventId)
+        if (markerIndex < 0) return result
+
+        result.put("readMarkerIndex", markerIndex)
+
+        var unreadCount = loadedEventIds.size - markerIndex - 1
+        var unreadMentions = 0
+        for (i in markerIndex + 1 until loadedEventIds.size) {
+            if (i < loadedSenders.size && loadedSenders[i] == myUserId) {
+                unreadCount--
+                continue
+            }
+            if (i < isMention.size && isMention[i]) unreadMentions++
+        }
+
+        result.put("unreadCount", maxOf(0, unreadCount))
+        result.put("unreadMentions", unreadMentions)
+        result.put("hasUnread", unreadCount > 0)
+        if (markerIndex + 1 < loadedEventIds.size) {
+            result.put("firstUnreadEventId", loadedEventIds[markerIndex + 1])
+        }
+        return result
+    }
+
+    fun shouldShowJumpToUnreadFallback(readMarkerJson: String): Boolean {
+        return readMarkerJson.contains("\"hasUnread\": true") ||
+               readMarkerJson.contains("\"hasUnread\":true")
+    }
+
+    fun formatUnreadJumpLabelFallback(unreadCount: Int, unreadMentions: Int): String {
+        val sb = StringBuilder()
+        sb.append(unreadCount)
+        if (unreadCount == 1) sb.append(" new message")
+        else sb.append(" new messages")
+        if (unreadMentions > 0) sb.append(" ($unreadMentions mentions)")
+        return sb.toString()
+    }
+
+    fun advanceReadMarkerFallback(roomId: String, latestEventId: String): String {
+        return latestEventId
+    }
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
