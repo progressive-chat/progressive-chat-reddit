@@ -33,9 +33,9 @@ Even if we try to be able to work on all the functionalities, we have more knowl
 
 # Other contributors
 
-First of all, we thank all contributors who use Element and report problems on this GitHub project or via the integrated rageshake function.
+First of all, we thank all contributors who use Progressive Chat and report problems on this GitHub project or via the integrated rageshake function.
 
-We do not forget all translators, for their work of translating Element into many languages. They are also the authors of Element.
+We do not forget all translators, for their work of translating Element into many languages. They are also the authors of Progressive Chat.
 
 Feel free to add your name below, when you contribute to the project!
 
