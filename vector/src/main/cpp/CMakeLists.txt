@@ -109,6 +109,7 @@ add_library(
     src/space_utils.cpp
     src/event_relations.cpp
     src/e2ee_decoration.cpp
+    src/room_list.cpp
     # src/olm.cpp  # Uncomment when libolm is added to the build
     src/jni_bridge.cpp
 )

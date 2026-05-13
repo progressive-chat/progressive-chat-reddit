@@ -96,6 +96,7 @@
 #include "progressive/space_utils.hpp"
 #include "progressive/event_relations.hpp"
 #include "progressive/e2ee_decoration.hpp"
+#include "progressive/room_list.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
 #include <chrono>
@@ -4381,6 +4382,19 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeComputeE2eeDecora
     json << R"(,"showShield": )" << (dec.showShield ? "true" : "false");
     json << R"(,"isWarning": )" << (dec.isWarning ? "true" : "false") << "}";
     return env->NewStringUTF(json.str().c_str());
+}
+
+// --- Room List ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetBadgeText(
+    JNIEnv* env, jclass, jint jCount, jint jHighlights
+) {
+    RoomListItem room;
+    room.notificationCount = jCount;
+    room.highlightCount = jHighlights;
+    auto s = progressive::getBadgeText(room);
+    return env->NewStringUTF(s.c_str());
 }
 
 } // extern "C"

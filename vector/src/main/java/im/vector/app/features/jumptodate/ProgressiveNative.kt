@@ -792,6 +792,10 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeComputeE2eeDecoration(encrypted: Boolean, verified: Boolean, crossSigned: Boolean, decryptError: Boolean, blacklisted: Boolean, beforeJoined: Boolean, errorReason: String): String
 
+    // --- Room List ---
+
+    @JvmStatic external fun nativeGetBadgeText(count: Int, highlights: Int): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
