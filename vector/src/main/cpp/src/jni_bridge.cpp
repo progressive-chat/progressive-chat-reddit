@@ -109,6 +109,7 @@
 #include "progressive/message_retry.hpp"
 #include "progressive/sync_utils.hpp"
 #include "progressive/event_display.hpp"
+#include "progressive/permalink.hpp"
 #include "progressive/verification_utils.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
@@ -4606,6 +4607,20 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeClassifyEvent(
     if (jEventType) env->ReleaseStringUTFChars(jEventType, et.c_str());
     if (jMsgType) env->ReleaseStringUTFChars(jMsgType, mt.c_str());
     return static_cast<jint>(progressive::classifyEvent(et, mt));
+}
+
+// --- Permalink ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeBuildEventPermalink(
+    JNIEnv* env, jclass, jstring jRoomId, jstring jEventId
+) {
+    auto roomId = jRoomId ? std::string(env->GetStringUTFChars(jRoomId, nullptr)) : "";
+    auto eventId = jEventId ? std::string(env->GetStringUTFChars(jEventId, nullptr)) : "";
+    if (jRoomId) env->ReleaseStringUTFChars(jRoomId, roomId.c_str());
+    if (jEventId) env->ReleaseStringUTFChars(jEventId, eventId.c_str());
+    auto s = progressive::buildEventPermalink(roomId, eventId);
+    return env->NewStringUTF(s.c_str());
 }
 
 } // extern "C"

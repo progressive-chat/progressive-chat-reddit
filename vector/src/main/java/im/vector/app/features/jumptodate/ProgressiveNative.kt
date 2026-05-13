@@ -850,6 +850,10 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeClassifyEvent(eventType: String, msgType: String): Int
 
+    // --- Permalink ---
+
+    @JvmStatic external fun nativeBuildEventPermalink(roomId: String, eventId: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
