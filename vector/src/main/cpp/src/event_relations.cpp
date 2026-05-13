@@ -57,19 +57,19 @@ bool isReaction(const std::string& contentJson) {
 }
 
 std::string extractThreadRoot(const std::string& contentJson) {
-    auto rel = parseRelation(contentJson);
+    auto rel = parseEventRelation(contentJson);
     if (rel.relType == "m.thread") return rel.eventId;
     return {};
 }
 
 std::string extractReplySource(const std::string& contentJson) {
-    auto rel = parseRelation(contentJson);
+    auto rel = parseEventRelation(contentJson);
     if (rel.relType == "m.reference") return rel.eventId;
     return {};
 }
 
 std::string extractEditSource(const std::string& contentJson) {
-    auto rel = parseRelation(contentJson);
+    auto rel = parseEventRelation(contentJson);
     if (rel.relType == "m.replace") return rel.eventId;
     return {};
 }
