@@ -682,6 +682,10 @@ object ProgressiveNative {
     @JvmStatic external fun nativeParsePinnedEventIds(stateJson: String): String
     @JvmStatic external fun nativeBuildPinnedEventsContent(idsJson: String): String
 
+    // --- Server Capabilities ---
+
+    @JvmStatic external fun nativeParseServerCapabilities(wellKnownJson: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

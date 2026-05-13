@@ -71,6 +71,7 @@
 #include "progressive/date_utils.hpp"
 #include "progressive/message_queue.hpp"
 #include "progressive/pinned_events.hpp"
+#include "progressive/server_capabilities.hpp"
 #include <sstream>
 #include <chrono>
 
@@ -3832,6 +3833,19 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeBuildPinnedEvents
 
     auto s = progressive::buildPinnedEventsContent(ids);
     return env->NewStringUTF(s.c_str());
+}
+
+// --- Server Capabilities ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseServerCapabilities(
+    JNIEnv* env, jclass, jstring jWellKnownJson
+) {
+    auto json = jWellKnownJson ? std::string(env->GetStringUTFChars(jWellKnownJson, nullptr)) : "";
+    if (jWellKnownJson) env->ReleaseStringUTFChars(jWellKnownJson, json.c_str());
+    auto caps = progressive::parseServerCapabilities(json);
+    auto result = progressive::capabilitiesToJson(caps);
+    return env->NewStringUTF(result.c_str());
 }
 
 } // extern "C"

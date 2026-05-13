@@ -78,6 +78,7 @@ add_library(
     src/date_utils.cpp
     src/message_queue.cpp
     src/pinned_events.cpp
+    src/server_capabilities.cpp
     src/jni_bridge.cpp
 )
 
