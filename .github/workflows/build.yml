@@ -9,8 +9,8 @@ permissions: {}
 
 # Enrich gradle.properties for CI/CD
 env:
-  GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx4096m -Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError" -Dkotlin.incremental=false
-  CI_GRADLE_ARG_PROPERTIES: --stacktrace -PpreDexEnable=false --max-workers 1 --no-daemon -PciBuild=true
+  GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx3072m -Dfile.encoding=UTF-8" -Dkotlin.incremental=false
+  CI_GRADLE_ARG_PROPERTIES: --stacktrace -PpreDexEnable=false --max-workers 1 --no-daemon -PciArch=armeabi-v7a
 
 jobs:
   debug:
@@ -72,14 +72,14 @@ jobs:
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/develop' }}
-      - name: Assemble GPlay unsigned apk
-        run: ./gradlew assembleGplayRelease $CI_GRADLE_ARG_PROPERTIES
-      - name: Upload Gplay unsigned APKs
+      - name: Assemble Fdroid unsigned apk (arm32)
+        run: ./gradlew assembleFdroidRelease $CI_GRADLE_ARG_PROPERTIES
+      - name: Upload Fdroid unsigned APK
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: vector-gplay-release-unsigned
+          name: progressive-fdroid-arm32
           path: |
-            vector-app/build/outputs/apk/*/release/*.apk
+            vector-app/build/outputs/apk/fdroid/release/*.apk
       - name: Publish to GitHub Release
         if: github.ref == 'refs/heads/main'
         run: |
@@ -88,7 +88,7 @@ jobs:
             --title "Nightly build $(date +%Y-%m-%d)" \
             --notes "Automated build from main branch. Commit: ${{ github.sha }}" \
             --prerelease \
-            vector-app/build/outputs/apk/gplay/release/*.apk
+            vector-app/build/outputs/apk/fdroid/release/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -100,7 +100,7 @@ jobs:
         id: download
         uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
-          name: vector-gplay-release-unsigned
+          name: progressive-fdroid-arm32
       - name: Show apks in artifact
         run: ls -R ${STEPS_DOWNLOAD_OUTPUTS_DOWNLOAD_PATH}
         env:
