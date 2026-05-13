@@ -339,6 +339,25 @@ object ProgressiveNative {
     @JvmStatic external fun nativeMsgAggClear()
     @JvmStatic external fun nativeMsgAggCount(): Int
 
+    // --- Room Info ---
+
+    @JvmStatic external fun nativeFormatCreationDate(epochMs: Long): String
+    @JvmStatic external fun nativeIsLikelyFullHistory(cached: Int, estimated: Int): Boolean
+
+    // --- Deleted Archive ---
+
+    @JvmStatic external fun nativeDeletedArchiveAdd(eventId: String, roomId: String, roomName: String, senderName: String, body: String, msgType: String, timestamp: String, originTs: Long, deletedBy: String)
+    @JvmStatic external fun nativeDeletedArchiveExportJson(): String
+    @JvmStatic external fun nativeDeletedArchiveClear()
+    @JvmStatic external fun nativeDeletedArchiveCount(): Int
+
+    // --- Search Index ---
+
+    @JvmStatic external fun nativeSearchIndexMessage(eventId: String, roomId: String, roomName: String, senderName: String, body: String, timestamp: Long, isEncrypted: Boolean)
+    @JvmStatic external fun nativeSearchQuery(query: String, limit: Int): String
+    @JvmStatic external fun nativeSearchClear()
+    @JvmStatic external fun nativeSearchIndexedCount(): Int
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

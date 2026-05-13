@@ -349,4 +349,28 @@
         android:summary="@string/labs_enable_all_messages_summary"
         android:title="@string/labs_enable_all_messages" />
 
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_ROOM_INFO_KEY"
+        android:summary="@string/labs_enable_room_info_summary"
+        android:title="@string/labs_enable_room_info" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_AUTO_TRANSLATE_KEY"
+        android:summary="@string/labs_enable_auto_translate_room_summary"
+        android:title="@string/labs_enable_auto_translate_room" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_DELETED_ARCHIVE_KEY"
+        android:summary="@string/labs_enable_deleted_archive_summary"
+        android:title="@string/labs_enable_deleted_archive" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_E2E_SEARCH_KEY"
+        android:summary="@string/labs_enable_e2e_search_summary"
+        android:title="@string/labs_enable_e2e_search" />
+
 </androidx.preference.PreferenceScreen>

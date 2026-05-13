@@ -102,6 +102,10 @@ class VectorPreferences @Inject constructor(
         const val SETTINGS_LABS_RAM_STATUSBAR_KEY = "SETTINGS_LABS_RAM_STATUSBAR_KEY"
         const val SETTINGS_LABS_CACHE_MANAGER_KEY = "SETTINGS_LABS_CACHE_MANAGER_KEY"
         const val SETTINGS_LABS_ALL_MESSAGES_KEY = "SETTINGS_LABS_ALL_MESSAGES_KEY"
+        const val SETTINGS_LABS_ROOM_INFO_KEY = "SETTINGS_LABS_ROOM_INFO_KEY"
+        const val SETTINGS_LABS_AUTO_TRANSLATE_KEY = "SETTINGS_LABS_AUTO_TRANSLATE_KEY"
+        const val SETTINGS_LABS_DELETED_ARCHIVE_KEY = "SETTINGS_LABS_DELETED_ARCHIVE_KEY"
+        const val SETTINGS_LABS_E2E_SEARCH_KEY = "SETTINGS_LABS_E2E_SEARCH_KEY"
         const val SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY"
@@ -1434,6 +1438,22 @@ class VectorPreferences @Inject constructor(
 
     fun isAllMessagesEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_ALL_MESSAGES_KEY, false)
+    }
+
+    fun isRoomInfoEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_ROOM_INFO_KEY, false)
+    }
+
+    fun isAutoTranslateEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_AUTO_TRANSLATE_KEY, false)
+    }
+
+    fun isDeletedArchiveEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_DELETED_ARCHIVE_KEY, false)
+    }
+
+    fun isE2ESearchEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_E2E_SEARCH_KEY, false)
     }
 
     fun showIpAddressInSessionManagerScreens(): Boolean {

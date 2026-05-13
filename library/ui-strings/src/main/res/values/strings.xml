@@ -3088,6 +3088,18 @@
      <string name="labs_enable_all_messages">All Messages pseudoroom</string>
      <string name="labs_enable_all_messages_summary">Show an \"All Messages\" button next to \"All Threads\". Merges all messages from all rooms into one timeline with subtle room labels.</string>
      <string name="all_messages_title">All Messages</string>
+     <string name="labs_enable_room_info">Room creation info</string>
+     <string name="labs_enable_room_info_summary">Show room creation date and cached event count in room menu. Tappable to jump to first message. \"Full history?\" indicator.</string>
+     <string name="room_created">Created: %s</string>
+     <string name="room_cached_events">Cached events: %d</string>
+     <string name="room_full_history">✓ Full history</string>
+     <string name="labs_enable_auto_translate_room">Auto-translate room</string>
+     <string name="labs_enable_auto_translate_room_summary">Show a \"Translate room\" option to display all messages in a chosen language. Builds on the C++ translate module.</string>
+     <string name="labs_enable_deleted_archive">Deleted message archive</string>
+     <string name="labs_enable_deleted_archive_summary">When deleting messages, save pre-deletion content to a local archive. Viewable later or included in exports.</string>
+     <string name="deleted_messages_title">Deleted Messages</string>
+     <string name="labs_enable_e2e_search">Search encrypted rooms</string>
+     <string name="labs_enable_e2e_search_summary">Index decrypted message content for full-text search. Includes encrypted rooms. C++ native index and relevance scoring.</string>
      <string name="jump_to_source">Jump to source</string>
 
 

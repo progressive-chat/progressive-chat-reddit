@@ -27,6 +27,9 @@
 #include "progressive/ram_monitor.hpp"
 #include "progressive/cache_manager.hpp"
 #include "progressive/message_aggregator.hpp"
+#include "progressive/room_info.hpp"
+#include "progressive/deleted_archive.hpp"
+#include "progressive/search_index.hpp"
 
 // --- Singleton keyword filter ---
 static progressive::KeywordFilter g_keywordFilter;
@@ -51,6 +54,12 @@ static progressive::CacheManager g_cacheMgr;
 
 // --- Singleton message aggregator ---
 static progressive::MessageAggregator g_msgAgg;
+
+// --- Singleton deleted archive ---
+static progressive::DeletedMessageArchive g_deletedArchive;
+
+// --- Singleton search index ---
+static progressive::SearchIndex g_searchIndex;
 
 #define LOG_TAG "ProgressiveNative"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -1615,6 +1624,140 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeMsgAggCount(
     JNIEnv*, jclass
 ) {
     return static_cast<jint>(g_msgAgg.count());
+}
+
+// --- Room Info ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatCreationDate(
+    JNIEnv* env, jclass, jlong jEpochMs
+) {
+    auto s = progressive::formatCreationDate(jEpochMs);
+    return env->NewStringUTF(s.c_str());
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsLikelyFullHistory(
+    JNIEnv*, jclass, jint jCached, jint jEstimated
+) {
+    return progressive::isLikelyFullHistory(jCached, jEstimated) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Deleted Archive ---
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeDeletedArchiveAdd(
+    JNIEnv* env, jclass,
+    jstring jEventId, jstring jRoomId, jstring jRoomName,
+    jstring jSenderName, jstring jBody, jstring jMsgType,
+    jstring jTimestamp, jlong jOriginTs, jstring jDeletedBy
+) {
+    DeletedEvent e;
+    e.eventId       = jEventId ? std::string(env->GetStringUTFChars(jEventId, nullptr)) : "";
+    e.roomId        = jRoomId ? std::string(env->GetStringUTFChars(jRoomId, nullptr)) : "";
+    e.roomName      = jRoomName ? std::string(env->GetStringUTFChars(jRoomName, nullptr)) : "";
+    e.senderName    = jSenderName ? std::string(env->GetStringUTFChars(jSenderName, nullptr)) : "";
+    e.body          = jBody ? std::string(env->GetStringUTFChars(jBody, nullptr)) : "";
+    e.msgType       = jMsgType ? std::string(env->GetStringUTFChars(jMsgType, nullptr)) : "";
+    e.timestamp     = jTimestamp ? std::string(env->GetStringUTFChars(jTimestamp, nullptr)) : "";
+    e.originServerTs = jOriginTs;
+    e.deletedBy     = jDeletedBy ? std::string(env->GetStringUTFChars(jDeletedBy, nullptr)) : "";
+
+    if (jEventId)  env->ReleaseStringUTFChars(jEventId, e.eventId.c_str());
+    if (jRoomId)   env->ReleaseStringUTFChars(jRoomId, e.roomId.c_str());
+    if (jRoomName) env->ReleaseStringUTFChars(jRoomName, e.roomName.c_str());
+    if (jSenderName) env->ReleaseStringUTFChars(jSenderName, e.senderName.c_str());
+    if (jBody)     env->ReleaseStringUTFChars(jBody, e.body.c_str());
+    if (jMsgType)  env->ReleaseStringUTFChars(jMsgType, e.msgType.c_str());
+    if (jTimestamp) env->ReleaseStringUTFChars(jTimestamp, e.timestamp.c_str());
+    if (jDeletedBy) env->ReleaseStringUTFChars(jDeletedBy, e.deletedBy.c_str());
+
+    g_deletedArchive.archive(e);
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeDeletedArchiveExportJson(
+    JNIEnv* env, jclass
+) {
+    auto json = g_deletedArchive.exportJson();
+    return env->NewStringUTF(json.c_str());
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeDeletedArchiveClear(
+    JNIEnv*, jclass
+) {
+    g_deletedArchive.clear();
+}
+
+JNIEXPORT jint JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeDeletedArchiveCount(
+    JNIEnv*, jclass
+) {
+    return static_cast<jint>(g_deletedArchive.count());
+}
+
+// --- Search Index ---
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeSearchIndexMessage(
+    JNIEnv* env, jclass,
+    jstring jEventId, jstring jRoomId, jstring jRoomName,
+    jstring jSenderName, jstring jBody, jlong jTimestamp, jboolean jEncrypted
+) {
+    auto eventId    = jEventId ? std::string(env->GetStringUTFChars(jEventId, nullptr)) : "";
+    auto roomId     = jRoomId ? std::string(env->GetStringUTFChars(jRoomId, nullptr)) : "";
+    auto roomName   = jRoomName ? std::string(env->GetStringUTFChars(jRoomName, nullptr)) : "";
+    auto senderName = jSenderName ? std::string(env->GetStringUTFChars(jSenderName, nullptr)) : "";
+    auto body       = jBody ? std::string(env->GetStringUTFChars(jBody, nullptr)) : "";
+
+    if (jEventId)  env->ReleaseStringUTFChars(jEventId, eventId.c_str());
+    if (jRoomId)   env->ReleaseStringUTFChars(jRoomId, roomId.c_str());
+    if (jRoomName) env->ReleaseStringUTFChars(jRoomName, roomName.c_str());
+    if (jSenderName) env->ReleaseStringUTFChars(jSenderName, senderName.c_str());
+    if (jBody)     env->ReleaseStringUTFChars(jBody, body.c_str());
+
+    g_searchIndex.indexMessage(eventId, roomId, roomName, senderName, body, jTimestamp, jEncrypted);
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeSearchQuery(
+    JNIEnv* env, jclass, jstring jQuery, jint jLimit
+) {
+    auto query = jQuery ? std::string(env->GetStringUTFChars(jQuery, nullptr)) : "";
+    if (jQuery) env->ReleaseStringUTFChars(jQuery, query.c_str());
+
+    auto result = g_searchIndex.search(query, jLimit);
+
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out;
+        for (char c : s) { if (c == '"') out += "\\\""; else out += c; }
+        return out;
+    };
+
+    std::ostringstream json;
+    json << "{";
+    json << R"("query": ")" << esc(result.query) << R"(",)";
+    json << R"("totalHits": )" << result.totalHits << ",";
+    json << R"("roomsSearched": )" << result.roomsSearched << ",";
+    json << R"("searchTimeMs": )" << result.searchTimeMs << ",";
+    json << R"("hits": )" << progressive::SearchIndex::hitsToJson(result.hits);
+    json << "}";
+    return env->NewStringUTF(json.str().c_str());
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeSearchClear(
+    JNIEnv*, jclass
+) {
+    g_searchIndex.clear();
+}
+
+JNIEXPORT jint JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeSearchIndexedCount(
+    JNIEnv*, jclass
+) {
+    return static_cast<jint>(g_searchIndex.indexedCount());
 }
 
 } // extern "C"

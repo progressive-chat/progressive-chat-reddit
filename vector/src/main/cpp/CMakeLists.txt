@@ -34,6 +34,9 @@ add_library(
     src/ram_monitor.cpp
     src/cache_manager.cpp
     src/message_aggregator.cpp
+    src/room_info.cpp
+    src/deleted_archive.cpp
+    src/search_index.cpp
     src/jni_bridge.cpp
 )
 
