@@ -100,6 +100,7 @@
 #include "progressive/media_utils.hpp"
 #include "progressive/notif_settings.hpp"
 #include "progressive/invite_utils.hpp"
+#include "progressive/session_manager.hpp"
 #include "progressive/verification_utils.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
@@ -4465,6 +4466,19 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetVerificationEm
     }
     json << "]";
     return env->NewStringUTF(json.str().c_str());
+}
+
+// --- Session Manager ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatSessionBadge(
+    JNIEnv* env, jclass, jint jUnread, jint jHighlights
+) {
+    SessionInfo s;
+    s.unreadCount = jUnread;
+    s.highlightCount = jHighlights;
+    auto badge = progressive::formatSessionBadge(s);
+    return env->NewStringUTF(badge.c_str());
 }
 
 } // extern "C"

@@ -109,6 +109,7 @@ add_library(
     src/notif_settings.cpp
     src/invite_utils.cpp
     src/verification_utils.cpp
+    src/session_manager.cpp
     src/olm.cpp
     src/jni_bridge.cpp
 )

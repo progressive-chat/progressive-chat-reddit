@@ -813,6 +813,10 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeGetVerificationEmojis(): String
 
+    // --- Session Manager ---
+
+    @JvmStatic external fun nativeFormatSessionBadge(unread: Int, highlights: Int): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
