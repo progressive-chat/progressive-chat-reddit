@@ -103,6 +103,7 @@
 #include "progressive/session_manager.hpp"
 #include "progressive/auth_utils.hpp"
 #include "progressive/content_scanner.hpp"
+#include "progressive/event_encryption.hpp"
 #include "progressive/verification_utils.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
@@ -4505,6 +4506,28 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsServerNotice(
     auto json = jContentJson ? std::string(env->GetStringUTFChars(jContentJson, nullptr)) : "";
     if (jContentJson) env->ReleaseStringUTFChars(jContentJson, json.c_str());
     return progressive::isServerNotice(json) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Event Encryption ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseEncryptedHeader(
+    JNIEnv* env, jclass, jstring jContentJson
+) {
+    auto json = jContentJson ? std::string(env->GetStringUTFChars(jContentJson, nullptr)) : "";
+    if (jContentJson) env->ReleaseStringUTFChars(jContentJson, json.c_str());
+
+    auto header = progressive::parseEncryptedHeader(json);
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out; for (char c : s) { if (c == '"') out += "\\\""; else out += c; } return out;
+    };
+    std::ostringstream out;
+    out << R"({"valid": )" << (header.valid ? "true" : "false");
+    out << R"(,"algorithm": ")" << esc(header.algorithm) << R"(")";
+    out << R"(,"senderKey": ")" << esc(header.senderKey) << R"(")";
+    out << R"(,"sessionId": ")" << esc(header.sessionId) << R"(")";
+    out << R"(,"messageIndex": )" << header.messageIndex << "}";
+    return env->NewStringUTF(out.str().c_str());
 }
 
 } // extern "C"

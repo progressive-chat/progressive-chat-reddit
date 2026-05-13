@@ -112,6 +112,7 @@ add_library(
     src/session_manager.cpp
     src/auth_utils.cpp
     src/content_scanner.cpp
+    src/event_encryption.cpp
     src/olm.cpp
     src/jni_bridge.cpp
 )

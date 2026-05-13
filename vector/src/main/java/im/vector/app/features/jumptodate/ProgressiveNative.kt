@@ -825,6 +825,10 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeIsServerNotice(contentJson: String): Boolean
 
+    // --- Event Encryption ---
+
+    @JvmStatic external fun nativeParseEncryptedHeader(contentJson: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
