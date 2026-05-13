@@ -712,6 +712,10 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeComputeStreak(timestampsJson: String): String
 
+    // --- Event Timeline ---
+
+    @JvmStatic external fun nativeFormatGroupLabel(timestampMs: Long): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

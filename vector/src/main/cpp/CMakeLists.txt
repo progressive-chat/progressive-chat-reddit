@@ -85,6 +85,7 @@ add_library(
     src/notif_analyzer.cpp
     src/sync_analyzer.cpp
     src/user_rating.cpp
+    src/event_timeline.cpp
     src/jni_bridge.cpp
 )
 

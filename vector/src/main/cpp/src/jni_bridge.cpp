@@ -78,6 +78,7 @@
 #include "progressive/notif_analyzer.hpp"
 #include "progressive/sync_analyzer.hpp"
 #include "progressive/user_rating.hpp"
+#include "progressive/event_timeline.hpp"
 #include <sstream>
 #include <chrono>
 
@@ -4004,6 +4005,16 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeComputeStreak(
     out << R"(,"totalActiveDays": )" << streak.totalActiveDays;
     out << R"(,"isActiveToday": )" << (streak.isActiveToday ? "true" : "false") << "}";
     return env->NewStringUTF(out.str().c_str());
+}
+
+// --- Event Timeline ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatGroupLabel(
+    JNIEnv* env, jclass, jlong jTimestampMs
+) {
+    auto s = progressive::formatGroupLabel(jTimestampMs);
+    return env->NewStringUTF(s.c_str());
 }
 
 } // extern "C"
