@@ -2,7 +2,7 @@
 
 A Matrix client in the making. The goal: a truly progressive messenger with a **pure C++ native** core.
 
-Currently an active fork of Element Classic Android. Kotlin/Java/Rust components are being gradually replaced with native C++ — starting with real features.
+Currently an active fork of [Element](https://github.com/element-hq) Classic ([element-android](https://github.com/element-hq/element-android)). Kotlin/Java/Rust components are being gradually replaced with native C++ — starting with real features.
 
 **Website:** [progressive.chat](https://progressive.chat)
 
@@ -24,6 +24,9 @@ Progressive Chat replaces slow Kotlin/Java components with native C++:
 | Chat export | `exporter.cpp` | HTML/PlainText/JSON formatting |
 | Event cache | `eventcache.cpp` | Stage 2 context menu data assembly |
 | Event database | `eventdb.cpp` | Realm DB queries (SQLite-native, 50x faster) |
+| Message translation | `translate.cpp` | OpenAI-compatible API request/response |
+| Proxy/Tor/I2P | `proxy.cpp` | Connection routing (SOCKS5/HTTP proxy) |
+| Yggdrasil | `yggdrasil.cpp` | .ygg domain resolution, URL rewriting |
 
 ## Building
 

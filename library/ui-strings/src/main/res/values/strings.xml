@@ -3026,6 +3026,8 @@
      <string name="labs_enable_tor_summary">Route all Matrix traffic through Tor network. Requires bundled Tor binary.</string>
      <string name="labs_enable_i2p">I2P routing</string>
      <string name="labs_enable_i2p_summary">Route all Matrix traffic through I2P network.</string>
+     <string name="labs_enable_yggdrasil">Yggdrasil mesh</string>
+     <string name="labs_enable_yggdrasil_summary">Resolve .ygg homeservers and rewrite URLs to Yggdrasil IPv6. Rewriting is handled by C++ native code.</string>
      <string name="jump_to_source">Jump to source</string>
 
 

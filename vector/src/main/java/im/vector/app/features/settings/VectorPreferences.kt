@@ -79,6 +79,7 @@ class VectorPreferences @Inject constructor(
         const val SETTINGS_TRANSLATE_TARGET_LANGUAGE = "SETTINGS_TRANSLATE_TARGET_LANGUAGE"
         const val SETTINGS_LABS_TOR_KEY = "SETTINGS_LABS_TOR_KEY"
         const val SETTINGS_LABS_I2P_KEY = "SETTINGS_LABS_I2P_KEY"
+        const val SETTINGS_LABS_YGGDRASIL_KEY = "SETTINGS_LABS_YGGDRASIL_KEY"
         const val SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY"
@@ -1319,6 +1320,10 @@ class VectorPreferences @Inject constructor(
 
     fun isI2PEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_I2P_KEY, false)
+    }
+
+    fun isYggdrasilEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_YGGDRASIL_KEY, false)
     }
 
     fun showIpAddressInSessionManagerScreens(): Boolean {

@@ -211,4 +211,10 @@
         android:summary="@string/labs_enable_i2p_summary"
         android:title="@string/labs_enable_i2p" />
 
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_YGGDRASIL_KEY"
+        android:summary="@string/labs_enable_yggdrasil_summary"
+        android:title="@string/labs_enable_yggdrasil" />
+
 </androidx.preference.PreferenceScreen>

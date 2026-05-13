@@ -15,6 +15,7 @@ add_library(
     src/eventdb.cpp
     src/translate.cpp
     src/proxy.cpp
+    src/yggdrasil.cpp
     src/jni_bridge.cpp
 )
 

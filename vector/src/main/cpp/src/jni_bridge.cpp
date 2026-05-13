@@ -8,6 +8,7 @@
 #include "progressive/eventdb.hpp"
 #include "progressive/translate.hpp"
 #include "progressive/proxy.hpp"
+#include "progressive/yggdrasil.hpp"
 
 #define LOG_TAG "ProgressiveNative"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -653,6 +654,52 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeComputeProxyConfi
 
     auto json = config.toJson();
     return env->NewStringUTF(json.c_str());
+}
+
+// --- Yggdrasil ---
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsYggdrasilAddress(
+    JNIEnv* env, jclass, jstring jAddr
+) {
+    if (!jAddr) return JNI_FALSE;
+    auto addr = std::string(env->GetStringUTFChars(jAddr, nullptr));
+    env->ReleaseStringUTFChars(jAddr, addr.c_str());
+    return progressive::isYggdrasilAddress(addr) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsYggdrasilDomain(
+    JNIEnv* env, jclass, jstring jHost
+) {
+    if (!jHost) return JNI_FALSE;
+    auto host = std::string(env->GetStringUTFChars(jHost, nullptr));
+    env->ReleaseStringUTFChars(jHost, host.c_str());
+    return progressive::isYggdrasilDomain(host) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeBuildYggHomeserverUrl(
+    JNIEnv* env, jclass, jstring jAddr, jint jPort, jboolean jTls
+) {
+    if (!jAddr) return env->NewStringUTF("");
+    auto addr = std::string(env->GetStringUTFChars(jAddr, nullptr));
+    env->ReleaseStringUTFChars(jAddr, addr.c_str());
+    auto url = progressive::buildYggHomeserverUrl(addr, jPort, jTls);
+    return env->NewStringUTF(url.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeRewriteHomeserverUrl(
+    JNIEnv* env, jclass, jstring jOriginalUrl, jstring jYggAddr
+) {
+    if (!jOriginalUrl || !jYggAddr) return env->NewStringUTF("");
+    auto original = std::string(env->GetStringUTFChars(jOriginalUrl, nullptr));
+    auto ygg = std::string(env->GetStringUTFChars(jYggAddr, nullptr));
+    env->ReleaseStringUTFChars(jOriginalUrl, original.c_str());
+    env->ReleaseStringUTFChars(jYggAddr, ygg.c_str());
+    auto result = progressive::rewriteHomeserverUrl(original, ygg);
+    return env->NewStringUTF(result.c_str());
 }
 
 } // extern "C"

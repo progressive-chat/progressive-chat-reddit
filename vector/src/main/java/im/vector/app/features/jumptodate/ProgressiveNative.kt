@@ -178,13 +178,20 @@ object ProgressiveNative {
 
     @JvmStatic
     external fun nativeComputeProxyConfig(
-        connType: Int,    // ConnectionType ordinal (0=Matrix, 1=Onion, 2=I2p)
-        proxyType: Int,   // ProxyType ordinal (0=None, 1=Http, 2=Socks5)
+        connType: Int,
+        proxyType: Int,
         host: String,
         port: Int,
         username: String,
         password: String
     ): String
+
+    // --- Yggdrasil ---
+
+    @JvmStatic external fun nativeIsYggdrasilAddress(addr: String): Boolean
+    @JvmStatic external fun nativeIsYggdrasilDomain(host: String): Boolean
+    @JvmStatic external fun nativeBuildYggHomeserverUrl(addr: String, port: Int, tls: Boolean): String
+    @JvmStatic external fun nativeRewriteHomeserverUrl(originalUrl: String, yggAddr: String): String
 
     // --- Pure Kotlin fallback implementations ---
 
