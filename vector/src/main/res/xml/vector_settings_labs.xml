@@ -283,4 +283,10 @@
         android:summary="@string/labs_enable_user_mask_summary"
         android:title="@string/labs_enable_user_mask" />
 
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_CHUNKED_UPLOAD_KEY"
+        android:summary="@string/labs_enable_chunked_upload_summary"
+        android:title="@string/labs_enable_chunked_upload" />
+
 </androidx.preference.PreferenceScreen>

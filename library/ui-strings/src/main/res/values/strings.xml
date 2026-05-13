@@ -3058,6 +3058,8 @@
      <string name="labs_enable_user_mask">Per-user masquerade</string>
      <string name="labs_enable_user_mask_summary">Override display name, avatar, and shown MXID for specific Matrix users. Changes are local only.</string>
      <string name="user_mask_mxid_hint">@user:server</string>
+     <string name="labs_enable_chunked_upload">Chunked file upload</string>
+     <string name="labs_enable_chunked_upload_summary">Split large files into configurable chunks. Reads chunk → sends → frees RAM → next chunk. Zero-copy streaming. User-defined chunk size.</string>
      <string name="jump_to_source">Jump to source</string>
 
 

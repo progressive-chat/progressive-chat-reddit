@@ -261,6 +261,19 @@ object ProgressiveNative {
     @JvmStatic external fun nativeUserMaskClear()
     @JvmStatic external fun nativeUserMaskCount(): Int
 
+    // --- Chunked Upload ---
+
+    @JvmStatic external fun nativeUploaderSetChunkSizeMb(mb: Int)
+    @JvmStatic external fun nativeUploaderComputeChunks(fileSize: Long): Int
+    @JvmStatic external fun nativeUploaderGetChunkJson(index: Int): String
+    @JvmStatic external fun nativeUploaderAdvance()
+    @JvmStatic external fun nativeUploaderCancel()
+    @JvmStatic external fun nativeUploaderFail(error: String)
+    @JvmStatic external fun nativeUploaderReset()
+    @JvmStatic external fun nativeUploaderProgressJson(): String
+    @JvmStatic external fun nativeUploaderContentRange(chunkIndex: Int): String
+    @JvmStatic external fun nativeSuggestChunkSizeMb(fileSize: Long): Int
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

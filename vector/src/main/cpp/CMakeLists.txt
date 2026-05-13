@@ -24,6 +24,7 @@ add_library(
     src/network_stats.cpp
     src/masquerade.cpp
     src/user_mask.cpp
+    src/chunked_upload.cpp
     src/jni_bridge.cpp
 )
 

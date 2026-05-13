@@ -91,6 +91,7 @@ class VectorPreferences @Inject constructor(
         const val SETTINGS_LABS_NETWORK_STATS_KEY = "SETTINGS_LABS_NETWORK_STATS_KEY"
         const val SETTINGS_LABS_MASQUERADE_KEY = "SETTINGS_LABS_MASQUERADE_KEY"
         const val SETTINGS_LABS_USER_MASK_KEY = "SETTINGS_LABS_USER_MASK_KEY"
+        const val SETTINGS_LABS_CHUNKED_UPLOAD_KEY = "SETTINGS_LABS_CHUNKED_UPLOAD_KEY"
         const val SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY"
@@ -1379,6 +1380,10 @@ class VectorPreferences @Inject constructor(
 
     fun isUserMaskEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_USER_MASK_KEY, false)
+    }
+
+    fun isChunkedUploadEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_CHUNKED_UPLOAD_KEY, false)
     }
 
     fun showIpAddressInSessionManagerScreens(): Boolean {

@@ -17,6 +17,7 @@
 #include "progressive/network_stats.hpp"
 #include "progressive/masquerade.hpp"
 #include "progressive/user_mask.hpp"
+#include "progressive/chunked_upload.hpp"
 
 // --- Singleton keyword filter ---
 static progressive::KeywordFilter g_keywordFilter;
@@ -26,6 +27,9 @@ static progressive::NetworkStatsCollector g_netStats;
 
 // --- Singleton user mask registry ---
 static progressive::UserMaskRegistry g_userMasks;
+
+// --- Singleton chunked uploader ---
+static progressive::ChunkedUploader g_uploader;
 
 #define LOG_TAG "ProgressiveNative"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -1112,6 +1116,98 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUserMaskCount(
     JNIEnv*, jclass
 ) {
     return static_cast<jint>(g_userMasks.count());
+}
+
+// --- Chunked Upload ---
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUploaderSetChunkSizeMb(
+    JNIEnv*, jclass, jint jMb
+) {
+    g_uploader.setChunkSizeMb(jMb);
+}
+
+JNIEXPORT jint JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUploaderComputeChunks(
+    JNIEnv*, jclass, jlong jFileSize
+) {
+    return g_uploader.computeChunks(jFileSize);
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUploaderGetChunkJson(
+    JNIEnv* env, jclass, jint jIndex
+) {
+    auto chunk = g_uploader.getChunkInfo(jIndex);
+    auto json = progressive::ChunkedUploader::chunkToJson(chunk);
+    return env->NewStringUTF(json.c_str());
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUploaderAdvance(
+    JNIEnv*, jclass
+) {
+    g_uploader.advanceChunk();
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUploaderCancel(
+    JNIEnv*, jclass
+) {
+    g_uploader.cancel();
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUploaderFail(
+    JNIEnv* env, jclass, jstring jError
+) {
+    auto err = jError ? std::string(env->GetStringUTFChars(jError, nullptr)) : "";
+    if (jError) env->ReleaseStringUTFChars(jError, err.c_str());
+    g_uploader.fail(err);
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUploaderReset(
+    JNIEnv*, jclass
+) {
+    g_uploader.reset();
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUploaderProgressJson(
+    JNIEnv* env, jclass
+) {
+    auto prog = g_uploader.progress();
+    // Return progress as JSON
+    std::ostringstream json;
+    json << "{";
+    json << R"("bytesUploaded": )" << prog.bytesUploaded << ",";
+    json << R"("totalBytes": )" << prog.totalBytes << ",";
+    json << R"("chunksCompleted": )" << prog.chunksCompleted << ",";
+    json << R"("totalChunks": )" << prog.totalChunks << ",";
+    json << R"("progress": )" << prog.progress() << ",";
+    json << R"("done": )" << (prog.done ? "true" : "false") << ",";
+    json << R"("cancelled": )" << (prog.cancelled ? "true" : "false") << ",";
+    json << R"("failed": )" << (prog.failed ? "true" : "false");
+    if (!prog.error.empty()) json << R"(,"error": ")" << prog.error << R"(")";
+    json << "}";
+    return env->NewStringUTF(json.str().c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeUploaderContentRange(
+    JNIEnv* env, jclass, jint jIndex
+) {
+    auto chunk = g_uploader.getChunkInfo(jIndex);
+    auto range = progressive::ChunkedUploader::formatContentRange(chunk);
+    return env->NewStringUTF(range.c_str());
+}
+
+JNIEXPORT jint JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeSuggestChunkSizeMb(
+    JNIEnv*, jclass, jlong jFileSize
+) {
+    return progressive::ChunkedUploader::suggestChunkSizeMb(jFileSize);
 }
 
 } // extern "C"
