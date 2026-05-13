@@ -677,6 +677,11 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeTextSimilarity(a: String, b: String): Double
 
+    // --- Pinned Events (Element Web parity) ---
+
+    @JvmStatic external fun nativeParsePinnedEventIds(stateJson: String): String
+    @JvmStatic external fun nativeBuildPinnedEventsContent(idsJson: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
