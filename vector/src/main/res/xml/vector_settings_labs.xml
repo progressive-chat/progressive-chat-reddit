@@ -301,4 +301,16 @@
         android:summary="@string/labs_strip_exif_summary"
         android:title="@string/labs_strip_exif" />
 
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_HIDE_INVITATION_KEY"
+        android:summary="@string/labs_enable_hide_invitation_summary"
+        android:title="@string/labs_enable_hide_invitation" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_ALL_THREADS_KEY"
+        android:summary="@string/labs_enable_all_threads_summary"
+        android:title="@string/labs_enable_all_threads" />
+
 </androidx.preference.PreferenceScreen>

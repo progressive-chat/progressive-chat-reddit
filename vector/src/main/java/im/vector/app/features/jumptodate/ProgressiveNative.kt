@@ -282,6 +282,29 @@ object ProgressiveNative {
     @JvmStatic external fun nativeFileHasMetadata(mimeType: String): Boolean
     @JvmStatic external fun nativeGetStrippableMimeTypes(): String
 
+    // --- Invitation Hide ---
+
+    @JvmStatic external fun nativeInviteHide(roomId: String, roomName: String, inviterName: String, inviterMxid: String)
+    @JvmStatic external fun nativeInviteUnhide(roomId: String)
+    @JvmStatic external fun nativeInviteIsHidden(roomId: String): Boolean
+    @JvmStatic external fun nativeInviteExportJson(): String
+    @JvmStatic external fun nativeInviteImportJson(json: String)
+    @JvmStatic external fun nativeInviteClear()
+    @JvmStatic external fun nativeInviteCount(): Int
+
+    // --- Thread Aggregator ---
+
+    @JvmStatic external fun nativeThreadAdd(
+        threadId: String, roomId: String, roomName: String,
+        accountId: String, accountIndex: String,
+        lastMsg: String, lastSender: String,
+        lastTs: Long, replyCount: Int, unread: Boolean
+    )
+    @JvmStatic external fun nativeThreadGetAllJson(): String
+    @JvmStatic external fun nativeThreadClear()
+    @JvmStatic external fun nativeThreadCount(): Int
+    @JvmStatic external fun nativeThreadRemoveRoom(roomId: String)
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

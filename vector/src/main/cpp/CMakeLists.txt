@@ -26,6 +26,8 @@ add_library(
     src/user_mask.cpp
     src/chunked_upload.cpp
     src/chat_features.cpp
+    src/invitation_hide.cpp
+    src/thread_aggregator.cpp
     src/jni_bridge.cpp
 )
 

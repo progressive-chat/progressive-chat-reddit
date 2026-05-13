@@ -3065,6 +3065,13 @@
      <string name="timezone_select">Select timezone</string>
      <string name="labs_strip_exif">Strip metadata from media</string>
      <string name="labs_strip_exif_summary">Show a checkbox when sending images to remove EXIF data (location, camera, timestamp) from the file.</string>
+     <string name="labs_enable_hide_invitation">Hide invitations</string>
+     <string name="labs_enable_hide_invitation_summary">Add a \"Hide\" option to invitations. Hidden invites go to a blacklist (not accepted/declined). Restorable from settings.</string>
+     <string name="labs_enable_all_threads">All Threads button</string>
+     <string name="labs_enable_all_threads_summary">Show an \"All Threads\" button on the main screen. Lists threads from all rooms across all accounts. C++ native aggregation.</string>
+     <string name="all_threads_title">All Threads</string>
+     <string name="invite_hide_action">Hide</string>
+     <string name="invite_hidden_list">Hidden invitations</string>
      <string name="jump_to_source">Jump to source</string>
 
 

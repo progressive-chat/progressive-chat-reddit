@@ -94,6 +94,8 @@ class VectorPreferences @Inject constructor(
         const val SETTINGS_LABS_CHUNKED_UPLOAD_KEY = "SETTINGS_LABS_CHUNKED_UPLOAD_KEY"
         const val SETTINGS_LABS_CUSTOM_TIMEZONE_KEY = "SETTINGS_LABS_CUSTOM_TIMEZONE_KEY"
         const val SETTINGS_LABS_STRIP_EXIF_KEY = "SETTINGS_LABS_STRIP_EXIF_KEY"
+        const val SETTINGS_LABS_HIDE_INVITATION_KEY = "SETTINGS_LABS_HIDE_INVITATION_KEY"
+        const val SETTINGS_LABS_ALL_THREADS_KEY = "SETTINGS_LABS_ALL_THREADS_KEY"
         const val SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY"
@@ -1394,6 +1396,14 @@ class VectorPreferences @Inject constructor(
 
     fun isStripExifEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_STRIP_EXIF_KEY, false)
+    }
+
+    fun isHideInvitationEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_HIDE_INVITATION_KEY, false)
+    }
+
+    fun isAllThreadsEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_ALL_THREADS_KEY, false)
     }
 
     fun showIpAddressInSessionManagerScreens(): Boolean {

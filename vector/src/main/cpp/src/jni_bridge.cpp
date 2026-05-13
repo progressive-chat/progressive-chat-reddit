@@ -19,6 +19,8 @@
 #include "progressive/user_mask.hpp"
 #include "progressive/chunked_upload.hpp"
 #include "progressive/chat_features.hpp"
+#include "progressive/invitation_hide.hpp"
+#include "progressive/thread_aggregator.hpp"
 
 // --- Singleton keyword filter ---
 static progressive::KeywordFilter g_keywordFilter;
@@ -31,6 +33,12 @@ static progressive::UserMaskRegistry g_userMasks;
 
 // --- Singleton chunked uploader ---
 static progressive::ChunkedUploader g_uploader;
+
+// --- Singleton invitation hide list ---
+static progressive::InvitationHideList g_inviteHide;
+
+// --- Singleton thread aggregator ---
+static progressive::ThreadAggregator g_threadAgg;
 
 #define LOG_TAG "ProgressiveNative"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -1266,6 +1274,144 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetStrippableMime
 ) {
     auto s = progressive::getStrippableMimeTypes();
     return env->NewStringUTF(s.c_str());
+}
+
+// --- Invitation Hide ---
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeInviteHide(
+    JNIEnv* env, jclass,
+    jstring jRoomId, jstring jRoomName, jstring jInviterName, jstring jInviterMxid
+) {
+    HiddenInvitation inv;
+    inv.roomId      = jRoomId ? std::string(env->GetStringUTFChars(jRoomId, nullptr)) : "";
+    inv.roomName    = jRoomName ? std::string(env->GetStringUTFChars(jRoomName, nullptr)) : "";
+    inv.inviterName = jInviterName ? std::string(env->GetStringUTFChars(jInviterName, nullptr)) : "";
+    inv.inviterMxid = jInviterMxid ? std::string(env->GetStringUTFChars(jInviterMxid, nullptr)) : "";
+
+    if (jRoomId)     env->ReleaseStringUTFChars(jRoomId, inv.roomId.c_str());
+    if (jRoomName)   env->ReleaseStringUTFChars(jRoomName, inv.roomName.c_str());
+    if (jInviterName) env->ReleaseStringUTFChars(jInviterName, inv.inviterName.c_str());
+    if (jInviterMxid) env->ReleaseStringUTFChars(jInviterMxid, inv.inviterMxid.c_str());
+
+    g_inviteHide.hide(inv);
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeInviteUnhide(
+    JNIEnv* env, jclass, jstring jRoomId
+) {
+    if (!jRoomId) return;
+    auto id = std::string(env->GetStringUTFChars(jRoomId, nullptr));
+    env->ReleaseStringUTFChars(jRoomId, id.c_str());
+    g_inviteHide.unhide(id);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeInviteIsHidden(
+    JNIEnv* env, jclass, jstring jRoomId
+) {
+    if (!jRoomId) return JNI_FALSE;
+    auto id = std::string(env->GetStringUTFChars(jRoomId, nullptr));
+    env->ReleaseStringUTFChars(jRoomId, id.c_str());
+    return g_inviteHide.isHidden(id) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeInviteExportJson(
+    JNIEnv* env, jclass
+) {
+    auto json = g_inviteHide.exportJson();
+    return env->NewStringUTF(json.c_str());
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeInviteImportJson(
+    JNIEnv* env, jclass, jstring jJson
+) {
+    if (!jJson) return;
+    auto json = std::string(env->GetStringUTFChars(jJson, nullptr));
+    env->ReleaseStringUTFChars(jJson, json.c_str());
+    g_inviteHide.importJson(json);
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeInviteClear(
+    JNIEnv*, jclass
+) {
+    g_inviteHide.clear();
+}
+
+JNIEXPORT jint JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeInviteCount(
+    JNIEnv*, jclass
+) {
+    return static_cast<jint>(g_inviteHide.count());
+}
+
+// --- Thread Aggregator ---
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeThreadAdd(
+    JNIEnv* env, jclass,
+    jstring jThreadId, jstring jRoomId, jstring jRoomName,
+    jstring jAccountId, jstring jAccountIndex,
+    jstring jLastMsg, jstring jLastSender,
+    jlong jLastTs, jint jReplyCount, jboolean jUnread
+) {
+    ThreadInfo t;
+    t.threadId     = jThreadId ? std::string(env->GetStringUTFChars(jThreadId, nullptr)) : "";
+    t.roomId       = jRoomId ? std::string(env->GetStringUTFChars(jRoomId, nullptr)) : "";
+    t.roomName     = jRoomName ? std::string(env->GetStringUTFChars(jRoomName, nullptr)) : "";
+    t.accountId    = jAccountId ? std::string(env->GetStringUTFChars(jAccountId, nullptr)) : "";
+    t.accountIndex = jAccountIndex ? std::string(env->GetStringUTFChars(jAccountIndex, nullptr)) : "";
+    t.lastMessage  = jLastMsg ? std::string(env->GetStringUTFChars(jLastMsg, nullptr)) : "";
+    t.lastSender   = jLastSender ? std::string(env->GetStringUTFChars(jLastSender, nullptr)) : "";
+    t.lastTimestamp = jLastTs;
+    t.replyCount   = jReplyCount;
+    t.unread       = jUnread;
+
+    if (jThreadId)   env->ReleaseStringUTFChars(jThreadId, t.threadId.c_str());
+    if (jRoomId)     env->ReleaseStringUTFChars(jRoomId, t.roomId.c_str());
+    if (jRoomName)   env->ReleaseStringUTFChars(jRoomName, t.roomName.c_str());
+    if (jAccountId)  env->ReleaseStringUTFChars(jAccountId, t.accountId.c_str());
+    if (jAccountIndex) env->ReleaseStringUTFChars(jAccountIndex, t.accountIndex.c_str());
+    if (jLastMsg)    env->ReleaseStringUTFChars(jLastMsg, t.lastMessage.c_str());
+    if (jLastSender) env->ReleaseStringUTFChars(jLastSender, t.lastSender.c_str());
+
+    g_threadAgg.addThread(t);
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeThreadGetAllJson(
+    JNIEnv* env, jclass
+) {
+    auto json = g_threadAgg.exportJson();
+    return env->NewStringUTF(json.c_str());
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeThreadClear(
+    JNIEnv*, jclass
+) {
+    g_threadAgg.clear();
+}
+
+JNIEXPORT jint JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeThreadCount(
+    JNIEnv*, jclass
+) {
+    return static_cast<jint>(g_threadAgg.count());
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeThreadRemoveRoom(
+    JNIEnv* env, jclass, jstring jRoomId
+) {
+    if (!jRoomId) return;
+    auto id = std::string(env->GetStringUTFChars(jRoomId, nullptr));
+    env->ReleaseStringUTFChars(jRoomId, id.c_str());
+    g_threadAgg.removeRoom(id);
 }
 
 } // extern "C"
