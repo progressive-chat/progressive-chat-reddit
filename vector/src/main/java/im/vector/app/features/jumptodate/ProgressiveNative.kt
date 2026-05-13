@@ -59,6 +59,21 @@ object ProgressiveNative {
         httpStatus: Int
     ): String
 
+    /**
+     * Parses a Matrix event JSON to find the source event it relates to
+     * (reply, reaction, edit, thread root).
+     *
+     * @param eventJson Full JSON of the Matrix event
+     * @param allowedTypes Comma-separated list of allowed relation types, or empty for all
+     *
+     * @return JSON with sourceEventId and relationType, or {"isRelation": false}
+     */
+    @JvmStatic
+    external fun nativeParseRelation(
+        eventJson: String,
+        allowedTypes: String
+    ): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
@@ -156,6 +171,36 @@ object ProgressiveNative {
         } catch (e: Exception) {
             return result.put("error", "Failed to parse server response.")
                     .put("statusCode", httpStatus)
+        }
+    }
+
+    fun parseRelationFallback(eventJson: String, allowedTypes: String): JSONObject {
+        val result = JSONObject()
+        try {
+            val json = JSONObject(eventJson)
+            val content = json.optJSONObject("content") ?: json
+            val relatesTo = content.optJSONObject("m.relates_to")
+                ?: content.optJSONObject("relates_to") ?: return result.put("isRelation", false)
+
+            val sourceEventId = relatesTo.optString("event_id", "")
+            val relationType = relatesTo.optString("rel_type", "")
+
+            if (sourceEventId.isEmpty()) return result.put("isRelation", false)
+
+            val jumpableTypes = setOf("m.annotation", "m.reference", "m.replace", "m.thread")
+            if (allowedTypes.isNotEmpty() && !allowedTypes.split(",").any { it == relationType }) {
+                return result.put("isRelation", false)
+            }
+            if (!jumpableTypes.contains(relationType)) {
+                return result.put("isRelation", false)
+            }
+
+            result.put("isRelation", true)
+            result.put("sourceEventId", sourceEventId)
+            result.put("relationType", relationType)
+            return result
+        } catch (e: Exception) {
+            return result.put("isRelation", false)
         }
     }
 }

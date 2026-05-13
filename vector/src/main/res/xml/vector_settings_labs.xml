@@ -130,4 +130,28 @@
         android:summary="@string/labs_enable_jump_to_date_summary"
         android:title="@string/labs_enable_jump_to_date" />
 
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_JUMP_TO_SOURCE_KEY"
+        android:summary="@string/labs_enable_jump_to_source_summary"
+        android:title="@string/labs_enable_jump_to_source" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:dependency="SETTINGS_LABS_JUMP_TO_SOURCE_KEY"
+        android:key="SETTINGS_LABS_JUMP_TO_SOURCE_REACTIONS"
+        android:title="@string/labs_enable_jump_to_source_reactions" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:dependency="SETTINGS_LABS_JUMP_TO_SOURCE_KEY"
+        android:key="SETTINGS_LABS_JUMP_TO_SOURCE_REPLIES"
+        android:title="@string/labs_enable_jump_to_source_replies" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:dependency="SETTINGS_LABS_JUMP_TO_SOURCE_KEY"
+        android:key="SETTINGS_LABS_JUMP_TO_SOURCE_EDITS"
+        android:title="@string/labs_enable_jump_to_source_edits" />
+
 </androidx.preference.PreferenceScreen>

@@ -1891,6 +1891,9 @@ class TimelineFragment :
             is EventSharedAction.EndPoll -> {
                 askConfirmationToEndPoll(action.eventId)
             }
+            is EventSharedAction.JumpToSource -> {
+                timelineViewModel.handle(RoomDetailAction.NavigateToEvent(action.sourceEventId, highlight = true))
+            }
             is EventSharedAction.ReportContent -> Unit /* Not clickable */
             EventSharedAction.Separator -> Unit /* Not clickable */
         }

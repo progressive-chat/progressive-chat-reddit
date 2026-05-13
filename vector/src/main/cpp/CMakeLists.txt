@@ -9,6 +9,7 @@ add_library(
     SHARED
     src/jumptodate.cpp
     src/json_parser.cpp
+    src/relation.cpp
     src/jni_bridge.cpp
 )
 

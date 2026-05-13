@@ -119,4 +119,7 @@ sealed class EventSharedAction(
 
     data class EndPoll(val eventId: String) :
             EventSharedAction(CommonStrings.poll_end_action, R.drawable.ic_check_on)
+
+    data class JumpToSource(val eventId: String, val sourceEventId: String) :
+            EventSharedAction(CommonStrings.jump_to_source, R.drawable.ic_jump_to_unread)
 }

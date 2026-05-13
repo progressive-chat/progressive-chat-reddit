@@ -394,6 +394,22 @@ class MessageActionsViewModel @AssistedInject constructor(
                     )
                 }
             }
+
+            if (vectorPreferences.isJumpToSourceEnabled()) {
+                val content = timelineEvent.root.toContentStringWithIndent()
+                val allowedTypes = buildString {
+                    if (vectorPreferences.isJumpToSourceReactionsEnabled()) append("m.annotation,")
+                    if (vectorPreferences.isJumpToSourceRepliesEnabled()) append("m.reference,")
+                    if (vectorPreferences.isJumpToSourceEditsEnabled()) append("m.replace,")
+                }.trimEnd(',')
+                val relation = im.vector.app.features.jumptodate.ProgressiveNative.parseRelationFallback(
+                    content, allowedTypes
+                )
+                if (relation.optBoolean("isRelation", false)) {
+                    val sourceId = relation.getString("sourceEventId")
+                    add(EventSharedAction.JumpToSource(eventId, sourceId))
+                }
+            }
         }
 
         if (vectorPreferences.developerMode()) {

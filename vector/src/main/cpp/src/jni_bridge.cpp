@@ -2,6 +2,7 @@
 #include <string>
 #include <android/log.h>
 #include "progressive/jumptodate.hpp"
+#include "progressive/relation.hpp"
 
 #define LOG_TAG "ProgressiveNative"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -113,6 +114,68 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseResponse(
             R"(","statusCode":)" + std::to_string(result.statusCode) + R"(})";
         return env->NewStringUTF(json.c_str());
     }
+}
+
+/*
+ * Class: im.vector.app.features.jumptodate.ProgressiveNative
+ * Method: nativeParseRelation
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+ *
+ * Parses event JSON to find the source event this event relates to.
+ * @param eventJson  Full JSON of the Matrix event
+ * @param allowedTypes  Comma-separated list of allowed relation types (e.g. "m.annotation,m.reference")
+ *                      or empty string for all types.
+ *
+ * Returns JSON: {"sourceEventId": "$xyz", "relationType": "m.annotation"} or {"isRelation": false}
+ */
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseRelation(
+    JNIEnv* env,
+    jclass /* this */,
+    jstring jEventJson,
+    jstring jAllowedTypes
+) {
+    if (!jEventJson) {
+        jclass exClass = env->FindClass("java/lang/IllegalArgumentException");
+        env->ThrowNew(exClass, "Event JSON must be non-null");
+        return nullptr;
+    }
+
+    const char* jsonCh = env->GetStringUTFChars(jEventJson, nullptr);
+    std::string json(jsonCh);
+    env->ReleaseStringUTFChars(jEventJson, jsonCh);
+
+    LOGD("nativeParseRelation: eventJson_len=%zu", json.size());
+
+    auto relation = progressive::parseRelation(json);
+
+    if (!relation.isRelation) {
+        return env->NewStringUTF(R"({"isRelation": false})");
+    }
+
+    // Check if this relation type is allowed
+    bool allowed = true;
+    if (jAllowedTypes) {
+        const char* allowedCh = env->GetStringUTFChars(jAllowedTypes, nullptr);
+        std::string allowedStr(allowedCh);
+        env->ReleaseStringUTFChars(jAllowedTypes, allowedCh);
+
+        if (!allowedStr.empty()) {
+            allowed = progressive::isJumpableRelationType(relation.relationType) &&
+                      allowedStr.find(relation.relationType) != std::string::npos;
+        }
+    } else {
+        allowed = progressive::isJumpableRelationType(relation.relationType);
+    }
+
+    if (!allowed) {
+        return env->NewStringUTF(R"({"isRelation": false})");
+    }
+
+    std::string resultJson =
+        R"({"isRelation": true, "sourceEventId": ")" + relation.sourceEventId +
+        R"(", "relationType": ")" + relation.relationType + R"("})";
+    return env->NewStringUTF(resultJson.c_str());
 }
 
 } // extern "C"
