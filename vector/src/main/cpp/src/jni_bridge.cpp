@@ -60,6 +60,7 @@
 #include "progressive/session_timeout.hpp"
 #include "progressive/password_validator.hpp"
 #include "progressive/spellcheck.hpp"
+#include "progressive/draft_manager.hpp"
 #include <sstream>
 #include <chrono>
 
@@ -3611,6 +3612,31 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeEditDistance(
     if (jA) env->ReleaseStringUTFChars(jA, a.c_str());
     if (jB) env->ReleaseStringUTFChars(jB, b.c_str());
     return progressive::SpellChecker::editDistance(a, b);
+}
+
+// --- Typing Indicator ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatTypingText(
+    JNIEnv* env, jclass, jstring jNamesJson
+) {
+    auto json = jNamesJson ? std::string(env->GetStringUTFChars(jNamesJson, nullptr)) : "[]";
+    if (jNamesJson) env->ReleaseStringUTFChars(jNamesJson, json.c_str());
+
+    std::vector<std::string> names;
+    size_t pos = 0;
+    while (true) {
+        pos = json.find('"', pos);
+        if (pos == std::string::npos) break;
+        ++pos;
+        auto end = json.find('"', pos);
+        if (end == std::string::npos) break;
+        names.push_back(json.substr(pos, end - pos));
+        pos = end + 1;
+    }
+
+    auto s = progressive::formatTypingText(names);
+    return env->NewStringUTF(s.c_str());
 }
 
 } // extern "C"

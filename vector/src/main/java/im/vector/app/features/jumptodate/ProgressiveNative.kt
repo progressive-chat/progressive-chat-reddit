@@ -633,6 +633,10 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeEditDistance(a: String, b: String): Int
 
+    // --- Typing Indicator ---
+
+    @JvmStatic external fun nativeFormatTypingText(namesJson: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

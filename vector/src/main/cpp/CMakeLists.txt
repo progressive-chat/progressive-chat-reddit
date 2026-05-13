@@ -67,6 +67,7 @@ add_library(
     src/session_timeout.cpp
     src/password_validator.cpp
     src/spellcheck.cpp
+    src/draft_manager.cpp
     src/jni_bridge.cpp
 )
 
