@@ -47,6 +47,7 @@ add_library(
     src/lang_detect.cpp
     src/avatar_history.cpp
     src/event_link.cpp
+    src/lightweight_call.cpp
     src/jni_bridge.cpp
 )
 

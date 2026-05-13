@@ -129,6 +129,7 @@ class VectorPreferences @Inject constructor(
         const val SETTINGS_LABS_JUMPTOROOM_KEY = "SETTINGS_LABS_JUMPTOROOM_KEY"
         const val SETTINGS_LABS_EVENT_LINK_RESOLVE_KEY = "SETTINGS_LABS_EVENT_LINK_RESOLVE_KEY"
         const val SETTINGS_LABS_SECONDS_TIMESTAMPS_KEY = "SETTINGS_LABS_SECONDS_TIMESTAMPS_KEY"
+        const val SETTINGS_LABS_LIGHTWEIGHT_CALL_KEY = "SETTINGS_LABS_LIGHTWEIGHT_CALL_KEY"
         const val SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY"
@@ -1569,6 +1570,10 @@ class VectorPreferences @Inject constructor(
 
     fun isSecondsTimestampsEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_SECONDS_TIMESTAMPS_KEY, false)
+    }
+
+    fun isLightweightCallEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_LIGHTWEIGHT_CALL_KEY, false)
     }
 
     fun showIpAddressInSessionManagerScreens(): Boolean {

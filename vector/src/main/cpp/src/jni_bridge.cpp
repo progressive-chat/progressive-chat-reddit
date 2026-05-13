@@ -41,6 +41,7 @@
 #include "progressive/lang_detect.hpp"
 #include "progressive/avatar_history.hpp"
 #include "progressive/event_link.hpp"
+#include "progressive/lightweight_call.hpp"
 
 // --- Singleton keyword filter ---
 static progressive::KeywordFilter g_keywordFilter;
@@ -107,6 +108,9 @@ static progressive::EmojiBlacklist g_emojiBlacklist;
 
 // --- Singleton avatar history ---
 static progressive::AvatarHistory g_avatarHistory;
+
+// --- Singleton lightweight call manager ---
+static progressive::LightweightCallManager g_lightCall;
 
 #define LOG_TAG "ProgressiveNative"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -2841,6 +2845,43 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatFullTimesta
 ) {
     auto s = progressive::formatFullTimestamp(jEpochMs);
     return env->NewStringUTF(s.c_str());
+}
+
+// --- Lightweight Call ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeLightCallEnter(
+    JNIEnv* env, jclass
+) {
+    auto plan = g_lightCall.enterCallMode();
+    auto json = progressive::LightweightCallManager::planToJson(plan);
+    return env->NewStringUTF(json.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeLightCallExit(
+    JNIEnv* env, jclass
+) {
+    auto plan = g_lightCall.exitCallMode();
+    auto json = progressive::LightweightCallManager::planToJson(plan);
+    return env->NewStringUTF(json.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeLightCallAssessMemory(
+    JNIEnv* env, jclass
+) {
+    auto state = g_lightCall.assessMemory();
+    auto json = progressive::LightweightCallManager::memoryStateToJson(state);
+    return env->NewStringUTF(json.c_str());
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeShouldUseLightweightMode(
+    JNIEnv* env, jclass
+) {
+    auto state = progressive::LightweightCallManager{}.assessMemory();
+    return progressive::LightweightCallManager::shouldUseLightweightMode(state) ? JNI_TRUE : JNI_FALSE;
 }
 
 } // extern "C"

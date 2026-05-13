@@ -512,4 +512,10 @@
         android:summary="@string/labs_enable_seconds_timestamps_summary"
         android:title="@string/labs_enable_seconds_timestamps" />
 
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_LIGHTWEIGHT_CALL_KEY"
+        android:summary="@string/labs_enable_lightweight_call_summary"
+        android:title="@string/labs_enable_lightweight_call" />
+
 </androidx.preference.PreferenceScreen>

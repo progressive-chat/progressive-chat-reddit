@@ -499,6 +499,13 @@ object ProgressiveNative {
     @JvmStatic external fun nativeFormatTimestamp(epochMs: Long, includeSeconds: Boolean): String
     @JvmStatic external fun nativeFormatFullTimestamp(epochMs: Long): String
 
+    // --- Lightweight Call ---
+
+    @JvmStatic external fun nativeLightCallEnter(): String
+    @JvmStatic external fun nativeLightCallExit(): String
+    @JvmStatic external fun nativeLightCallAssessMemory(): String
+    @JvmStatic external fun nativeShouldUseLightweightMode(): Boolean
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

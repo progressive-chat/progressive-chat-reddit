@@ -3164,6 +3164,8 @@
      <string name="labs_enable_event_link_max_concurrent">Max concurrent resolves</string>
      <string name="labs_enable_seconds_timestamps">Timestamps with seconds</string>
      <string name="labs_enable_seconds_timestamps_summary">Show all timestamps as HH:MM:SS instead of HH:MM. C++ native formatting.</string>
+     <string name="labs_enable_lightweight_call">Lightweight call mode</string>
+     <string name="labs_enable_lightweight_call_summary">Before 1-on-1 E2EE P2P calls, automatically free RAM by clearing caches and suspending background work. Essential for low-RAM devices.</string>
      <string name="jump_to_source">Jump to source</string>
 
 
