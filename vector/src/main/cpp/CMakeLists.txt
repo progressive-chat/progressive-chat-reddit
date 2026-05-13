@@ -37,6 +37,8 @@ add_library(
     src/room_info.cpp
     src/deleted_archive.cpp
     src/search_index.cpp
+    src/module_loader.cpp
+    src/notification.cpp
     src/jni_bridge.cpp
 )
 

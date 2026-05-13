@@ -3100,6 +3100,13 @@
      <string name="deleted_messages_title">Deleted Messages</string>
      <string name="labs_enable_e2e_search">Search encrypted rooms</string>
      <string name="labs_enable_e2e_search_summary">Index decrypted message content for full-text search. Includes encrypted rooms. C++ native index and relevance scoring.</string>
+     <string name="labs_enable_module_updates">Modular .so updates</string>
+     <string name="labs_enable_module_updates_summary">Load features from separate .so modules (e.g. messagecontextmenu.so). Modules can be updated independently without reinstalling the app.</string>
+     <string name="labs_enable_notif_keywords">Custom notification keywords</string>
+     <string name="labs_enable_notif_keywords_summary">Define custom words/phrases that trigger a notification. Works alongside @mentions. C++ native matching.</string>
+     <string name="notif_keywords_add">Add keyword</string>
+     <string name="labs_enable_reaction_preview">Reaction preview in chat list</string>
+     <string name="labs_enable_reaction_preview_summary">Show \"User reacted: 🚀 to \'message...\'\" in chat previews instead of just the emoji. C++ native formatting.</string>
      <string name="jump_to_source">Jump to source</string>
 
 

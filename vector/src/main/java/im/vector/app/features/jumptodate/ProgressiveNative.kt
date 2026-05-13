@@ -358,6 +358,25 @@ object ProgressiveNative {
     @JvmStatic external fun nativeSearchClear()
     @JvmStatic external fun nativeSearchIndexedCount(): Int
 
+    // --- Module Loader ---
+
+    @JvmStatic external fun nativeModuleScanDir(dirPath: String)
+    @JvmStatic external fun nativeModuleEnable(name: String)
+    @JvmStatic external fun nativeModuleIsEnabled(name: String): Boolean
+    @JvmStatic external fun nativeModuleListJson(): String
+
+    // --- Notification Keywords ---
+
+    @JvmStatic external fun nativeNotifKeywordAdd(keyword: String, caseSensitive: Boolean)
+    @JvmStatic external fun nativeNotifKeywordCheck(body: String): String
+    @JvmStatic external fun nativeNotifKeywordExport(): String
+    @JvmStatic external fun nativeNotifKeywordImport(json: String)
+    @JvmStatic external fun nativeNotifKeywordClear()
+
+    // --- Reaction Preview ---
+
+    @JvmStatic external fun nativeFormatReactionPreview(reactorName: String, emoji: String, sourceBody: String, sourceSender: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

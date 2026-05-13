@@ -106,6 +106,9 @@ class VectorPreferences @Inject constructor(
         const val SETTINGS_LABS_AUTO_TRANSLATE_KEY = "SETTINGS_LABS_AUTO_TRANSLATE_KEY"
         const val SETTINGS_LABS_DELETED_ARCHIVE_KEY = "SETTINGS_LABS_DELETED_ARCHIVE_KEY"
         const val SETTINGS_LABS_E2E_SEARCH_KEY = "SETTINGS_LABS_E2E_SEARCH_KEY"
+        const val SETTINGS_LABS_MODULE_UPDATES_KEY = "SETTINGS_LABS_MODULE_UPDATES_KEY"
+        const val SETTINGS_LABS_NOTIF_KEYWORDS_KEY = "SETTINGS_LABS_NOTIF_KEYWORDS_KEY"
+        const val SETTINGS_LABS_REACTION_PREVIEW_KEY = "SETTINGS_LABS_REACTION_PREVIEW_KEY"
         const val SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY"
@@ -1454,6 +1457,18 @@ class VectorPreferences @Inject constructor(
 
     fun isE2ESearchEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_E2E_SEARCH_KEY, false)
+    }
+
+    fun isModuleUpdatesEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_MODULE_UPDATES_KEY, false)
+    }
+
+    fun isNotifKeywordsEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_NOTIF_KEYWORDS_KEY, false)
+    }
+
+    fun isReactionPreviewEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_REACTION_PREVIEW_KEY, false)
     }
 
     fun showIpAddressInSessionManagerScreens(): Boolean {

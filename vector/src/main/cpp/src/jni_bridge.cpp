@@ -30,6 +30,8 @@
 #include "progressive/room_info.hpp"
 #include "progressive/deleted_archive.hpp"
 #include "progressive/search_index.hpp"
+#include "progressive/module_loader.hpp"
+#include "progressive/notification.hpp"
 
 // --- Singleton keyword filter ---
 static progressive::KeywordFilter g_keywordFilter;
@@ -60,6 +62,12 @@ static progressive::DeletedMessageArchive g_deletedArchive;
 
 // --- Singleton search index ---
 static progressive::SearchIndex g_searchIndex;
+
+// --- Singleton module loader ---
+static progressive::ModuleLoader g_moduleLoader;
+
+// --- Singleton notification keywords ---
+static progressive::NotificationKeywords g_notifKeywords;
 
 #define LOG_TAG "ProgressiveNative"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -1758,6 +1766,111 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeSearchIndexedCoun
     JNIEnv*, jclass
 ) {
     return static_cast<jint>(g_searchIndex.indexedCount());
+}
+
+// --- Module Loader ---
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeModuleScanDir(
+    JNIEnv* env, jclass, jstring jDir
+) {
+    auto dir = jDir ? std::string(env->GetStringUTFChars(jDir, nullptr)) : "";
+    if (jDir) env->ReleaseStringUTFChars(jDir, dir.c_str());
+    g_moduleLoader.scanDirectory(dir);
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeModuleEnable(
+    JNIEnv* env, jclass, jstring jName
+) {
+    auto name = jName ? std::string(env->GetStringUTFChars(jName, nullptr)) : "";
+    if (jName) env->ReleaseStringUTFChars(jName, name.c_str());
+    g_moduleLoader.enable(name);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeModuleIsEnabled(
+    JNIEnv* env, jclass, jstring jName
+) {
+    auto name = jName ? std::string(env->GetStringUTFChars(jName, nullptr)) : "";
+    if (jName) env->ReleaseStringUTFChars(jName, name.c_str());
+    return g_moduleLoader.isEnabled(name) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeModuleListJson(
+    JNIEnv* env, jclass
+) {
+    auto json = g_moduleLoader.listModulesJson();
+    return env->NewStringUTF(json.c_str());
+}
+
+// --- Notification Keywords ---
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeNotifKeywordAdd(
+    JNIEnv* env, jclass, jstring jKeyword, jboolean jCaseSensitive
+) {
+    auto kw = jKeyword ? std::string(env->GetStringUTFChars(jKeyword, nullptr)) : "";
+    if (jKeyword) env->ReleaseStringUTFChars(jKeyword, kw.c_str());
+    g_notifKeywords.addKeyword(kw, jCaseSensitive);
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeNotifKeywordCheck(
+    JNIEnv* env, jclass, jstring jBody
+) {
+    auto body = jBody ? std::string(env->GetStringUTFChars(jBody, nullptr)) : "";
+    if (jBody) env->ReleaseStringUTFChars(jBody, body.c_str());
+    auto match = g_notifKeywords.check(body);
+    return env->NewStringUTF(match.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeNotifKeywordExport(
+    JNIEnv* env, jclass
+) {
+    auto json = g_notifKeywords.exportJson();
+    return env->NewStringUTF(json.c_str());
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeNotifKeywordImport(
+    JNIEnv* env, jclass, jstring jJson
+) {
+    if (!jJson) return;
+    auto json = std::string(env->GetStringUTFChars(jJson, nullptr));
+    env->ReleaseStringUTFChars(jJson, json.c_str());
+    g_notifKeywords.importJson(json);
+}
+
+JNIEXPORT void JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeNotifKeywordClear(
+    JNIEnv*, jclass
+) {
+    g_notifKeywords.clear();
+}
+
+// --- Reaction Preview ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatReactionPreview(
+    JNIEnv* env, jclass,
+    jstring jReactorName, jstring jEmoji, jstring jSourceBody, jstring jSourceSender
+) {
+    ReactionPreview rp;
+    rp.reactorName      = jReactorName ? std::string(env->GetStringUTFChars(jReactorName, nullptr)) : "";
+    rp.reactionEmoji    = jEmoji ? std::string(env->GetStringUTFChars(jEmoji, nullptr)) : "";
+    rp.sourceBody       = jSourceBody ? std::string(env->GetStringUTFChars(jSourceBody, nullptr)) : "";
+    rp.sourceSenderName = jSourceSender ? std::string(env->GetStringUTFChars(jSourceSender, nullptr)) : "";
+
+    if (jReactorName)  env->ReleaseStringUTFChars(jReactorName, rp.reactorName.c_str());
+    if (jEmoji)        env->ReleaseStringUTFChars(jEmoji, rp.reactionEmoji.c_str());
+    if (jSourceBody)   env->ReleaseStringUTFChars(jSourceBody, rp.sourceBody.c_str());
+    if (jSourceSender) env->ReleaseStringUTFChars(jSourceSender, rp.sourceSenderName.c_str());
+
+    auto s = progressive::formatReactionPreview(rp);
+    return env->NewStringUTF(s.c_str());
 }
 
 } // extern "C"

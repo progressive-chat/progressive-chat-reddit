@@ -373,4 +373,22 @@
         android:summary="@string/labs_enable_e2e_search_summary"
         android:title="@string/labs_enable_e2e_search" />
 
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_MODULE_UPDATES_KEY"
+        android:summary="@string/labs_enable_module_updates_summary"
+        android:title="@string/labs_enable_module_updates" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_NOTIF_KEYWORDS_KEY"
+        android:summary="@string/labs_enable_notif_keywords_summary"
+        android:title="@string/labs_enable_notif_keywords" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_REACTION_PREVIEW_KEY"
+        android:summary="@string/labs_enable_reaction_preview_summary"
+        android:title="@string/labs_enable_reaction_preview" />
+
 </androidx.preference.PreferenceScreen>
