@@ -3060,6 +3060,11 @@
      <string name="user_mask_mxid_hint">@user:server</string>
      <string name="labs_enable_chunked_upload">Chunked file upload</string>
      <string name="labs_enable_chunked_upload_summary">Split large files into configurable chunks. Reads chunk → sends → frees RAM → next chunk. Zero-copy streaming. User-defined chunk size.</string>
+     <string name="labs_enable_custom_timezone">Custom timezone display</string>
+     <string name="labs_enable_custom_timezone_summary">Add a clock icon in the chat toolbar to switch timestamp display to a chosen timezone. C++ native conversion.</string>
+     <string name="timezone_select">Select timezone</string>
+     <string name="labs_strip_exif">Strip metadata from media</string>
+     <string name="labs_strip_exif_summary">Show a checkbox when sending images to remove EXIF data (location, camera, timestamp) from the file.</string>
      <string name="jump_to_source">Jump to source</string>
 
 

@@ -289,4 +289,16 @@
         android:summary="@string/labs_enable_chunked_upload_summary"
         android:title="@string/labs_enable_chunked_upload" />
 
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_CUSTOM_TIMEZONE_KEY"
+        android:summary="@string/labs_enable_custom_timezone_summary"
+        android:title="@string/labs_enable_custom_timezone" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_STRIP_EXIF_KEY"
+        android:summary="@string/labs_strip_exif_summary"
+        android:title="@string/labs_strip_exif" />
+
 </androidx.preference.PreferenceScreen>

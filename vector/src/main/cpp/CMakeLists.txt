@@ -25,6 +25,7 @@ add_library(
     src/masquerade.cpp
     src/user_mask.cpp
     src/chunked_upload.cpp
+    src/chat_features.cpp
     src/jni_bridge.cpp
 )
 

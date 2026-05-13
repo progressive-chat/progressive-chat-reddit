@@ -274,6 +274,14 @@ object ProgressiveNative {
     @JvmStatic external fun nativeUploaderContentRange(chunkIndex: Int): String
     @JvmStatic external fun nativeSuggestChunkSizeMb(fileSize: Long): Int
 
+    // --- Chat Features (Timezone + EXIF) ---
+
+    @JvmStatic external fun nativeGetCommonTimezones(): String
+    @JvmStatic external fun nativeFormatTimestampInTimezone(utcMs: Long, tzId: String): String
+    @JvmStatic external fun nativeIsValidTimezoneId(tzId: String): Boolean
+    @JvmStatic external fun nativeFileHasMetadata(mimeType: String): Boolean
+    @JvmStatic external fun nativeGetStrippableMimeTypes(): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

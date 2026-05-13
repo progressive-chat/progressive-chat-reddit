@@ -18,6 +18,7 @@
 #include "progressive/masquerade.hpp"
 #include "progressive/user_mask.hpp"
 #include "progressive/chunked_upload.hpp"
+#include "progressive/chat_features.hpp"
 
 // --- Singleton keyword filter ---
 static progressive::KeywordFilter g_keywordFilter;
@@ -1208,6 +1209,63 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeSuggestChunkSizeM
     JNIEnv*, jclass, jlong jFileSize
 ) {
     return progressive::ChunkedUploader::suggestChunkSizeMb(jFileSize);
+}
+
+// --- Chat Features (Timezone + EXIF) ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetCommonTimezones(
+    JNIEnv* env, jclass
+) {
+    auto zones = progressive::getCommonTimezones();
+    // Return as JSON array
+    std::ostringstream json;
+    json << "[";
+    for (size_t i = 0; i < zones.size(); ++i) {
+        if (i > 0) json << ",";
+        json << R"({"id": ")" << zones[i].id << R"(",)";
+        json << R"("name": ")" << zones[i].displayName << R"(",)";
+        json << R"("offset": )" << zones[i].utcOffsetMinutes << "}";
+    }
+    json << "]";
+    return env->NewStringUTF(json.str().c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatTimestampInTimezone(
+    JNIEnv* env, jclass, jlong jUtcMs, jstring jTzId
+) {
+    auto tzId = jTzId ? std::string(env->GetStringUTFChars(jTzId, nullptr)) : "UTC";
+    if (jTzId) env->ReleaseStringUTFChars(jTzId, tzId.c_str());
+
+    auto formatted = progressive::formatTimestampInTimezone(jUtcMs, tzId);
+    return env->NewStringUTF(formatted.c_str());
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsValidTimezoneId(
+    JNIEnv* env, jclass, jstring jTzId
+) {
+    auto tzId = jTzId ? std::string(env->GetStringUTFChars(jTzId, nullptr)) : "";
+    if (jTzId) env->ReleaseStringUTFChars(jTzId, tzId.c_str());
+    return progressive::isValidTimezoneId(tzId) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFileHasMetadata(
+    JNIEnv* env, jclass, jstring jMimeType
+) {
+    auto mime = jMimeType ? std::string(env->GetStringUTFChars(jMimeType, nullptr)) : "";
+    if (jMimeType) env->ReleaseStringUTFChars(jMimeType, mime.c_str());
+    return progressive::fileHasMetadata(mime) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetStrippableMimeTypes(
+    JNIEnv* env, jclass
+) {
+    auto s = progressive::getStrippableMimeTypes();
+    return env->NewStringUTF(s.c_str());
 }
 
 } // extern "C"
