@@ -6,6 +6,9 @@
 
 namespace progressive {
 
+// Login type — from LoginType.kt (40L)
+enum class LoginType { Password, Sso, Unsupported, Custom, Direct, Unknown, Qr };
+
 // ---- Login Flow Utilities ----
 
 struct LoginFlow {
