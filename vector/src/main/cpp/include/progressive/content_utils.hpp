@@ -130,6 +130,20 @@ std::string extractUsefulTextFromHtmlReply(const std::string& repliedHtmlBody, c
 // Converts <span data-mx-spoiler>text</span> to █████
 std::string formatSpoilerTextFromHtml(const std::string& formattedBody);
 
+// ---- Combined Text + Image Message (like Element X) ----
+// Matrix allows inline images in formatted_body via <img src="mxc://...">
+
+std::string buildTextWithImageContent(
+    const std::string& plainText, const std::string& imageMxcUrl,
+    const std::string& imageMimetype = "image/png",
+    int imageWidth = 0, int imageHeight = 0);
+
+std::string buildReplyWithImageContent(
+    const std::string& plainText, const std::string& imageMxcUrl,
+    const std::string& replyEventId, const std::string& imageMimetype = "image/png");
+
+bool hasTextWithImage(const std::string& contentJson);
+
 } // namespace progressive
 
 #endif // PROGRESSIVE_CONTENT_UTILS_HPP

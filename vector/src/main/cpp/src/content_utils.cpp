@@ -392,4 +392,59 @@ std::string formatSpoilerTextFromHtml(const std::string& formattedBody) {
     return result;
 }
 
+// ==== Combined Text + Image (Element X-style messages) ====
+// Matrix spec: m.room.message with msgtype=m.text, formatted_body contains <img>
+
+std::string buildTextWithImageContent(
+    const std::string& plainText, const std::string& imageMxcUrl,
+    const std::string& imageMimetype, int imageWidth, int imageHeight)
+{
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out; for (char c : s) { if (c == '"') out += "\\\""; if (c == '<') out += "&lt;"; else out += c; } return out;
+    };
+
+    std::ostringstream json;
+    json << R"({"msgtype": "m.text",)";
+    json << R"("body": ")" << esc(plainText) << R"(",)";
+    json << R"("format": "org.matrix.custom.html",)";
+    json << R"("formatted_body": ")" << esc(plainText);
+
+    // Add inline image as HTML <img> tag
+    json << "<br><img src=\\\"" << esc(imageMxcUrl) << "\\\"";
+    if (!imageMimetype.empty()) json << " data-mime-type=\\\"" << esc(imageMimetype) << "\\\"";
+    if (imageWidth > 0) json << " width=\\\"" << imageWidth << "\\\"";
+    if (imageHeight > 0) json << " height=\\\"" << imageHeight << "\\\"";
+    json << ">";
+
+    json << R"(")";
+    json << "}";
+    return json.str();
+}
+
+std::string buildReplyWithImageContent(
+    const std::string& plainText, const std::string& imageMxcUrl,
+    const std::string& replyEventId, const std::string& imageMimetype)
+{
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out; for (char c : s) { if (c == '"') out += "\\\""; else out += c; } return out;
+    };
+
+    std::ostringstream json;
+    json << R"({"msgtype": "m.text",)";
+    json << R"("body": ")" << esc(plainText) << R"(",)";
+    json << R"("format": "org.matrix.custom.html",)";
+    json << R"("formatted_body": ")" << esc(plainText) << "<br><img src='" << esc(imageMxcUrl) << "'/>" << R"(",)";
+    json << R"("m.relates_to": {)";
+    json << R"("m.in_reply_to": {)";
+    json << R"("event_id": ")" << esc(replyEventId) << R"(")";
+    json << "}}}";
+    return json.str();
+}
+
+bool hasTextWithImage(const std::string& contentJson) {
+    return contentJson.find("\"format\"") != std::string::npos &&
+           contentJson.find("\"formatted_body\"") != std::string::npos &&
+           contentJson.find("<img") != std::string::npos;
+}
+
 } // namespace progressive
