@@ -165,7 +165,6 @@ struct ThreadDetails {
 
 // ==== JSON Parsing ====
 
-WellKnown parseWellKnown(const std::string& json);
 Credentials parseCredentials(const std::string& json);
 SessionParams parseSessionParams(const std::string& json);
 UserPresence parseUserPresence(const std::string& json);
@@ -345,6 +344,5 @@ namespace WidgetType {
 
 HomeServerCapabilities parseHomeServerCapabilities(const std::string& json);
 WidgetContent parseWidgetContent(const std::string& json);
-ThreePid parseThreePid(const std::string& json);
 
 } // namespace progressive

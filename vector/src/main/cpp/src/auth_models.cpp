@@ -82,31 +82,6 @@ static std::string extractJsonObject(const std::string& json, const std::string&
     return json.substr(start, pos - start);
 }
 
-// ==== Parse WellKnown ====
-//
-// Original Kotlin (WellKnown.kt:43-70)
-
-WellKnown parseWellKnown(const std::string& json) {
-    WellKnown wk;
-
-    auto hsJson = extractJsonObject(json, "m.homeserver");
-    if (!hsJson.empty()) wk.homeServer.baseUrl = extractJsonString(hsJson, "base_url");
-
-    auto isJson = extractJsonObject(json, "m.identity_server");
-    if (!isJson.empty()) wk.identityServer.baseUrl = extractJsonString(isJson, "base_url");
-
-    wk.integrationsJson = extractJsonObject(json, "m.integrations");
-    wk.disableNetworkConstraint = extractJsonBool(json, "io.element.disable_network_constraint");
-
-    auto authJson = extractJsonObject(json, "org.matrix.msc2965.authentication");
-    if (!authJson.empty()) {
-        wk.delegatedAuth.issuer = extractJsonString(authJson, "issuer");
-        wk.delegatedAuth.accountUrl = extractJsonString(authJson, "account");
-    }
-
-    return wk;
-}
-
 // ==== Parse Credentials ====
 //
 // Original Kotlin (Credentials.kt:33-63)
@@ -258,17 +233,6 @@ std::string HomeServerCapabilities::versionOverrideForFeature(const std::string&
     if (it == roomVersions.capabilities.end()) return "";
     if (!it->second.preferred.empty()) return it->second.preferred;
     return it->second.support.empty() ? "" : it->second.support.back();
-}
-
-// ==== Identity Models ====
-
-ThreePid parseThreePid(const std::string& json) {
-    ThreePid p;
-    p.value = extractJsonString(json, "email");
-    if (!p.value.empty()) { p.type = ThreePidType::EMAIL; return p; }
-    p.value = extractJsonString(json, "msisdn");
-    if (!p.value.empty()) { p.type = ThreePidType::MSISDN; return p; }
-    return p;
 }
 
 // ==== Widget Models ====
