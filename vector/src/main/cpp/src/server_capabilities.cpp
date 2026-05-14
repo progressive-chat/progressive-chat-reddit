@@ -1,127 +1,200 @@
 #include "progressive/server_capabilities.hpp"
-#include "progressive/json_parser.hpp"
 #include <sstream>
-#include <algorithm>
 
 namespace progressive {
 
-ServerCapabilities parseServerCapabilities(const std::string& wellKnownJson) {
-    ServerCapabilities caps;
+// ---- Capability Checking (from HomeServerCapabilities.kt:125-143) ----
+// Original Kotlin:
+//   fun isFeatureSupported(feature: String): RoomCapabilitySupport {
+//       if (roomVersions?.capabilities == null) return RoomCapabilitySupport.UNKNOWN
+//       val info = roomVersions.capabilities[feature] ?: return RoomCapabilitySupport.UNSUPPORTED
+//       val preferred = info.preferred ?: info.support.lastOrNull()
+//       val versionCap = roomVersions.supportedVersion.firstOrNull { it.version == preferred }
+//       return when {
+//           versionCap == null -> UNKNOWN
+//           versionCap.status == STABLE -> SUPPORTED
+//           else -> SUPPORTED_UNSTABLE
+//       }
+//   }
 
-    // Parse room versions
-    auto roomVersions = parseJsonStringValue(wellKnownJson, "m.room_versions");
-    if (!roomVersions.empty()) {
-        // Parse comma-separated or JSON array
-        std::istringstream stream(roomVersions);
-        std::string version;
-        while (std::getline(stream, version, ',')) {
-            while (!version.empty() && version.front() == ' ') version.erase(0, 1);
-            while (!version.empty() && version.back() == ' ') version.pop_back();
-            if (!version.empty()) caps.roomVersions.push_back(version);
-        }
+RoomCapabilitySupport isFeatureSupported(
+    const RoomVersionCapabilities& caps, const std::string& feature)
+{
+    // Original: capabilities == null → UNKNOWN
+    if (caps.capabilities.empty()) return RoomCapabilitySupport::Unknown;
+
+    // Original: capabilities[feature] ?: return UNSUPPORTED
+    auto it = caps.capabilities.find(feature);
+    if (it == caps.capabilities.end()) return RoomCapabilitySupport::Unsupported;
+
+    const auto& info = it->second;
+
+    // Original: val preferred = info.preferred ?: info.support.lastOrNull()
+    std::string preferred = info.preferred;
+    if (preferred.empty() && !info.support.empty()) {
+        preferred = info.support.back();
     }
+    if (preferred.empty()) return RoomCapabilitySupport::Unknown;
 
-    caps.defaultRoomVersion = parseJsonStringValue(wellKnownJson, "m.room_default_version");
-    if (caps.defaultRoomVersion.empty()) caps.defaultRoomVersion = "10";
+    // Original: val versionCap = supportedVersion.firstOrNull { it.version == preferred }
+    const RoomVersionInfo* versionCap = nullptr;
+    for (const auto& v : caps.supportedVersion) {
+        if (v.version == preferred) { versionCap = &v; break; }
+    }
+    if (!versionCap) return RoomCapabilitySupport::Unknown;
 
-    // Parse registration
-    auto regEnabled = parseJsonStringValue(wellKnownJson, "m.registration_enabled");
-    caps.registrationEnabled = (regEnabled == "true");
-
-    // Check for email/captcha in registration flows
-    auto regFlows = parseJsonStringValue(wellKnownJson, "m.login.flows");
-    auto lower = wellKnownJson;
-    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-    caps.emailRequired = lower.find("email") != std::string::npos;
-    caps.captchaRequired = lower.find("captcha") != std::string::npos ||
-                           lower.find("recaptcha") != std::string::npos;
-
-    // Feature support (MSC flags)
-    auto unstableFeatures = parseJsonStringValue(wellKnownJson, "m.unstable_features");
-    auto featuresLower = unstableFeatures;
-    std::transform(featuresLower.begin(), featuresLower.end(), featuresLower.begin(), ::tolower);
-
-    caps.msc3030Supported = featuresLower.find("msc3030") != std::string::npos;
-    caps.threadSupport = featuresLower.find("thread") != std::string::npos;
-    caps.pollSupport = featuresLower.find("poll") != std::string::npos;
-    caps.knockSupport = featuresLower.find("knock") != std::string::npos;
-    caps.restrictedRooms = featuresLower.find("restricted") != std::string::npos;
-
-    // Upload size
-    auto maxSize = parseJsonStringValue(wellKnownJson, "m.upload.size");
-    if (!maxSize.empty()) caps.maxUploadSizeBytes = std::stoll(maxSize);
-
-    return caps;
+    // Original: versionCap.status == STABLE → SUPPORTED else SUPPORTED_UNSTABLE
+    return (versionCap->status == RoomVersionStatus::Stable)
+        ? RoomCapabilitySupport::Supported
+        : RoomCapabilitySupport::SupportedUnstable;
 }
 
-void parseVersionsResponse(ServerCapabilities& caps, const std::string& versionsJson) {
-    // Parse /_matrix/client/versions response
-    // {"versions": ["v1.1", "v1.2", ...], "unstable_features": {...}}
+// Original: fun isFeatureSupported(feature: String, byRoomVersion: String): Boolean
+//   val info = roomVersions.capabilities[feature] ?: return false
+//   return info.preferred == byRoomVersion || info.support.contains(byRoomVersion)
 
-    auto versions = parseJsonStringValue(versionsJson, "versions");
-    if (!versions.empty()) {
-        caps.roomVersions.clear();
-        std::istringstream stream(versions);
-        std::string version;
-        while (std::getline(stream, version, ',')) {
-            while (!version.empty() && version.front() == ' ') version.erase(0, 1);
-            while (!version.empty() && version.back() == ' ') version.pop_back();
-            if (!version.empty()) caps.roomVersions.push_back(version);
-        }
-    }
+bool isFeatureSupportedByVersion(
+    const RoomVersionCapabilities& caps, const std::string& feature, const std::string& roomVersion)
+{
+    if (caps.capabilities.empty()) return false;
 
-    caps.matrixVersion = parseJsonStringValue(versionsJson, "v");
-}
+    auto it = caps.capabilities.find(feature);
+    if (it == caps.capabilities.end()) return false;
 
-bool supportsRoomVersion(const ServerCapabilities& caps, const std::string& version) {
-    for (const auto& v : caps.roomVersions) {
-        if (v == version) return true;
+    const auto& info = it->second;
+    if (info.preferred == roomVersion) return true;
+
+    for (const auto& v : info.support) {
+        if (v == roomVersion) return true;
     }
     return false;
 }
 
-std::string getRecommendedRoomVersion(const ServerCapabilities& caps) {
-    // Prefer default, fall back to latest known stable
-    if (!caps.defaultRoomVersion.empty() && supportsRoomVersion(caps, caps.defaultRoomVersion)) {
-        return caps.defaultRoomVersion;
-    }
-    // Try popular versions
-    for (const auto& v : {"10", "9", "11", "8", "7", "6"}) {
-        if (supportsRoomVersion(caps, v)) return v;
-    }
-    return caps.roomVersions.empty() ? "10" : caps.roomVersions.back();
+// Original: fun versionOverrideForFeature(feature: String): String?
+//   val cap = roomVersions?.capabilities?.get(feature)
+//   return cap?.preferred ?: cap?.support?.lastOrNull()
+
+std::string versionOverrideForFeature(
+    const RoomVersionCapabilities& caps, const std::string& feature)
+{
+    if (caps.capabilities.empty()) return "";
+
+    auto it = caps.capabilities.find(feature);
+    if (it == caps.capabilities.end()) return "";
+
+    const auto& info = it->second;
+    if (!info.preferred.empty()) return info.preferred;
+    if (!info.support.empty()) return info.support.back();
+    return "";
 }
 
-std::string capabilitiesToJson(const ServerCapabilities& caps) {
-    auto esc = [](const std::string& s) -> std::string {
-        std::string out;
-        for (char c : s) { if (c == '"') out += "\\\""; else out += c; }
-        return out;
+// ---- OAuth Logout URL Builder (from HomeServerCapabilities.kt:171-191) ----
+// Original: fun getLogoutDeviceURL(deviceId: String): String?
+//   if (externalAccountManagementUrl == null) return null
+//   var action = "org.matrix.device_delete"
+//   externalAccountManagementSupportedActions?.also { actions ->
+//       if (actions.contains("org.matrix.device_delete")) { }
+//       else if (actions.contains("org.matrix.session_end")) { action = "org.matrix.session_end" }
+//       else if (actions.contains("session_end")) { action = "session_end" }
+//   }
+//   return externalAccountManagementUrl.removeSuffix("/") + "?action=${action}&device_id=${deviceId}"
+
+std::string buildLogoutDeviceUrl(
+    const HomeServerCapabilities& caps, const std::string& deviceId)
+{
+    if (caps.externalAccountManagementUrl.empty() || deviceId.empty()) return "";
+
+    // Original: var action = "org.matrix.device_delete" (default stable value)
+    std::string action = "org.matrix.device_delete";
+
+    const auto& actions = caps.externalAccountManagementSupportedActions;
+    bool hasDeviceDelete = false, hasSessionEnd = false, hasRawSessionEnd = false;
+    for (const auto& a : actions) {
+        if (a == "org.matrix.device_delete") hasDeviceDelete = true;
+        if (a == "org.matrix.session_end") hasSessionEnd = true;
+        if (a == "session_end") hasRawSessionEnd = true;
+    }
+
+    if (!actions.empty() && !hasDeviceDelete) {
+        if (hasSessionEnd) {
+            action = "org.matrix.session_end";    // earlier MSC4191
+        } else if (hasRawSessionEnd) {
+            action = "session_end";              // previous unspecified
+        }
+    }
+
+    std::string baseUrl = caps.externalAccountManagementUrl;
+    while (!baseUrl.empty() && baseUrl.back() == '/') baseUrl.pop_back();
+
+    // URL-encode device_id (simple version — just alphanum escape)
+    std::ostringstream url;
+    url << baseUrl << "?action=" << action << "&device_id=" << deviceId;
+    return url.str();
+}
+
+// ---- Default Capabilities ----
+HomeServerCapabilities getDefaultCapabilities() {
+    return HomeServerCapabilities{};
+}
+
+// ---- Parse from JSON ----
+HomeServerCapabilities parseCapabilities(const std::string& json) {
+    HomeServerCapabilities caps;
+
+    // Simple JSON extractors
+    auto extractBool = [&](const std::string& key, bool defaultVal = false) -> bool {
+        auto search = "\"" + key + "\":";
+        auto pos = json.find(search);
+        if (pos == std::string::npos) return defaultVal;
+        pos += search.size();
+        while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t')) pos++;
+        if (json.find("true", pos) == pos) return true;
+        return false;
     };
+
+    auto extractStr = [&](const std::string& key) -> std::string {
+        auto search = "\"" + key + "\":\"";
+        auto pos = json.find(search);
+        if (pos == std::string::npos) return "";
+        pos += search.size();
+        auto end = json.find('"', pos);
+        if (end == std::string::npos) return "";
+        return json.substr(pos, end - pos);
+    };
+
+    caps.canChangePassword = extractBool("m.change_password", true);
+    caps.canChangeDisplayName = extractBool("m.change_displayname", true);
+    caps.canChangeAvatar = extractBool("m.change_avatar_url", true);
+    caps.canChange3pid = extractBool("m.3pid_changes", true);
+    caps.canUseThreading = extractBool("m.thread", false);
+    caps.canUseAuthenticatedMedia = extractBool("m.authenticated_media", false);
+    caps.canLoginWithQrCode = extractBool("m.login_qr", false);
+    caps.canRedactRelatedEvents = extractBool("m.redact_related_events", false);
+    caps.authenticationIssuer = extractStr("m.authentication_issuer");
+
+    return caps;
+}
+
+bool isDelegatedOidcEnabled(const HomeServerCapabilities& caps) {
+    // Original: val delegatedOidcAuthEnabled: Boolean = authenticationIssuer != null
+    return !caps.authenticationIssuer.empty();
+}
+
+std::string capabilitiesToJson(const HomeServerCapabilities& caps) {
     std::ostringstream json;
     json << "{";
-    json << R"("serverName": ")" << esc(caps.serverName) << R"(",)";
-    json << R"("defaultRoomVersion": ")" << caps.defaultRoomVersion << R"(",)";
-    json << R"("msc3030Supported": )" << (caps.msc3030Supported ? "true" : "false") << ",";
-    json << R"("threadSupport": )" << (caps.threadSupport ? "true" : "false") << ",";
-    json << R"("pollSupport": )" << (caps.pollSupport ? "true" : "false") << ",";
-    json << R"("registrationEnabled": )" << (caps.registrationEnabled ? "true" : "false") << ",";
-    json << R"("maxUploadSizeBytes": )" << caps.maxUploadSizeBytes;
+    json << R"("canChangePassword": )" << (caps.canChangePassword ? "true" : "false") << ",";
+    json << R"("canChangeDisplayName": )" << (caps.canChangeDisplayName ? "true" : "false") << ",";
+    json << R"("canChangeAvatar": )" << (caps.canChangeAvatar ? "true" : "false") << ",";
+    json << R"("canChange3pid": )" << (caps.canChange3pid ? "true" : "false") << ",";
+    json << R"("maxUploadFileSize": )" << caps.maxUploadFileSize << ",";
+    json << R"("canUseThreading": )" << (caps.canUseThreading ? "true" : "false") << ",";
+    json << R"("canUseThreadReadReceipts": )" << (caps.canUseThreadReadReceiptsAndNotifications ? "true" : "false") << ",";
+    json << R"("canLoginWithQrCode": )" << (caps.canLoginWithQrCode ? "true" : "false") << ",";
+    json << R"("canUseAuthenticatedMedia": )" << (caps.canUseAuthenticatedMedia ? "true" : "false") << ",";
+    json << R"("delegatedOidcEnabled": )" << (isDelegatedOidcEnabled(caps) ? "true" : "false");
     json << "}";
     return json.str();
-}
-
-std::string capabilitiesToText(const ServerCapabilities& caps) {
-    std::ostringstream out;
-    out << "Server: " << caps.serverName << "\n";
-    out << "Matrix version: " << caps.matrixVersion << "\n";
-    out << "Default room version: " << caps.defaultRoomVersion << "\n";
-    out << "MSC3030 (jump to date): " << (caps.msc3030Supported ? "Yes" : "No") << "\n";
-    out << "Threads: " << (caps.threadSupport ? "Yes" : "No") << "\n";
-    out << "Polls: " << (caps.pollSupport ? "Yes" : "No") << "\n";
-    out << "Registration open: " << (caps.registrationEnabled ? "Yes" : "No") << "\n";
-    out << "Max upload: " << (caps.maxUploadSizeBytes / 1048576) << " MB\n";
-    return out.str();
 }
 
 } // namespace progressive

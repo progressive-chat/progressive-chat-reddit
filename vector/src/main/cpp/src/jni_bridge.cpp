@@ -3837,19 +3837,6 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeBuildPinnedEvents
     return env->NewStringUTF(s.c_str());
 }
 
-// --- Server Capabilities ---
-
-JNIEXPORT jstring JNICALL
-Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseServerCapabilities(
-    JNIEnv* env, jclass, jstring jWellKnownJson
-) {
-    auto json = jWellKnownJson ? std::string(env->GetStringUTFChars(jWellKnownJson, nullptr)) : "";
-    if (jWellKnownJson) env->ReleaseStringUTFChars(jWellKnownJson, json.c_str());
-    auto caps = progressive::parseServerCapabilities(json);
-    auto result = progressive::capabilitiesToJson(caps);
-    return env->NewStringUTF(result.c_str());
-}
-
 // --- Username Validator ---
 
 JNIEXPORT jstring JNICALL
@@ -5042,6 +5029,30 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetDefaultSyncFil
     auto filter = progressive::getDefaultSyncFilter();
     auto json = progressive::syncFilterToJson(filter);
     return env->NewStringUTF(json.c_str());
+}
+
+// --- Server Capabilities (updated from HomeServerCapabilities.kt) ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseServerCapabilities(
+    JNIEnv* env, jclass, jstring jJson
+) {
+    auto json = jJson ? std::string(env->GetStringUTFChars(jJson, nullptr)) : "{}";
+    if (jJson) env->ReleaseStringUTFChars(jJson, json.c_str());
+    auto caps = progressive::parseCapabilities(json);
+    auto result = progressive::capabilitiesToJson(caps);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsDelegatedOidcEnabled(
+    JNIEnv* env, jclass, jstring jAuthenticationIssuer
+) {
+    auto issuer = jAuthenticationIssuer ? std::string(env->GetStringUTFChars(jAuthenticationIssuer, nullptr)) : "";
+    if (jAuthenticationIssuer) env->ReleaseStringUTFChars(jAuthenticationIssuer, issuer.c_str());
+    progressive::HomeServerCapabilities caps;
+    caps.authenticationIssuer = issuer;
+    return progressive::isDelegatedOidcEnabled(caps);
 }
 
 // --- Sync Utils ---

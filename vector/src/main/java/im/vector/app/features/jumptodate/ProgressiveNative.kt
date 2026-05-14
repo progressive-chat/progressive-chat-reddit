@@ -1063,6 +1063,11 @@ object ProgressiveNative {
     @JvmStatic external fun nativeBuildSyncFilter(lazyLoadState: Boolean, lazyLoadMessages: Boolean, useThreadNotif: Boolean, canUseThreadNotif: Boolean, timelineTypes: Array<String>, stateTypes: Array<String>): String
     @JvmStatic external fun nativeGetDefaultSyncFilter(): String
 
+    // --- Server Capabilities (updated from HomeServerCapabilities.kt) ---
+
+    @JvmStatic external fun nativeParseServerCapabilities(json: String): String
+    @JvmStatic external fun nativeIsDelegatedOidcEnabled(authenticationIssuer: String): Boolean
+
     // --- Kotlin fallbacks for Slash Commands ---
 
     fun parseSlashCommandFallback(text: String): JSONObject {
