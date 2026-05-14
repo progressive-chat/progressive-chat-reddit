@@ -970,6 +970,65 @@ object ProgressiveNative {
         return latestEventId
     }
 
+    // --- Slash Commands ---
+    // Ported from: SlashCommandParser.kt, SlashCommand.kt, Command.kt
+
+    @JvmStatic external fun nativeParseSlashCommand(text: String): String
+    @JvmStatic external fun nativeFormatSlashCommand(command: String, arguments: String, type: Int, senderDisplayName: String): String
+    @JvmStatic external fun nativeIsKnownSlashCommand(text: String): Boolean
+    @JvmStatic external fun nativeGetAvailableCommands(): String
+
+    // --- Kotlin fallbacks for Slash Commands ---
+
+    fun parseSlashCommandFallback(text: String): JSONObject {
+        val result = JSONObject()
+        result.put("isSlashCommand", false)
+        result.put("command", "")
+        result.put("arguments", "")
+        result.put("type", -1)
+        result.put("needsMatrixId", false)
+        result.put("isMessage", false)
+        result.put("isAdmin", false)
+        if (text.isEmpty() || !text.startsWith("/")) return result
+
+        val spaceIdx = text.indexOf(' ')
+        val cmdPart = if (spaceIdx < 0) text else text.substring(0, spaceIdx)
+        val args = if (spaceIdx >= 0) text.substring(spaceIdx + 1).trim() else ""
+        val lowered = cmdPart.lowercase()
+
+        val commands = mapOf(
+            "/me" to 1, "/join" to 2, "/part" to 3, "/invite" to 4,
+            "/kick" to 5, "/ban" to 6, "/unban" to 7, "/op" to 8,
+            "/deop" to 9, "/nick" to 10, "/topic" to 11, "/roomname" to 12,
+            "/notice" to 13, "/shrug" to 14, "/tableflip" to 15, "/unflip" to 16,
+            "/lenny" to 17, "/rainbow" to 18, "/rainbowme" to 19, "/plain" to 20,
+            "/spoiler" to 21, "/avatar" to 22, "/discardsession" to 23,
+            "/clearscalartoken" to 24, "/markdown" to 25
+        )
+        val type = commands[lowered] ?: return result
+
+        result.put("isSlashCommand", true)
+        result.put("command", cmdPart)
+        result.put("arguments", args)
+        result.put("type", type)
+        result.put("isMessage", type in listOf(1, 13, 14, 15, 16, 17, 18, 19, 20, 21, 25))
+        result.put("isAdmin", type in listOf(5, 6, 7, 8, 9))
+        return result
+    }
+
+    fun formatSlashCommandFallback(command: String, arguments: String, type: Int, sender: String): String {
+        return when (type) {
+            1, 19 -> "* $sender $arguments"
+            13 -> arguments
+            14 -> if (arguments.isNotEmpty()) "$arguments ¯\\_(ツ)_/¯" else "¯\\_(ツ)_/¯"
+            15 -> "(╯°□°）╯︵ ┻━┻"
+            16 -> "┬──┬ ノ( ゜-゜ノ)"
+            17 -> "( ͡° ͜ʖ ͡°)"
+            21 -> "||$arguments||"
+            else -> arguments
+        }
+    }
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(

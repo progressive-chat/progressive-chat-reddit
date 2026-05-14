@@ -119,6 +119,7 @@
 #include "progressive/cross_signing.hpp"
 #include "progressive/edit_history.hpp"
 #include "progressive/read_marker.hpp"
+#include "progressive/slash_command.hpp"
 #include "progressive/verification_utils.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
@@ -4871,6 +4872,72 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeAdvanceReadMarker
     if (jLatestEventId) env->ReleaseStringUTFChars(jLatestEventId, latestEventId.c_str());
     auto newMark = progressive::advanceReadMarker(roomId, latestEventId);
     return env->NewStringUTF(newMark.c_str());
+}
+
+// --- Slash Commands ---
+// Ported from: SlashCommandParser.kt, SlashCommand.kt, Command.kt
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseSlashCommand(
+    JNIEnv* env, jclass, jstring jText
+) {
+    auto text = jText ? std::string(env->GetStringUTFChars(jText, nullptr)) : "";
+    if (jText) env->ReleaseStringUTFChars(jText, text.c_str());
+
+    auto cmd = progressive::parseSlashCommand(text);
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out; for (char c : s) { if (c == '"') out += "\\\""; else out += c; } return out;
+    };
+    std::ostringstream json;
+    json << R"({"isSlashCommand": )" << (cmd.isSlashCommand ? "true" : "false");
+    json << R"(,"command": ")" << esc(cmd.command) << R"(")";
+    json << R"(,"arguments": ")" << esc(cmd.arguments) << R"(")";
+    json << R"(,"type": )" << static_cast<int>(cmd.type);
+    json << R"(,"needsMatrixId": )" << (cmd.needsMatrixİd ? "true" : "false");
+    json << R"(,"isMessage": )" << (progressive::isMessageCommand(cmd.type) ? "true" : "false");
+    json << R"(,"isAdmin": )" << (progressive::isAdminCommand(cmd.type) ? "true" : "false") << "}";
+    return env->NewStringUTF(json.str().c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatSlashCommand(
+    JNIEnv* env, jclass,
+    jstring jCommand, jstring jArguments, jint jType, jstring jSenderDisplayName
+) {
+    auto arguments = jArguments ? std::string(env->GetStringUTFChars(jArguments, nullptr)) : "";
+    auto sender = jSenderDisplayName ? std::string(env->GetStringUTFChars(jSenderDisplayName, nullptr)) : "";
+    if (jArguments) env->ReleaseStringUTFChars(jArguments, arguments.c_str());
+    if (jSenderDisplayName) env->ReleaseStringUTFChars(jSenderDisplayName, sender.c_str());
+
+    progressive::SlashCommand cmd;
+    cmd.type = static_cast<progressive::SlashCommandType>(jType);
+    cmd.arguments = arguments;
+    auto formatted = progressive::formatSlashCommand(cmd, sender);
+    return env->NewStringUTF(formatted.c_str());
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsKnownSlashCommand(
+    JNIEnv* env, jclass, jstring jText
+) {
+    auto text = jText ? std::string(env->GetStringUTFChars(jText, nullptr)) : "";
+    if (jText) env->ReleaseStringUTFChars(jText, text.c_str());
+    return progressive::isKnownSlashCommand(text);
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetAvailableCommands(
+    JNIEnv* env, jclass
+) {
+    auto cmds = progressive::getAvailableCommands();
+    std::ostringstream json;
+    json << "[";
+    for (size_t i = 0; i < cmds.size(); ++i) {
+        if (i > 0) json << ",";
+        json << R"(")" << cmds[i] << R"(")";
+    }
+    json << "]";
+    return env->NewStringUTF(json.str().c_str());
 }
 
 } // extern "C"
