@@ -56,7 +56,7 @@ struct LoginAuthFlow {
     std::string requiredParameter;         // parameter name if required
 };
 
-struct LoginLoginAuthFlowsResult {
+struct LoginAuthFlowsResult {
     std::vector<LoginFlow> flows;
     bool hasPassword = false;    // can login with password
     bool hasSso = false;         // can login via SSO

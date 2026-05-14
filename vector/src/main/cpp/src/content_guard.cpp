@@ -138,11 +138,11 @@ MediaGroup checkMediaCollapse(
     return group;
 }
 
-std::vector<MediaItem> groupMedia(
+std::vector<ContentMediaItem> groupMedia(
     const std::vector<std::string>& mediaTypes,
     int threshold)
 {
-    std::vector<MediaItem> result;
+    std::vector<ContentMediaItem> result;
     if (threshold <= 0) {
         for (const auto& t : mediaTypes) result.push_back({t, false, 0});
         return result;

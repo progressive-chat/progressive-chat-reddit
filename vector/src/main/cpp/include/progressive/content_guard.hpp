@@ -63,13 +63,13 @@ MediaGroup checkMediaCollapse(
 // Group consecutive media types and return collapse instructions.
 // Returns a list where consecutive media of the same type beyond threshold
 // are replaced with a collapse marker.
-struct MediaItem {
+struct ContentMediaItem {
     std::string mediaType;       // "image", "video", "file", "text"
     bool isCollapseMarker = false; // this is a placeholder
     int collapseCount = 0;       // how many items are collapsed
 };
 
-std::vector<MediaItem> groupMedia(
+std::vector<ContentMediaItem> groupMedia(
     const std::vector<std::string>& mediaTypes,
     int threshold = 10
 );
