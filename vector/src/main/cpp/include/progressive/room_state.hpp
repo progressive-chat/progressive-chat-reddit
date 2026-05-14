@@ -116,6 +116,30 @@ RoomCreate parseRoomCreate(const std::string& contentJson);
 // Check if this is an upgraded room (has predecessor).
 bool isUpgradedRoom(const RoomCreate& create);
 
+// ---- Room Tombstone ----
+// Ported from: org.matrix.android.sdk.api.session.room.model.tombstone.RoomTombstoneContent.kt (35L)
+//              org.matrix.android.sdk.internal.session.room.tombstone.RoomTombstoneEventProcessor.kt (49L)
+//
+// Tombstone events signal that a room has been replaced by an upgraded version.
+// When a room is upgraded, a tombstone event is sent with the replacement room ID.
+
+struct RoomTombstone {
+    std::string body;                // server-defined message
+    std::string replacementRoomId;   // new room to visit
+    bool valid = false;              // has replacement_room
+};
+
+// Parse m.room.tombstone event content.
+// Original Kotlin (RoomTombstoneContent.kt):
+//   @Json(name = "body") val body: String?
+//   @Json(name = "replacement_room") val replacementRoomId: String?
+RoomTombstone parseTombstone(const std::string& contentJson);
+
+// Check if a room has been upgraded (tombstone with replacement).
+bool isRoomUpgraded(const RoomTombstone& tombstone);
+
+std::string tombstoneToJson(const RoomTombstone& tombstone);
+
 // ---- JSON Serialization ----
 
 std::string joinRulesToJson(const RoomJoinRules& rules);

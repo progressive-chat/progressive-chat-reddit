@@ -233,4 +233,35 @@ std::string roomCreateToJson(const RoomCreate& create) {
     return json.str();
 }
 
+// ==== Room Tombstone (from RoomTombstoneContent.kt + RoomTombstoneEventProcessor.kt) ====
+// Original Kotlin:
+//   data class RoomTombstoneContent(
+//       @Json(name = "body") val body: String? = null,
+//       @Json(name = "replacement_room") val replacementRoomId: String?
+//   )
+
+RoomTombstone parseTombstone(const std::string& contentJson) {
+    RoomTombstone tombstone;
+    tombstone.body = extractStr(contentJson, "body");
+    tombstone.replacementRoomId = extractStr(contentJson, "replacement_room");
+    tombstone.valid = !tombstone.replacementRoomId.empty();
+    return tombstone;
+}
+
+bool isRoomUpgraded(const RoomTombstone& tombstone) {
+    return tombstone.valid && !tombstone.replacementRoomId.empty();
+}
+
+std::string tombstoneToJson(const RoomTombstone& tombstone) {
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out; for (char c : s) { if (c == '"') out += "\\\""; else out += c; } return out;
+    };
+    std::ostringstream json;
+    json << R"({"valid": )" << (tombstone.valid ? "true" : "false") << ",";
+    json << R"("body": ")" << esc(tombstone.body) << R"(",)";
+    json << R"("replacementRoomId": ")" << esc(tombstone.replacementRoomId) << R"(")";
+    json << "}";
+    return json.str();
+}
+
 } // namespace progressive

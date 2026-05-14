@@ -1043,6 +1043,7 @@ object ProgressiveNative {
     @JvmStatic external fun nativeParseHistoryVisibility(contentJson: String): String
     @JvmStatic external fun nativeParseGuestAccess(contentJson: String): String
     @JvmStatic external fun nativeParseRoomCreate(contentJson: String): String
+    @JvmStatic external fun nativeParseTombstone(contentJson: String): String
 
     // --- Login Flow Parser ---
     // Ported from: LoginWizard.kt, LoginFlow.kt, LoginFlowTypes.kt
