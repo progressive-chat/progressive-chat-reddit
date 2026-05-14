@@ -69,6 +69,9 @@ bool isDirectSection(const RoomSortEntry& room);
 // Check if a room should be in the "Favourites" section.
 bool isFavouriteSection(const RoomSortEntry& room);
 
+// Room category filter — from RoomCategoryFilter.kt (38L)
+enum class RoomCategory { All, OnlyDm, OnlyRooms, OnlyWithNotifications }; 
+
 // ---- Breadcrumbs Sorting (from BreadcrumbsRoomComparator.kt 35L) ----
 // Breadcrumbs are recently visited rooms. They appear at the top of the room list.
 // Rooms with breadcrumbsIndex != -1 are sorted by index (lower = more recent).
