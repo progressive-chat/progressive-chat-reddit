@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <unordered_map>
+#include "progressive/message_content.hpp"
 
 namespace progressive {
 
