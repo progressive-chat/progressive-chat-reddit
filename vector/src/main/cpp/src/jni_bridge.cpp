@@ -4558,15 +4558,40 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsCallEvent(
 
 JNIEXPORT jint JNICALL
 Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeComputeRetryDelay(
-    JNIEnv*, jclass, jint jMaxRetries, jint jBaseMs, jint jMaxMs, jdouble jBackoff, jboolean jJitter, jint jAttempt
+    JNIEnv*, jclass, jint jRetryCount, jint jMaxDelayMs
 ) {
-    RetryPolicy policy;
-    policy.maxRetries = jMaxRetries;
-    policy.baseDelayMs = jBaseMs;
-    policy.maxDelayMs = jMaxMs;
-    policy.backoffMultiplier = jBackoff;
-    policy.useJitter = jJitter;
-    return progressive::computeRetryDelay(policy, jAttempt);
+    return static_cast<jint>(progressive::computeRetryDelay(jRetryCount, jMaxDelayMs));
+}
+
+// --- Message Retry Queue ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeDecideRetry(
+    JNIEnv* env, jclass, jint jRetryCount, jint jErrorCode, jstring jRetryAfterHeader
+) {
+    progressive::PendingMessage msg;
+    msg.retryCount = jRetryCount;
+    auto retryAfter = jRetryAfterHeader ? std::string(env->GetStringUTFChars(jRetryAfterHeader, nullptr)) : "";
+    if (jRetryAfterHeader) env->ReleaseStringUTFChars(jRetryAfterHeader, retryAfter.c_str());
+
+    auto decision = progressive::decideRetry(msg, jErrorCode, retryAfter);
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out; for (char c : s) { if (c == '"') out += "\\\""; else out += c; } return out;
+    };
+    std::ostringstream json;
+    json << R"({"shouldRetry": )" << (decision.shouldRetry ? "true" : "false");
+    json << R"(,"delayMs": )" << decision.delayMs;
+    json << R"(,"reason": ")" << esc(decision.reason) << R"(")"";
+    json << "}";
+    return env->NewStringUTF(json.str().c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatMessageStatus(
+    JNIEnv* env, jclass, jint jState
+) {
+    auto s = progressive::formatMessageStatus(static_cast<progressive::MessageSendState>(jState));
+    return env->NewStringUTF(s.c_str());
 }
 
 // --- Sync Utils ---

@@ -7,89 +7,79 @@
 
 namespace progressive {
 
-// ---- Message Retry Logic ----
+// ---- Message Retry Queue ----
+// Ported from: org.matrix.android.sdk.internal.session.room.send.QueueMediator.kt
+//              org.matrix.android.sdk.internal.session.room.send.RetryDecider.kt
+//              im.vector.app.features.home.room.detail.timeline.factory.MessageItemFactory.kt
 
-struct RetryPolicy {
-    int maxRetries = 5;
-    int baseDelayMs = 1000;        // initial delay
-    int maxDelayMs = 60000;        // maximum delay (1 minute)
-    double backoffMultiplier = 2.0; // exponential backoff factor
-    bool useJitter = true;         // add random jitter to delay
+enum class MessageSendState {
+    Pending,         // queued, not yet sent
+    Sending,         // currently being sent
+    Sent,            // successfully sent
+    Failed,          // failed (permanent error)
+    Retrying,        // retrying after temporary failure
+    Cancelled        // user cancelled
 };
 
-struct RetryState {
-    std::string eventId;
-    int attemptCount = 0;
-    int64_t lastAttemptMs = 0;
-    int64_t nextAttemptMs = 0;
-    int currentDelayMs = 0;
-    bool shouldRetry = true;
-    std::string lastError;
-    bool isPermanentFailure = false;
-};
-
-// Compute retry delay for the next attempt.
-int computeRetryDelay(const RetryPolicy& policy, int attemptCount);
-
-// Check if a message should be retried.
-bool shouldRetry(const RetryState& state, const RetryPolicy& policy);
-
-// Update retry state after a failed attempt.
-RetryState updateRetryState(const RetryState& state, const RetryPolicy& policy,
-    const std::string& error, bool isPermanent);
-
-// Check if an error is a permanent failure (should not retry).
-bool isPermanentError(const std::string& errorMessage);
-
-// Format retry state for UI display.
-std::string formatRetryState(const RetryState& state);
-
-// Get recommended retry policy for a given network condition.
-RetryPolicy getRetryPolicyForNetwork(const std::string& networkType); // "wifi", "cellular", "unknown"
-
-// ---- Message Send Queue ----
-
-struct SendQueueItem {
-    std::string eventId;
+struct PendingMessage {
+    std::string localId;          // local event ID (txnId)
     std::string roomId;
-    std::string body;
-    std::string formattedBody;
-    int priority = 0;            // lower = sent first
-    int64_t enqueuedAtMs = 0;
-    int retryCount = 0;
-    bool isSending = false;
-    bool failed = false;
-    std::string errorMessage;
+    std::string body;             // message content
+    std::string msgType;          // "m.text", "m.image", "m.file", etc.
+    int64_t queuedAtMs = 0;       // when was it queued
+    int64_t lastAttemptMs = 0;    // last send attempt timestamp
+    int retryCount = 0;           // number of retries so far
+    MessageSendState state = MessageSendState::Pending;
+    std::string error;            // last error message
+    int errorCode = 0;            // HTTP status code (0 if unknown)
 };
 
-struct SendQueueStats {
-    int totalItems = 0;
-    int pendingItems = 0;
-    int sendingItems = 0;
-    int failedItems = 0;
-    int64_t oldestItemMs = 0;
+struct RetryDecision {
+    bool shouldRetry = false;
+    int64_t delayMs = 0;          // how long to wait before retrying
+    std::string reason;           // why this decision was made
 };
 
-// Add an item to the send queue.
-void enqueueMessage(std::vector<SendQueueItem>& queue, const SendQueueItem& item);
+// Compute the retry delay using exponential backoff.
+// Base delay 1s, doubles each retry, capped at 5 minutes.
+// Original Kotlin (RetryDecider.kt):
+//   fun computeRetryDelay(retryCount: Int, maxDelayMs: Long): Long
+int64_t computeRetryDelay(int retryCount, int64_t maxDelayMs = 300000);
 
-// Get the next item to send (highest priority, not already sending).
-const SendQueueItem* getNextToSend(const std::vector<SendQueueItem>& queue);
+// Decide whether to retry sending a message based on error code.
+// 429 Rate Limited → retry after Retry-After header
+// 5xx Server Error → retry with backoff
+// 4xx Client Error → don't retry (except 429)
+// Network error → retry with backoff
+RetryDecision decideRetry(const PendingMessage& msg, int errorCode, const std::string& retryAfterHeader = "");
 
-// Mark an item as sent (remove from queue).
-void markSent(std::vector<SendQueueItem>& queue, const std::string& eventId);
+// Update the message state after a send attempt.
+PendingMessage afterAttempt(PendingMessage msg, bool success, int errorCode, const std::string& error, int64_t nowMs);
 
-// Mark an item as failed (will retry).
-void markFailed(std::vector<SendQueueItem>& queue, const std::string& eventId, const std::string& error);
+// Check if a message has been pending too long (stale).
+bool isStaleMessage(const PendingMessage& msg, int64_t nowMs, int64_t maxAgeMs = 600000);
 
-// Compute send queue statistics.
-SendQueueStats computeSendQueueStats(const std::vector<SendQueueItem>& queue);
+// Filter the retry queue: remove cancelled, mark stale as failed.
+std::vector<PendingMessage> cleanQueue(const std::vector<PendingMessage>& queue, int64_t nowMs);
 
-// Sort queue by priority (lowest first).
-void sortSendQueue(std::vector<SendQueueItem>& queue);
+// Sort queue: oldest first, then by retry count (fewer retries first).
+std::vector<PendingMessage> sortQueue(std::vector<PendingMessage> queue);
 
-// Format send queue stats as JSON.
-std::string sendQueueStatsToJson(const SendQueueStats& stats);
+// Get the next message that should be sent (state == Pending or Retrying).
+// Returns the one with the oldest queuedAtMs that has waited long enough.
+PendingMessage getNextToSend(const std::vector<PendingMessage>& queue, int64_t nowMs);
+
+// Format message state as JSON for the Kotlin UI layer.
+std::string pendingMessageToJson(const PendingMessage& msg);
+
+// Format the full queue as JSON array.
+std::string queueToJson(const std::vector<PendingMessage>& queue);
+
+// Get a human-readable status for a message.
+std::string formatMessageStatus(MessageSendState state);
+
+// Get a display text for the retry count badge.
+std::string formatRetryBadge(int retryCount);
 
 } // namespace progressive
 

@@ -2,178 +2,191 @@
 #include <sstream>
 #include <algorithm>
 #include <cmath>
-#include <chrono>
-#include <random>
 
 namespace progressive {
 
-int computeRetryDelay(const RetryPolicy& policy, int attemptCount) {
-    if (attemptCount <= 0) return 0;
-
-    double delay = policy.baseDelayMs * std::pow(policy.backoffMultiplier, attemptCount - 1);
-    if (delay > policy.maxDelayMs) delay = policy.maxDelayMs;
-
-    if (policy.useJitter) {
-        // Add ±25% jitter
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        double jitter = 1.0 + (std::uniform_real_distribution<double>(-0.25, 0.25)(gen));
-        delay *= jitter;
-    }
-
-    return static_cast<int>(delay);
+int64_t computeRetryDelay(int retryCount, int64_t maxDelayMs) {
+    // Exponential backoff: base 1s, double each retry
+    // Retry 0: 1000ms, Retry 1: 2000ms, Retry 2: 4000ms, ...
+    // Capped at maxDelayMs (default 5 minutes)
+    // Original Kotlin:
+    //   Math.min(baseDelay * (1 shl retryCount), maxDelay)
+    int64_t delay = 1000LL * (1LL << std::min(retryCount, 10));
+    if (delay > maxDelayMs) delay = maxDelayMs;
+    return delay;
 }
 
-bool shouldRetry(const RetryState& state, const RetryPolicy& policy) {
-    if (!state.shouldRetry) return false;
-    if (state.isPermanentFailure) return false;
-    if (state.attemptCount >= policy.maxRetries) return false;
+RetryDecision decideRetry(const PendingMessage& msg, int errorCode, const std::string& retryAfterHeader) {
+    RetryDecision decision;
 
-    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-
-    return now >= state.nextAttemptMs;
-}
-
-RetryState updateRetryState(const RetryState& state, const RetryPolicy& policy,
-    const std::string& error, bool isPermanent) {
-    RetryState updated = state;
-    updated.attemptCount++;
-    updated.lastError = error;
-    updated.isPermanentFailure = isPermanent;
-
-    if (isPermanent) {
-        updated.shouldRetry = false;
-        return updated;
-    }
-
-    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-
-    updated.currentDelayMs = computeRetryDelay(policy, updated.attemptCount);
-    updated.lastAttemptMs = now;
-    updated.nextAttemptMs = now + updated.currentDelayMs;
-
-    if (updated.attemptCount >= policy.maxRetries) {
-        updated.shouldRetry = false;
-    }
-
-    return updated;
-}
-
-bool isPermanentError(const std::string& errorMessage) {
-    // Matrix error codes that should NOT be retried
-    if (errorMessage.find("M_FORBIDDEN") != std::string::npos) return true;
-    if (errorMessage.find("M_UNKNOWN_TOKEN") != std::string::npos) return true;
-    if (errorMessage.find("M_MISSING_TOKEN") != std::string::npos) return true;
-    if (errorMessage.find("M_BAD_JSON") != std::string::npos) return true;
-    if (errorMessage.find("M_NOT_JSON") != std::string::npos) return true;
-    if (errorMessage.find("M_UNKNOWN") != std::string::npos) return true;
-    if (errorMessage.find("M_INVALID_USERNAME") != std::string::npos) return true;
-
-    // Network errors are retryable
-    if (errorMessage.find("timeout") != std::string::npos) return false;
-    if (errorMessage.find("connection") != std::string::npos) return false;
-    if (errorMessage.find("network") != std::string::npos) return false;
-
-    return false;
-}
-
-std::string formatRetryState(const RetryState& state) {
-    std::ostringstream out;
-    out << "Attempt " << state.attemptCount;
-    if (!state.shouldRetry) {
-        out << " (stopped)";
-    } else if (state.currentDelayMs > 0) {
-        out << " - next retry in " << (state.currentDelayMs / 1000) << "s";
-    }
-    if (!state.lastError.empty()) {
-        out << "\nError: " << state.lastError;
-    }
-    return out.str();
-}
-
-RetryPolicy getRetryPolicyForNetwork(const std::string& networkType) {
-    if (networkType == "wifi") {
-        return {3, 1000, 10000, 1.5, true};
-    } else if (networkType == "cellular") {
-        return {5, 2000, 30000, 2.0, true};
-    }
-    return {5, 1000, 60000, 2.0, true}; // default
-}
-
-// ---- Send Queue ----
-
-void enqueueMessage(std::vector<SendQueueItem>& queue, const SendQueueItem& item) {
-    SendQueueItem copy = item;
-    if (copy.enqueuedAtMs == 0) {
-        copy.enqueuedAtMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()).count();
-    }
-    queue.push_back(copy);
-}
-
-const SendQueueItem* getNextToSend(const std::vector<SendQueueItem>& queue) {
-    // Find the highest priority item that hasn't failed and isn't sending
-    const SendQueueItem* best = nullptr;
-    for (const auto& item : queue) {
-        if (item.isSending || item.failed) continue;
-        if (!best || item.priority < best->priority) best = &item;
-    }
-    return best;
-}
-
-void markSent(std::vector<SendQueueItem>& queue, const std::string& eventId) {
-    queue.erase(std::remove_if(queue.begin(), queue.end(),
-        [&](const SendQueueItem& item) { return item.eventId == eventId; }
-    ), queue.end());
-}
-
-void markFailed(std::vector<SendQueueItem>& queue, const std::string& eventId, const std::string& error) {
-    for (auto& item : queue) {
-        if (item.eventId == eventId) {
-            item.failed = true;
-            item.isSending = false;
-            item.errorMessage = error;
-            item.retryCount++;
-            return;
+    // 429 Rate Limited — retry after specified time
+    if (errorCode == 429) {
+        decision.shouldRetry = true;
+        if (!retryAfterHeader.empty()) {
+            decision.delayMs = std::stoll(retryAfterHeader) * 1000;
+        } else {
+            decision.delayMs = computeRetryDelay(msg.retryCount);
         }
+        decision.reason = "Rate limited (429)";
+        return decision;
     }
-}
 
-SendQueueStats computeSendQueueStats(const std::vector<SendQueueItem>& queue) {
-    SendQueueStats stats;
-    stats.totalItems = static_cast<int>(queue.size());
-
-    for (const auto& item : queue) {
-        if (item.isSending) stats.sendingItems++;
-        else if (item.failed) stats.failedItems++;
-        else stats.pendingItems++;
-
-        if (stats.oldestItemMs == 0 || item.enqueuedAtMs < stats.oldestItemMs) {
-            stats.oldestItemMs = item.enqueuedAtMs;
+    // 5xx Server Error — retry with backoff
+    if (errorCode >= 500 && errorCode < 600) {
+        // Don't retry forever — max 5 retries
+        if (msg.retryCount >= 5) {
+            decision.reason = "Too many server errors";
+            return decision;
         }
+        decision.shouldRetry = true;
+        decision.delayMs = computeRetryDelay(msg.retryCount);
+        decision.reason = "Server error (" + std::to_string(errorCode) + ")";
+        return decision;
     }
 
-    return stats;
+    // Network/timeout errors (errorCode 0)
+    if (errorCode == 0) {
+        if (msg.retryCount >= 8) {
+            decision.reason = "Too many network failures";
+            return decision;
+        }
+        decision.shouldRetry = true;
+        decision.delayMs = computeRetryDelay(msg.retryCount);
+        decision.reason = "Network error";
+        return decision;
+    }
+
+    // 4xx Client Error — don't retry (except 429 handled above)
+    if (errorCode >= 400 && errorCode < 500) {
+        decision.reason = "Client error (" + std::to_string(errorCode) + ")";
+        return decision;
+    }
+
+    // Unknown — don't retry
+    decision.reason = "Unknown error";
+    return decision;
 }
 
-void sortSendQueue(std::vector<SendQueueItem>& queue) {
-    std::sort(queue.begin(), queue.end(), [](const auto& a, const auto& b) {
-        if (a.priority != b.priority) return a.priority < b.priority;
-        return a.enqueuedAtMs < b.enqueuedAtMs;
+PendingMessage afterAttempt(PendingMessage msg, bool success, int errorCode, const std::string& error, int64_t nowMs) {
+    msg.lastAttemptMs = nowMs;
+
+    if (success) {
+        msg.state = MessageSendState::Sent;
+        return msg;
+    }
+
+    msg.error = error;
+    msg.errorCode = errorCode;
+    msg.retryCount++;
+
+    auto decision = decideRetry(msg, errorCode);
+    if (decision.shouldRetry) {
+        msg.state = MessageSendState::Retrying;
+    } else {
+        msg.state = MessageSendState::Failed;
+    }
+    return msg;
+}
+
+bool isStaleMessage(const PendingMessage& msg, int64_t nowMs, int64_t maxAgeMs) {
+    if (msg.state == MessageSendState::Sent || msg.state == MessageSendState::Cancelled) return false;
+    return (nowMs - msg.queuedAtMs) > maxAgeMs;
+}
+
+std::vector<PendingMessage> cleanQueue(const std::vector<PendingMessage>& queue, int64_t nowMs) {
+    std::vector<PendingMessage> cleaned;
+    for (auto msg : queue) {
+        if (msg.state == MessageSendState::Cancelled) continue;
+        if (isStaleMessage(msg, nowMs)) {
+            msg.state = MessageSendState::Failed;
+            msg.error = "Message is too old to retry";
+        }
+        cleaned.push_back(msg);
+    }
+    return cleaned;
+}
+
+std::vector<PendingMessage> sortQueue(std::vector<PendingMessage> queue) {
+    // Sort: pending/retrying first, then by queuedAtMs (oldest first),
+    // within same timestamp, fewer retries first
+    std::sort(queue.begin(), queue.end(), [](const PendingMessage& a, const PendingMessage& b) {
+        // Active states first
+        bool aActive = (a.state == MessageSendState::Pending || a.state == MessageSendState::Retrying);
+        bool bActive = (b.state == MessageSendState::Pending || b.state == MessageSendState::Retrying);
+        if (aActive != bActive) return aActive;
+
+        // Older messages first
+        if (a.queuedAtMs != b.queuedAtMs) return a.queuedAtMs < b.queuedAtMs;
+
+        // Fewer retries first
+        return a.retryCount < b.retryCount;
     });
+    return queue;
 }
 
-std::string sendQueueStatsToJson(const SendQueueStats& stats) {
+PendingMessage getNextToSend(const std::vector<PendingMessage>& queue, int64_t nowMs) {
+    PendingMessage empty;
+    empty.state = MessageSendState::Failed;
+
+    for (const auto& msg : queue) {
+        if (msg.state == MessageSendState::Pending) return msg;
+
+        if (msg.state == MessageSendState::Retrying) {
+            // Check if enough time has passed since last attempt
+            auto decision = decideRetry(msg, msg.errorCode);
+            if (decision.shouldRetry && (nowMs - msg.lastAttemptMs) >= decision.delayMs) {
+                return msg;
+            }
+        }
+    }
+    return empty;
+}
+
+std::string formatMessageStatus(MessageSendState state) {
+    switch (state) {
+        case MessageSendState::Pending: return "Sending...";
+        case MessageSendState::Sending: return "Sending...";
+        case MessageSendState::Sent: return "Sent";
+        case MessageSendState::Failed: return "Failed to send";
+        case MessageSendState::Retrying: return "Retrying...";
+        case MessageSendState::Cancelled: return "Cancelled";
+        default: return "Unknown";
+    }
+}
+
+std::string formatRetryBadge(int retryCount) {
+    if (retryCount <= 0) return "";
+    if (retryCount == 1) return "1 retry";
+    return std::to_string(retryCount) + " retries";
+}
+
+std::string pendingMessageToJson(const PendingMessage& msg) {
+    auto esc = [](const std::string& s) -> std::string {
+        std::string out;
+        for (char c : s) { if (c == '"') out += "\\\""; else out += c; }
+        return out;
+    };
     std::ostringstream json;
-    json << "{";
-    json << R"("total": )" << stats.totalItems << ",";
-    json << R"("pending": )" << stats.pendingItems << ",";
-    json << R"("sending": )" << stats.sendingItems << ",";
-    json << R"("failed": )" << stats.failedItems << ",";
-    json << R"("oldestItemMs": )" << stats.oldestItemMs;
-    json << "}";
+    json << R"({"localId": ")" << esc(msg.localId) << R"(",)";
+    json << R"("roomId": ")" << esc(msg.roomId) << R"(",)";
+    json << R"("body": ")" << esc(msg.body) << R"(",)";
+    json << R"("msgType": ")" << esc(msg.msgType) << R"(",)";
+    json << R"("queuedAtMs": )" << msg.queuedAtMs << ",";
+    json << R"("retryCount": )" << msg.retryCount << ",";
+    json << R"("state": )" << static_cast<int>(msg.state) << ",";
+    json << R"("error": ")" << esc(msg.error) << R"(",)";
+    json << R"("errorCode": )" << msg.errorCode << "}";
+    return json.str();
+}
+
+std::string queueToJson(const std::vector<PendingMessage>& queue) {
+    std::ostringstream json;
+    json << "[";
+    for (size_t i = 0; i < queue.size(); ++i) {
+        if (i > 0) json << ",";
+        json << pendingMessageToJson(queue[i]);
+    }
+    json << "]";
     return json.str();
 }
 

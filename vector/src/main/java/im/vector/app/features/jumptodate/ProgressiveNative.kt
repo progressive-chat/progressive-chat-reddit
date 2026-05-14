@@ -836,7 +836,9 @@ object ProgressiveNative {
 
     // --- Message Retry ---
 
-    @JvmStatic external fun nativeComputeRetryDelay(maxRetries: Int, baseMs: Int, maxMs: Int, backoff: Double, jitter: Boolean, attempt: Int): Int
+    @JvmStatic external fun nativeComputeRetryDelay(retryCount: Int, maxDelayMs: Int): Int
+    @JvmStatic external fun nativeDecideRetry(retryCount: Int, errorCode: Int, retryAfterHeader: String): String
+    @JvmStatic external fun nativeFormatMessageStatus(state: Int): String
 
     // --- Sync Utils ---
 
