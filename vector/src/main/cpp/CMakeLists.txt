@@ -120,6 +120,7 @@ add_library(
     src/auth_utils.cpp
     src/content_scanner.cpp
     src/event_encryption.cpp
+    src/event_models.cpp
     src/federation_version.cpp
     src/report_utils.cpp
     src/webrtc_utils.cpp
