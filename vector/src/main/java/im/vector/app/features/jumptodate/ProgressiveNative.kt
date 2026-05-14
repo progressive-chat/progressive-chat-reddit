@@ -1027,6 +1027,14 @@ object ProgressiveNative {
     @JvmStatic external fun nativeParseKeyBackupVersion(json: String): String
     @JvmStatic external fun nativeIsValidPassphrase(passphrase: String): Boolean
 
+    // --- Content Utils (MXC URLs, Message Types) ---
+    // Ported from: ContentUrlResolver.kt, MessageContent.kt
+
+    @JvmStatic external fun nativeResolveMxcDownloadUrl(mxcUrl: String, homeServerUrl: String): String
+    @JvmStatic external fun nativeParseMessageContent(contentJson: String): String
+    @JvmStatic external fun nativeIsMxcUri(url: String): Boolean
+    @JvmStatic external fun nativeFormatFileSize(bytes: Long): String
+
     // --- Kotlin fallbacks for Slash Commands ---
 
     fun parseSlashCommandFallback(text: String): JSONObject {

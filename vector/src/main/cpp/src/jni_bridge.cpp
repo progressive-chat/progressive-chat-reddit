@@ -126,6 +126,7 @@
 #include "progressive/well_known.hpp"
 #include "progressive/room_sort.hpp"
 #include "progressive/key_backup.hpp"
+#include "progressive/content_utils.hpp"
 #include "progressive/verification_utils.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
@@ -4813,6 +4814,49 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsValidPassphrase
     auto pass = jPassphrase ? std::string(env->GetStringUTFChars(jPassphrase, nullptr)) : "";
     if (jPassphrase) env->ReleaseStringUTFChars(jPassphrase, pass.c_str());
     return progressive::isValidPassphrase(pass);
+}
+
+// --- Content Utils (MXC URLs, Message Types) ---
+// Ported from: ContentUrlResolver.kt, MessageContent.kt, ContentDownloadStateBinder.kt
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeResolveMxcDownloadUrl(
+    JNIEnv* env, jclass, jstring jMxcUrl, jstring jHomeServerUrl
+) {
+    auto mxc = jMxcUrl ? std::string(env->GetStringUTFChars(jMxcUrl, nullptr)) : "";
+    auto hs = jHomeServerUrl ? std::string(env->GetStringUTFChars(jHomeServerUrl, nullptr)) : "";
+    if (jMxcUrl) env->ReleaseStringUTFChars(jMxcUrl, mxc.c_str());
+    if (jHomeServerUrl) env->ReleaseStringUTFChars(jHomeServerUrl, hs.c_str());
+    auto url = progressive::resolveMxcDownloadUrl(mxc, hs);
+    return env->NewStringUTF(url.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseMessageContent(
+    JNIEnv* env, jclass, jstring jContentJson
+) {
+    auto json = jContentJson ? std::string(env->GetStringUTFChars(jContentJson, nullptr)) : "{}";
+    if (jContentJson) env->ReleaseStringUTFChars(jContentJson, json.c_str());
+    auto content = progressive::parseMessageContent(json);
+    auto result = progressive::messageContentToJson(content);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNIEXPORT jboolean JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeIsMxcUri(
+    JNIEnv* env, jclass, jstring jUrl
+) {
+    auto url = jUrl ? std::string(env->GetStringUTFChars(jUrl, nullptr)) : "";
+    if (jUrl) env->ReleaseStringUTFChars(jUrl, url.c_str());
+    return progressive::isMxcUri(url);
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeFormatFileSize(
+    JNIEnv* env, jclass, jlong jBytes
+) {
+    auto s = progressive::formatFileSize(jBytes);
+    return env->NewStringUTF(s.c_str());
 }
 
 // --- Sync Utils ---

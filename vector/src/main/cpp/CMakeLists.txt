@@ -135,6 +135,7 @@ add_library(
     src/well_known.cpp
     src/room_sort.cpp
     src/key_backup.cpp
+    src/content_utils.cpp
     # src/olm.cpp  # disabled: libolm API mismatches
     src/jni_bridge.cpp
 )
