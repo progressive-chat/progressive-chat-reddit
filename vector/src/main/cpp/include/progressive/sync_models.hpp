@@ -180,4 +180,44 @@ SyncDeviceListResponse parseSyncDeviceList(const std::string& json);
 // Serialize top-level sync response (for caching)
 std::string syncResponseToJson(const SyncResponse& response);
 
+// ==== Sync State Machine ====
+//
+// Original Kotlin (SyncState.kt:24-27), (SyncRequestState.kt:20-44), (InitialSyncStrategy.kt:22-53)
+
+enum class SyncStateType { IDLE = 0, RUNNING = 1, PAUSED = 2, KILLING = 3, KILLED = 4, NO_NETWORK = 5, INVALID_TOKEN = 6 };
+
+struct SyncState {
+    SyncStateType type = SyncStateType::IDLE;
+    bool afterPause = false;             // for RUNNING state
+};
+
+enum class InitialSyncStepType { DOWNLOADING = 0, IMPORTING_ACCOUNT = 1, IMPORTING_DEFERRED_KEYS = 2 };
+
+struct InitialSyncStep {
+    InitialSyncStepType type = InitialSyncStepType::DOWNLOADING;
+    int percentProgress = 0;
+};
+
+struct IncrementalSyncParsing {
+    int rooms = 0;
+    int toDevice = 0;
+};
+
+enum class SyncRequestStateType { IDLE = 0, INITIAL_PROGRESS = 1, INCREMENTAL_IDLE = 2, INCREMENTAL_PARSING = 3, INCREMENTAL_ERROR = 4, INCREMENTAL_DONE = 5 };
+
+struct SyncRequestState {
+    SyncRequestStateType type = SyncRequestStateType::IDLE;
+    InitialSyncStep initialStep;         // for INITIAL_PROGRESS
+    IncrementalSyncParsing parsing;       // for INCREMENTAL_PARSING
+};
+
+enum class InitialSyncStrategyType { LEGACY = 0, OPTIMIZED = 1 };
+
+struct InitialSyncStrategy {
+    InitialSyncStrategyType type = InitialSyncStrategyType::OPTIMIZED;
+    int64_t minSizeToSplit = 1048576;    // 1 MB
+    int64_t minSizeToStoreInFile = 1024; // 1 KB
+    int maxRoomsToInsert = 100;
+};
+
 } // namespace progressive

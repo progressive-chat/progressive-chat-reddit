@@ -316,4 +316,85 @@ ValidDecryptedEvent ValidDecryptedEvent::fromEncryptedEvent(
     return vd;
 }
 
+// ==== Parse SearchResult ====
+//
+// Original Kotlin (SearchResult.kt:25-44)
+
+SearchResult parseSearchResult(const std::string& json) {
+    SearchResult r;
+    r.nextBatch = extractJsonString(json, "next_batch");
+
+    auto highPos = json.find("\"highlights\"");
+    if (highPos != std::string::npos) {
+        highPos = json.find('[', highPos);
+        if (highPos != std::string::npos) {
+            highPos++;
+            while (highPos < json.size()) {
+                while (highPos < json.size() && (json[highPos] == ' ' || json[highPos] == ',' || json[highPos] == '\n')) highPos++;
+                if (highPos >= json.size() || json[highPos] == ']') break;
+                if (json[highPos] == '"') {
+                    highPos++;
+                    size_t end = highPos;
+                    while (end < json.size() && json[end] != '"') end++;
+                    r.highlights.push_back(json.substr(highPos, end - highPos));
+                    highPos = end + 1;
+                }
+            }
+        }
+    }
+
+    // Parse results array (nested Event + sender)
+    auto resultsPos = json.find("\"results\"");
+    if (resultsPos != std::string::npos) {
+        resultsPos = json.find('[', resultsPos);
+        if (resultsPos != std::string::npos) {
+            resultsPos++;
+            while (resultsPos < json.size()) {
+                while (resultsPos < json.size() && (json[resultsPos] == ' ' || json[resultsPos] == ',' || json[resultsPos] == '\n')) resultsPos++;
+                if (resultsPos >= json.size() || json[resultsPos] == ']') break;
+                if (json[resultsPos] == '{') {
+                    int d = 1;
+                    size_t start = resultsPos;
+                    resultsPos++;
+                    while (resultsPos < json.size() && d > 0) { if (json[resultsPos] == '{') d++; else if (json[resultsPos] == '}') d--; resultsPos++; }
+                    std::string itemJson = json.substr(start, resultsPos - start);
+                    EventAndSender eas;
+                    eas.event = parseEvent(itemJson);
+                    auto senderJson = extractJsonObject(itemJson, "sender");
+                    if (!senderJson.empty()) {
+                        eas.sender.userId = extractJsonString(senderJson, "user_id");
+                        eas.sender.displayName = extractJsonString(senderJson, "display_name");
+                        eas.sender.avatarUrl = extractJsonString(senderJson, "avatar_url");
+                    }
+                    r.results.push_back(eas);
+                }
+            }
+        }
+    }
+
+    return r;
+}
+
+// ==== Parse ContentAttachmentData ====
+
+ContentAttachmentData parseContentAttachmentData(const std::string& json) {
+    ContentAttachmentData d;
+    d.size = extractJsonInt64(json, "size");
+    d.duration = extractJsonInt64(json, "duration");
+    d.date = extractJsonInt64(json, "date");
+    d.height = extractJsonInt64(json, "height");
+    d.width = extractJsonInt64(json, "width");
+    d.exifOrientation = static_cast<int>(extractJsonInt64(json, "exifOrientation"));
+    d.name = extractJsonString(json, "name");
+    d.mimeType = extractJsonString(json, "mimeType");
+
+    auto typeStr = extractJsonString(json, "type");
+    if (typeStr == "IMAGE") d.type = AttachmentType::IMAGE;
+    else if (typeStr == "AUDIO") d.type = AttachmentType::AUDIO;
+    else if (typeStr == "VIDEO") d.type = AttachmentType::VIDEO;
+    else if (typeStr == "VOICE_MESSAGE") d.type = AttachmentType::VOICE_MESSAGE;
+
+    return d;
+}
+
 } // namespace progressive

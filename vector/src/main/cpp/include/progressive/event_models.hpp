@@ -456,6 +456,52 @@ RoomKeyContent parseRoomKeyContent(const std::string& json);
 RoomKeyWithHeldContent parseRoomKeyWithHeldContent(const std::string& json);
 SecretSendEventContent parseSecretSendEventContent(const std::string& json);
 
-std::string eventToJson(const Event& ev);
+// ==== Search Result ====
+//
+// Original Kotlin (SearchResult.kt:25-44):
+//   data class SearchResult(nextBatch, highlights, results: List<EventAndSender>)
+//   data class EventAndSender(event: Event, sender: MatrixItem.UserItem?)
+
+struct UserItem {
+    std::string userId;
+    std::string displayName;
+    std::string avatarUrl;
+};
+
+struct EventAndSender {
+    Event event;
+    UserItem sender;
+};
+
+struct SearchResult {
+    std::string nextBatch;                   // pagination token, null if no more
+    std::vector<std::string> highlights;     // stemmed words to highlight
+    std::vector<EventAndSender> results;     // ordered result list
+};
+
+// ==== Content Attachment Data ====
+//
+// Original Kotlin (ContentAttachmentData.kt:28-63):
+//   data class ContentAttachmentData(size, duration, date, height, width,
+//       exifOrientation, name, mimeType, type, waveform)
+
+enum class AttachmentType { FILE = 0, IMAGE = 1, AUDIO = 2, VIDEO = 3, VOICE_MESSAGE = 4 };
+
+struct ContentAttachmentData {
+    int64_t size = 0;
+    int64_t duration = 0;
+    int64_t date = 0;
+    int64_t height = 0;
+    int64_t width = 0;
+    int exifOrientation = 0;                 // ExifInterface.ORIENTATION_UNDEFINED = 0
+    std::string name;
+    std::string uri;                         // queryUri
+    std::string mimeType;
+    AttachmentType type = AttachmentType::FILE;
+    std::vector<int> waveform;               // audio waveform data
+};
+
+SearchResult parseSearchResult(const std::string& json);
+ContentAttachmentData parseContentAttachmentData(const std::string& json);
 
 } // namespace progressive

@@ -223,4 +223,128 @@ SecretStorageKeyContent parseSecretStorageKey(const std::string& json);
 EncryptedSecretContent parseEncryptedSecret(const std::string& json);
 KeyInfoResult parseKeyInfoResult(const std::string& json);
 
+// ==== HomeServer Capabilities ====
+//
+// Original Kotlin (HomeServerCapabilities.kt:25-192):
+//   data class HomeServerCapabilities(canChangePassword, canChangeDisplayName,
+//       roomVersions, maxUploadFileSize, canUseThreading, ...)
+
+enum class RoomVersionStatus { STABLE = 0, UNSTABLE = 1 };
+enum class RoomCapabilitySupport { SUPPORTED = 0, SUPPORTED_UNSTABLE = 1, UNSUPPORTED = 2, UNKNOWN = 3 };
+
+struct RoomVersionInfo {
+    std::string version;
+    RoomVersionStatus status = RoomVersionStatus::STABLE;
+};
+
+struct RoomCapabilityInfo {
+    std::string preferred;
+    std::vector<std::string> support;
+};
+
+struct RoomVersionCapabilities {
+    std::string defaultRoomVersion;
+    std::vector<RoomVersionInfo> supportedVersion;
+    std::unordered_map<std::string, RoomCapabilityInfo> capabilities;
+};
+
+struct HomeServerCapabilities {
+    bool canChangePassword = true;
+    bool canChangeDisplayName = true;
+    bool canChangeAvatar = true;
+    bool canChange3pid = true;
+    int64_t maxUploadFileSize = -1;              // MAX_UPLOAD_FILE_SIZE_UNKNOWN
+    bool lastVersionIdentityServerSupported = false;
+    std::string defaultIdentityServerUrl;
+    RoomVersionCapabilities roomVersions;
+    bool canUseThreading = false;
+    bool canControlLogoutDevices = false;
+    bool canLoginWithQrCode = false;
+    bool canUseThreadReadReceipts = false;
+    bool canRemotelyTogglePush = false;
+    bool canRedactRelatedEvents = false;
+    std::string externalAccountManagementUrl;
+    std::vector<std::string> externalAccountManagementActions;
+    std::string authenticationIssuer;
+    bool delegatedOidcAuthEnabled = false;
+    bool canUseAuthenticatedMedia = false;
+
+    RoomCapabilitySupport isFeatureSupported(const std::string& feature) const;
+    std::string versionOverrideForFeature(const std::string& feature) const;
+};
+
+// ==== Identity Service Models ====
+//
+// Original Kotlin: ThreePid.kt, SharedState.kt, FoundThreePid.kt, IdentityServiceError.kt
+
+enum class ThreePidType { EMAIL = 0, MSISDN = 1 };
+
+struct ThreePid {
+    ThreePidType type = ThreePidType::EMAIL;
+    std::string value;               // email address or phone number
+};
+
+enum class SharedState {
+    SHARED = 0, NOT_SHARED = 1, BINDING_IN_PROGRESS = 2
+};
+
+struct FoundThreePid {
+    ThreePid threePid;
+    std::string matrixId;
+};
+
+enum class IdentityServiceErrorType {
+    OUTDATED_IDENTITY_SERVER = 0, OUTDATED_HOME_SERVER = 1,
+    NO_IDENTITY_SERVER_CONFIGURED = 2, TERMS_NOT_SIGNED = 3,
+    BULK_LOOKUP_SHA256_NOT_SUPPORTED = 4, USER_CONSENT_NOT_PROVIDED = 5,
+    BINDING_ERROR = 6, NO_CURRENT_BINDING = 7
+};
+
+// ==== Widget Models ====
+//
+// Original Kotlin: Widget.kt, WidgetContent.kt, WidgetType.kt
+
+struct WidgetContent {
+    std::string creatorUserId;       // "creatorUserId" key
+    std::string id;                  // "id" key
+    std::string type;                // "type" key — e.g. "m.jitsi"
+    std::string url;                 // "url" key
+    std::string name;                // "name" key
+    std::string dataJson;            // "data" key — raw JSON
+    bool waitForIframeLoad = false;  // "waitForIframeLoad" key
+
+    bool isActive() const { return !type.empty() && !url.empty(); }
+};
+
+struct Widget {
+    WidgetContent widgetContent;
+    std::string eventJson;           // Event serialized
+    std::string widgetId;
+    std::string senderInfoJson;      // SenderInfo serialized
+    bool isAddedByMe = false;
+    std::string widgetType;          // WidgetType string value
+};
+
+// Widget type constants
+namespace WidgetType {
+    constexpr const char* JITSI = "m.jitsi";
+    constexpr const char* TRADING_VIEW = "m.tradingview";
+    constexpr const char* SPOTIFY = "m.spotify";
+    constexpr const char* VIDEO = "m.video";
+    constexpr const char* GOOGLE_DOC = "m.googledoc";
+    constexpr const char* GOOGLE_CALENDAR = "m.googlecalendar";
+    constexpr const char* ETHERPAD = "m.etherpad";
+    constexpr const char* STICKER_PICKER = "m.stickerpicker";
+    constexpr const char* GRAFANA = "m.grafana";
+    constexpr const char* CUSTOM = "m.custom";
+    constexpr const char* INTEGRATION_MANAGER = "m.integration_manager";
+    constexpr const char* ELEMENT_CALL = "io.element.call";
+}
+
+// ==== JSON Parsing ====
+
+HomeServerCapabilities parseHomeServerCapabilities(const std::string& json);
+WidgetContent parseWidgetContent(const std::string& json);
+ThreePid parseThreePid(const std::string& json);
+
 } // namespace progressive

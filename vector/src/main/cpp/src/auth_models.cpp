@@ -226,4 +226,63 @@ KeyInfoResult parseKeyInfoResult(const std::string& json) {
     return r;
 }
 
+// ==== HomeServer Capabilities ====
+
+HomeServerCapabilities parseHomeServerCapabilities(const std::string& json) {
+    HomeServerCapabilities c;
+    c.canChangePassword = extractJsonBool(json, "canChangePassword");
+    c.canChangeDisplayName = extractJsonBool(json, "canChangeDisplayName");
+    c.canChangeAvatar = extractJsonBool(json, "canChangeAvatar");
+    c.canChange3pid = extractJsonBool(json, "canChange3pid");
+    c.maxUploadFileSize = extractJsonInt64(json, "maxUploadFileSize");
+    c.canUseThreading = extractJsonBool(json, "canUseThreading");
+    c.canUseAuthenticatedMedia = extractJsonBool(json, "canUseAuthenticatedMedia");
+    c.authenticationIssuer = extractJsonString(json, "authenticationIssuer");
+    c.delegatedOidcAuthEnabled = !c.authenticationIssuer.empty();
+    return c;
+}
+
+RoomCapabilitySupport HomeServerCapabilities::isFeatureSupported(const std::string& feature) const {
+    if (roomVersions.capabilities.empty()) return RoomCapabilitySupport::UNKNOWN;
+    auto it = roomVersions.capabilities.find(feature);
+    if (it == roomVersions.capabilities.end()) return RoomCapabilitySupport::UNSUPPORTED;
+    const auto& pref = it->second.preferred.empty() ? (it->second.support.empty() ? "" : it->second.support.back()) : it->second.preferred;
+    for (const auto& v : roomVersions.supportedVersion)
+        if (v.version == pref)
+            return v.status == RoomVersionStatus::STABLE ? RoomCapabilitySupport::SUPPORTED : RoomCapabilitySupport::SUPPORTED_UNSTABLE;
+    return RoomCapabilitySupport::UNKNOWN;
+}
+
+std::string HomeServerCapabilities::versionOverrideForFeature(const std::string& feature) const {
+    auto it = roomVersions.capabilities.find(feature);
+    if (it == roomVersions.capabilities.end()) return "";
+    if (!it->second.preferred.empty()) return it->second.preferred;
+    return it->second.support.empty() ? "" : it->second.support.back();
+}
+
+// ==== Identity Models ====
+
+ThreePid parseThreePid(const std::string& json) {
+    ThreePid p;
+    p.value = extractJsonString(json, "email");
+    if (!p.value.empty()) { p.type = ThreePidType::EMAIL; return p; }
+    p.value = extractJsonString(json, "msisdn");
+    if (!p.value.empty()) { p.type = ThreePidType::MSISDN; return p; }
+    return p;
+}
+
+// ==== Widget Models ====
+
+WidgetContent parseWidgetContent(const std::string& json) {
+    WidgetContent w;
+    w.creatorUserId = extractJsonString(json, "creatorUserId");
+    w.id = extractJsonString(json, "id");
+    w.type = extractJsonString(json, "type");
+    w.url = extractJsonString(json, "url");
+    w.name = extractJsonString(json, "name");
+    w.dataJson = extractJsonObject(json, "data");
+    w.waitForIframeLoad = extractJsonBool(json, "waitForIframeLoad");
+    return w;
+}
+
 } // namespace progressive
