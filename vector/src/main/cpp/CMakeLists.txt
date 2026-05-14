@@ -18,6 +18,7 @@ add_library(
     src/markdown.cpp
     src/account_export.cpp
     src/audio_engine.cpp
+    src/auth_models.cpp
     src/media_filter.cpp
     src/content_filter.cpp
     src/network_stats.cpp

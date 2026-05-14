@@ -173,4 +173,54 @@ CallNegotiateContent parseCallNegotiate(const std::string& contentJson);
 CallReplacesContent parseCallReplaces(const std::string& contentJson);
 CallAssertedIdentityContent parseCallAssertedIdentity(const std::string& contentJson);
 
+// ==== Call State (Lifecycle) ====
+//
+// Original Kotlin (CallState.kt:25-49):
+//   sealed class CallState {
+//       object Idle, CreateOffer, Dialing, LocalRinging, Answering
+//       data class Connected(iceConnectionState)
+//       data class Ended(reason)
+//   }
+
+enum class IceConnectionState {
+    NEW = 0, CHECKING = 1, CONNECTED = 2, COMPLETED = 3,
+    FAILED = 4, DISCONNECTED = 5, CLOSED = 6
+};
+
+enum class CallStateType {
+    IDLE = 0, CREATE_OFFER = 1, DIALING = 2,
+    LOCAL_RINGING = 3, ANSWERING = 4, CONNECTED = 5, ENDED = 6
+};
+
+struct CallState {
+    CallStateType type = CallStateType::IDLE;
+    IceConnectionState iceState = IceConnectionState::NEW; // for CONNECTED
+    EndCallReason endReason = EndCallReason::USER_HANGUP;  // for ENDED
+
+    bool isActiveCall() const {
+        return type == CallStateType::DIALING
+            || type == CallStateType::LOCAL_RINGING
+            || type == CallStateType::ANSWERING
+            || type == CallStateType::CONNECTED;
+    }
+};
+
+// ==== TURN Server Response ====
+//
+// Original Kotlin (TurnServerResponse.kt:26-47):
+//   data class TurnServerResponse(username, password, uris, ttl)
+//
+// Response from GET /_matrix/client/r0/voip/turnServer
+
+struct TurnServerResponse {
+    std::string username;            // "username" key
+    std::string password;            // "password" key
+    std::vector<std::string> uris;   // "uris" key — TURN URI list
+    int ttl = 0;                     // "ttl" key — time-to-live in seconds
+
+    bool isValid() const { return !username.empty() && !uris.empty(); }
+};
+
+TurnServerResponse parseTurnServerResponse(const std::string& json);
+
 } // namespace progressive

@@ -241,4 +241,36 @@ CallAssertedIdentityContent parseCallAssertedIdentity(const std::string& json) {
     return c;
 }
 
+// ==== Parse TurnServerResponse ====
+//
+// Original Kotlin (TurnServerResponse.kt:26-47)
+
+TurnServerResponse parseTurnServerResponse(const std::string& json) {
+    TurnServerResponse ts;
+    ts.username = extractJsonString(json, "username");
+    ts.password = extractJsonString(json, "password");
+    ts.ttl = extractJsonInt(json, "ttl");
+
+    auto urisPos = json.find("\"uris\"");
+    if (urisPos != std::string::npos) {
+        urisPos = json.find('[', urisPos);
+        if (urisPos != std::string::npos) {
+            urisPos++;
+            while (urisPos < json.size()) {
+                while (urisPos < json.size() && (json[urisPos] == ' ' || json[urisPos] == ',' || json[urisPos] == '\n')) urisPos++;
+                if (urisPos >= json.size() || json[urisPos] == ']') break;
+                if (json[urisPos] == '"') {
+                    urisPos++;
+                    size_t end = urisPos;
+                    while (end < json.size() && json[end] != '"') end++;
+                    ts.uris.push_back(json.substr(urisPos, end - urisPos));
+                    urisPos = end + 1;
+                }
+            }
+        }
+    }
+
+    return ts;
+}
+
 } // namespace progressive
