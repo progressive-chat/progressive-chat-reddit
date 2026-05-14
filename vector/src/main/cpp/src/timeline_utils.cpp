@@ -116,4 +116,32 @@ bool hasScrolledAway(const LiveTimelineState& state, int visibleFirstIndex,
     return eventsFromEnd > thresholdFromEnd;
 }
 
+// ==== Loading Progress Indicator ====
+LoadingProgress computeLoadingProgress(int loaded, int rendered) {
+    LoadingProgress prog;
+    prog.eventsLoaded = loaded;
+    prog.eventsRendered = rendered;
+    prog.eventsPending = loaded - rendered;
+    if (prog.eventsPending < 0) prog.eventsPending = 0;
+    prog.isLoading = prog.eventsPending > 0;
+
+    // Label for spinner center: show pending count, cap at 99+
+    if (prog.eventsPending > 99) prog.label = "99+";
+    else if (prog.eventsPending > 0) prog.label = std::to_string(prog.eventsPending);
+    else prog.label = "";
+
+    return prog;
+}
+
+std::string loadingProgressToJson(const LoadingProgress& prog) {
+    std::ostringstream json;
+    json << R"({"eventsLoaded": )" << prog.eventsLoaded << ",";
+    json << R"("eventsRendered": )" << prog.eventsRendered << ",";
+    json << R"("eventsPending": )" << prog.eventsPending << ",";
+    json << R"("isLoading": )" << (prog.isLoading ? "true" : "false") << ",";
+    json << R"("label": ")" << prog.label << R"(")";
+    json << "}";
+    return json.str();
+}
+
 } // namespace progressive

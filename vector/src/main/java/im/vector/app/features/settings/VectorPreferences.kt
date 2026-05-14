@@ -1581,6 +1581,10 @@ class VectorPreferences @Inject constructor(
         return defaultPrefs.getBoolean("SETTINGS_LABS_JUMP_TO_UNREAD_TIME", false)
     }
 
+    fun isLoadingProgressEnabled(): Boolean {
+        return defaultPrefs.getBoolean("SETTINGS_LABS_LOADING_PROGRESS", false)
+    }
+
     fun isDuplicateNamesEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_DUPLICATE_NAMES_KEY, false)
     }

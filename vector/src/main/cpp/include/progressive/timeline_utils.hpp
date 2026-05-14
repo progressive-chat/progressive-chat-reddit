@@ -78,6 +78,20 @@ LiveTimelineState updateScrollState(const LiveTimelineState& state, int64_t nowM
 bool hasScrolledAway(const LiveTimelineState& state, int visibleFirstIndex,
     int totalEvents, int thresholdFromEnd = 3);
 
+// ---- Loading Progress Indicator ---
+// Optional Labs feature: shows how many events loaded vs rendered in loading spinner.
+
+struct LoadingProgress {
+    int eventsLoaded = 0;      // total fetched from server
+    int eventsRendered = 0;    // already displayed in UI
+    int eventsPending = 0;     // loaded but not yet rendered
+    bool isLoading = false;    // fetch in progress
+    std::string label;         // e.g. "12" for the spinner center
+};
+
+LoadingProgress computeLoadingProgress(int loaded, int rendered);
+std::string loadingProgressToJson(const LoadingProgress& prog);
+
 } // namespace progressive
 
 #endif // PROGRESSIVE_TIMELINE_UTILS_HPP
