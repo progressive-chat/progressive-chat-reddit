@@ -33,6 +33,7 @@ add_library(
     src/chat_preview.cpp
     src/ram_monitor.cpp
     src/cache_manager.cpp
+    src/call_models.cpp
     src/message_aggregator.cpp
     src/room_info.cpp
     src/deleted_archive.cpp
