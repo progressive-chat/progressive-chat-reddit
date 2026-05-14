@@ -104,4 +104,36 @@ std::string readMarkerToJson(const ReadMarkerState& state) {
     return json.str();
 }
 
+std::string formatTimeAgoLabel(int64_t timestampMs, int64_t nowMs) {
+    if (timestampMs <= 0) return "";
+
+    int64_t diffMs = nowMs - timestampMs;
+    if (diffMs < 0) return "just now";
+
+    int64_t seconds = diffMs / 1000;
+    int64_t minutes = seconds / 60;
+    int64_t hours = minutes / 60;
+    int64_t days = hours / 24;
+    int64_t weeks = days / 7;
+    int64_t months = days / 30;
+
+    if (seconds < 60) return "just now";
+    if (minutes == 1) return "1 minute ago";
+    if (minutes < 60) return std::to_string(minutes) + " minutes ago";
+    if (hours == 1) return "1 hour ago";
+    if (hours < 24) return std::to_string(hours) + " hours ago";
+    if (days == 1) return "yesterday";
+    if (days < 7) return std::to_string(days) + " days ago";
+    if (weeks == 1) return "1 week ago";
+    if (weeks < 5) return std::to_string(weeks) + " weeks ago";
+    if (months == 1) return "1 month ago";
+    return std::to_string(months) + " months ago";
+}
+
+std::string formatJumpToUnreadLabel(const ReadMarkerState& state, int64_t nowMs) {
+    std::string timeLabel = formatTimeAgoLabel(state.firstUnreadTimestampMs, nowMs);
+    if (timeLabel.empty()) return "Jump to unread";
+    return "Jump to unread (" + timeLabel + ")";
+}
+
 } // namespace progressive

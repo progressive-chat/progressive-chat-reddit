@@ -1089,6 +1089,11 @@ object ProgressiveNative {
     @JvmStatic external fun nativeParseUserStatus(accountDataJson: String): String
     @JvmStatic external fun nativeBuildUserStatusJson(status: String, emoji: String): String
 
+    // --- Jump to Unread Time Label ---
+    // Optional: shows \"Jump to unread (3 hours ago)\" instead of just \"Jump to unread\"
+
+    @JvmStatic external fun nativeFormatJumpToUnreadLabel(readMarkerJson: String, nowMs: Long): String
+
     // --- Content Utils (MXC URLs, Message Types) ---
     // Ported from: ContentUrlResolver.kt, MessageContent.kt
 

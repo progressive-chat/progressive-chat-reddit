@@ -1577,6 +1577,10 @@ class VectorPreferences @Inject constructor(
         return defaultPrefs.getBoolean(SETTINGS_LABS_OFFLINE_CACHE_KEY, false)
     }
 
+    fun isJumpToUnreadTimeEnabled(): Boolean {
+        return defaultPrefs.getBoolean("SETTINGS_LABS_JUMP_TO_UNREAD_TIME", false)
+    }
+
     fun isDuplicateNamesEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_DUPLICATE_NAMES_KEY, false)
     }

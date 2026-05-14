@@ -15,14 +15,15 @@ namespace progressive {
 
 struct ReadMarkerState {
     std::string roomId;
-    std::string lastReadEventId;       // server-side read marker
-    std::string firstUnreadEventId;    // first event after read marker
-    int unreadCount = 0;               // events between read marker and latest
-    int unreadMentions = 0;            // @mentions in unread range
-    int unreadHighlights = 0;          // @room + keyword matches
+    std::string lastReadEventId;
+    std::string firstUnreadEventId;
+    int64_t firstUnreadTimestampMs = 0;  // when the first unread event was sent
+    int unreadCount = 0;
+    int unreadMentions = 0;
+    int unreadHighlights = 0;
     bool hasUnread = false;
-    bool showReadMarker = false;       // show "New messages" divider
-    int readMarkerIndex = -1;          // position in the loaded event list
+    bool showReadMarker = false;
+    int readMarkerIndex = -1;
 };
 
 // Compute read marker position in the loaded event list.
@@ -42,6 +43,15 @@ bool shouldShowJumpToUnread(const ReadMarkerState& state);
 
 // Format unread count for the jump button: "14 new messages".
 std::string formatUnreadJumpLabel(const ReadMarkerState& state);
+
+// Format a "time ago" label for the jump button.
+// "Jump to unread (3 hours ago)", "Jump to unread (5 days ago)"
+// Returns empty string if firstUnreadTimestampMs is 0.
+std::string formatTimeAgoLabel(int64_t timestampMs, int64_t nowMs);
+
+// Format the complete jump button text with optional time suffix.
+// Returns "Jump to unread (3 hours ago)" or "Jump to unread" if no timestamp.
+std::string formatJumpToUnreadLabel(const ReadMarkerState& state, int64_t nowMs);
 
 // Update read marker after sending own message (auto-advance).
 std::string advanceReadMarker(const std::string& currentRoomId, const std::string& latestEventId);
