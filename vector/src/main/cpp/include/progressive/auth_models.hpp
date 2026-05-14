@@ -222,7 +222,146 @@ SecretStorageKeyContent parseSecretStorageKey(const std::string& json);
 EncryptedSecretContent parseEncryptedSecret(const std::string& json);
 KeyInfoResult parseKeyInfoResult(const std::string& json);
 
-// ==== HomeServer Capabilities ====
+// ==== Auth Metadata (OAuth 2.0 / MSC4191) ====
+//
+// Original Kotlin (AuthMetadata.kt:38-48):
+//   data class AuthMetadata(issuer, accountManagementUri, accountManagementActionsSupported)
+
+struct AuthMetadata {
+    std::string issuer;                                      // OIDC issuer URL
+    std::string accountManagementUri;                        // external account management
+    std::vector<std::string> accountManagementActions;       // supported actions
+};
+
+// ==== Registration Result ====
+//
+// Original Kotlin (RegistrationResult.kt:28-47):
+//   sealed class RegistrationResult { Success(session) / FlowResponse(flowResult) }
+
+struct FlowResult {
+    std::vector<std::string> missingStages;
+    std::vector<std::string> completedStages;
+};
+
+enum class RegistrationResultType { SUCCESS = 0, FLOW_RESPONSE = 1 };
+
+struct RegistrationResult {
+    RegistrationResultType type = RegistrationResultType::FLOW_RESPONSE;
+    FlowResult flowResult;                                   // for FLOW_RESPONSE
+    std::string sessionJson;                                 // for SUCCESS — Session serialized
+};
+
+// ==== Well-Known Result (Discovery) ====
+//
+// Original Kotlin (WellknownResult.kt:24-53):
+//   sealed class WellknownResult { Prompt / Ignore / FailPrompt / FailError }
+
+enum class WellknownResultType { PROMPT = 0, IGNORE = 1, FAIL_PROMPT = 2, FAIL_ERROR = 3 };
+
+struct WellknownResult {
+    WellknownResultType type = WellknownResultType::IGNORE;
+    std::string homeServerUrl;                               // for PROMPT
+    std::string identityServerUrl;                           // for PROMPT
+    WellKnown wellKnown;                                     // parsed well-known JSON
+    std::string errorMessage;                                // for FAIL_ERROR
+};
+
+// ==== Room Notification State ====
+//
+// Original Kotlin (RoomNotificationState.kt:23-30):
+//   enum class RoomNotificationState { ALL_MESSAGES_NOISY, ALL_MESSAGES, MENTIONS_ONLY, MUTE }
+
+enum class RoomNotificationState {
+    ALL_MESSAGES_NOISY = 0, ALL_MESSAGES = 1, MENTIONS_ONLY = 2, MUTE = 3
+};
+
+// ==== Room Sort Order ====
+//
+// Original Kotlin (RoomSortOrder.kt:22-31):
+//   enum class RoomSortOrder { NAME, ACTIVITY, PRIORITY_AND_ACTIVITY, NONE }
+
+enum class RoomSortOrder {
+    NAME = 0, ACTIVITY = 1, PRIORITY_AND_ACTIVITY = 2, NONE = 3
+};
+
+// ==== Pusher (Push Notifications) ====
+//
+// Original Kotlin (Pusher.kt:25-56), (PusherData.kt), (PusherState enum)
+
+enum class PusherState { UNREGISTERED = 0, REGISTERING = 1, UNREGISTERING = 2, REGISTERED = 3, FAILED_TO_REGISTER = 4 };
+
+struct PusherData {
+    std::string url;                                         // HTTP pusher URL
+    std::string format;                                      // "event_id_only"
+};
+
+struct Pusher {
+    std::string pushKey;
+    std::string kind;                                        // "http" or "email"
+    std::string appId;
+    std::string appDisplayName;
+    std::string deviceDisplayName;
+    std::string profileTag;
+    std::string lang;
+    PusherData data;
+    bool enabled = true;
+    std::string deviceId;
+    PusherState state = PusherState::UNREGISTERED;
+};
+
+// ==== Content Scanner ====
+//
+// Original Kotlin (ScanState.kt:21-28): enum + data class ScanStatusInfo
+
+enum class ScanState { TRUSTED = 0, INFECTED = 1, UNKNOWN = 2, IN_PROGRESS = 3 };
+
+struct ScanStatusInfo {
+    ScanState state = ScanState::UNKNOWN;
+    int64_t scanDateTimestamp = 0;
+    std::string humanReadableMessage;
+};
+
+// ==== UIA Result ====
+//
+// Original Kotlin (UiaResult.kt:22-26): enum class UiaResult { SUCCESS, FAILURE, CANCELLED }
+
+enum class UiaResult { SUCCESS = 0, FAILURE = 1, CANCELLED = 2 };
+
+// ==== Preview URL Data ====
+//
+// Original Kotlin (PreviewUrlData.kt:37-52):
+//   data class PreviewUrlData(url, siteName, title, description, mxcUrl, imageWidth, imageHeight)
+
+struct PreviewUrlData {
+    std::string url;                                         // og:url
+    std::string siteName;                                    // og:site_name
+    std::string title;                                       // og:title
+    std::string description;                                 // og:description
+    std::string mxcUrl;                                      // og:image
+    int imageWidth = 0;                                      // og:image:width
+    int imageHeight = 0;                                     // og:image:height
+};
+
+// ==== Timeline Event ====
+//
+// Original Kotlin (TimelineEvent.kt:44-71):
+//   data class TimelineEvent(root: Event, localId, eventId, displayIndex, senderInfo, annotations, readReceipts)
+
+struct TimelineEvent {
+    Event root;
+    int64_t localId = 0;
+    std::string eventId;
+    int displayIndex = 0;
+    bool ownedByThreadChunk = false;
+    std::string senderInfoJson;                              // SenderInfo serialized
+    std::string annotationsJson;                             // EventAnnotationsSummary serialized
+    std::vector<std::string> readReceiptIds;                 // read receipt event IDs
+    std::string roomId;
+
+    bool isEncrypted() const { return root.type == "m.room.encrypted"; }
+};
+
+// ==== JSON Parsing (extended) ====
 //
 // Original Kotlin (HomeServerCapabilities.kt:25-192):
 //   data class HomeServerCapabilities(canChangePassword, canChangeDisplayName,
