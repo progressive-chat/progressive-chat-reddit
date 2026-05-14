@@ -333,6 +333,12 @@ struct AggregatedReplace {
 };
 
 // Extended AggregatedRelations (full struct, not just chunks)
+
+struct LatestThreadUnsignedRelation : UnsignedRelationInfo {
+    Event latestEvent;                       // "latest_event" key
+    bool isUserParticipating = false;        // "current_user_participated" key
+};
+
 struct AggregatedRelationsFull {
     AggregatedAnnotation annotations;    // "m.annotation" key
     DefaultUnsignedRelationInfo references; // "m.reference" key
@@ -381,11 +387,6 @@ struct StableUnstableId {
 //       @Json(name="latest_event") event: Event?,
 //       @Json(name="current_user_participated") isUserParticipating: Boolean?
 //   )
-
-struct LatestThreadUnsignedRelation : UnsignedRelationInfo {
-    Event latestEvent;                       // "latest_event" key
-    bool isUserParticipating = false;        // "current_user_participated" key
-};
 
 // ==== Valid Decrypted Event ====
 //
