@@ -50,6 +50,17 @@ std::string replaceSpaceChars(const std::string& input) {
 //       return if (hasDecimal) "${truncated / 10.0}$suffix" else "${truncated / 10}$suffix"
 //   }
 
+std::string trim(const std::string& input) {
+    size_t start = 0;
+    while (start < input.size() && (input[start] == ' ' || input[start] == '\t'
+        || input[start] == '\n' || input[start] == '\r')) start++;
+    if (start >= input.size()) return "";
+    size_t end = input.size() - 1;
+    while (end > start && (input[end] == ' ' || input[end] == '\t'
+        || input[end] == '\n' || input[end] == '\r')) end--;
+    return input.substr(start, end - start + 1);
+}
+
 std::string formatCountToShortDecimal(int64_t value) {
     if (value < 0) return "-" + formatCountToShortDecimal(-value);
     if (value < 1000) return std::to_string(value);
