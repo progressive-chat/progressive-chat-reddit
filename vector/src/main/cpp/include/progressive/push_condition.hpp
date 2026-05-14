@@ -2,6 +2,7 @@
 #define PROGRESSIVE_PUSH_CONDITION_HPP
 
 #include <string>
+#include <vector>
 
 namespace progressive {
 

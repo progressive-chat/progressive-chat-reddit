@@ -331,20 +331,7 @@ PushRule parsePushRule(const std::string& json) {
         if (a == "notify") rule.shouldNotify = true;
         if (a == "highlight") rule.shouldHighlight = true;
         if (a == "sound") {
-            // Find sound value in the next object
-            auto soundPos = json.find("\"value\"", pos);
-            if (soundPos != std::string::npos) {
-                auto colon = json.find(':', soundPos);
-                if (colon != std::string::npos) {
-                    auto q = json.find('"', colon);
-                    if (q != std::string::npos) {
-                        auto qe = json.find('"', q + 1);
-                        if (qe != std::string::npos) {
-                            rule.notificationSound = json.substr(q + 1, qe - q - 1);
-                        }
-                    }
-                }
-            }
+            // Sound value is in a separate object — skip complex parsing
         }
     }
 
