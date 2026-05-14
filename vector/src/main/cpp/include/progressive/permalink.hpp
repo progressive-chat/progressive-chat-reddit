@@ -84,6 +84,31 @@ bool isEmailInviteLink(const std::string& url);
 // URL-decode a string (replaces %20 with space, etc.)
 std::string urlDecode(const std::string& encoded);
 
+// Compute via parameters for a Matrix permalink.
+// Faithful port from org.matrix.android.sdk.internal.session.permalinks.ViaParameterFinder.kt (103L)
+//
+// Selects up to `max` server names by:
+//   1. Getting joined members of the room
+//   2. Extracting server names (domain from MXID)
+//   3. Grouping by server, counting members
+//   4. Sorting by count (most representative first)
+//   5. Ensuring the requesting user's server is included
+//   6. Taking top `max` servers
+//
+// @param myUserId  The requesting user's MXID
+// @param memberUserIds  List of joined member MXIDs
+// @param maxServers  Max via servers to include (default 3)
+// @return List of server names, sorted by representativeness
+std::vector<std::string> computeViaParams(
+    const std::string& myUserId,
+    const std::vector<std::string>& memberUserIds,
+    int maxServers = 3
+);
+
+// Format via parameters as URL query string.
+// ["matrix.org", "elsewhere.com"] → "?via=matrix.org&via=elsewhere.com"
+std::string formatViaParamsUrl(const std::vector<std::string>& viaServers);
+
 } // namespace progressive
 
 #endif // PROGRESSIVE_PERMALINK_HPP

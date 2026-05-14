@@ -1,6 +1,7 @@
 #include "progressive/permalink.hpp"
 #include "progressive/url_tools.hpp"
 #include <sstream>
+#include <unordered_map>
 
 namespace progressive {
 
@@ -214,6 +215,78 @@ std::string urlDecode(const std::string& encoded) {
         else result += encoded[i];
     }
     return result;
+}
+
+// ==== Via Parameter Computation (from ViaParameterFinder.kt:36-64) ====
+// Original Kotlin:
+//   fun computeViaParams(userId: String, roomId: String, max: Int): List<String> {
+//       val userHomeserver = userId.getServerName()
+//       return getUserIdsOfJoinedMembers(roomId)
+//           .map { it.getServerName() }
+//           .groupBy { it }.mapValues { it.value.size }.toMutableMap()
+//           .apply { this[userHomeserver] = Int.MAX_VALUE }
+//           .let { map -> map.keys.sortedByDescending { map[it] } }
+//           .take(max)
+//   }
+
+std::vector<std::string> computeViaParams(
+    const std::string& myUserId,
+    const std::vector<std::string>& memberUserIds,
+    int maxServers)
+{
+    // Extract the current user's server name
+    std::string myServer;
+    {
+        auto colon = myUserId.rfind(':');
+        if (colon != std::string::npos) myServer = myUserId.substr(colon + 1);
+    }
+
+    // Extract server names from all member MXIDs
+    std::vector<std::string> servers;
+    for (const auto& uid : memberUserIds) {
+        auto colon = uid.rfind(':');
+        if (colon != std::string::npos) {
+            servers.push_back(uid.substr(colon + 1));
+        }
+    }
+
+    // Group by server and count members per server
+    std::unordered_map<std::string, int> serverCounts;
+    for (const auto& srv : servers) {
+        serverCounts[srv]++;
+    }
+
+    // Original: .apply { this[userHomeserver] = Int.MAX_VALUE }
+    // Ensure the user's own server is included (highest priority)
+    if (!myServer.empty()) serverCounts[myServer] = INT32_MAX;
+
+    // Sort servers by count (descending)
+    std::vector<std::pair<std::string, int>> sorted;
+    for (const auto& [srv, count] : serverCounts) {
+        sorted.push_back({srv, count});
+    }
+    std::sort(sorted.begin(), sorted.end(),
+        [](const auto& a, const auto& b) { return a.second > b.second; });
+
+    // Take top N
+    std::vector<std::string> result;
+    for (int i = 0; i < maxServers && i < static_cast<int>(sorted.size()); ++i) {
+        result.push_back(sorted[i].first);
+    }
+
+    return result;
+}
+
+std::string formatViaParamsUrl(const std::vector<std::string>& viaServers) {
+    if (viaServers.empty()) return "";
+
+    std::ostringstream out;
+    out << "?via=";
+    for (size_t i = 0; i < viaServers.size(); ++i) {
+        if (i > 0) out << "&via=";
+        out << viaServers[i];  // URL-encoding could be added
+    }
+    return out.str();
 }
 
 } // namespace progressive
