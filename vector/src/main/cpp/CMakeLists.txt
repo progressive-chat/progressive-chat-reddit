@@ -136,6 +136,7 @@ add_library(
     src/room_sort.cpp
     src/key_backup.cpp
     src/notif_format.cpp
+    src/matrix_error.cpp
     src/olm.cpp
     src/jni_bridge.cpp
 )

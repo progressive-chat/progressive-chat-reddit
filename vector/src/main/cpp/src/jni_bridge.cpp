@@ -133,6 +133,7 @@
 #include "progressive/sync_filter.hpp"
 #include "progressive/room_name.hpp"
 #include "progressive/notif_format.hpp"
+#include "progressive/matrix_error.hpp"
 #include "progressive/verification_utils.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
@@ -1313,6 +1314,30 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeStripHtmlTags(
     if (jHtml) env->ReleaseStringUTFChars(jHtml, html.c_str());
     auto stripped = progressive::stripHtmlTags(html);
     return env->NewStringUTF(stripped.c_str());
+}
+
+// --- Matrix Error Parser ---
+// Ported from: MatrixError.kt (218L)
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseMatrixError(
+    JNIEnv* env, jclass, jstring jJson
+) {
+    auto json = jJson ? std::string(env->GetStringUTFChars(jJson, nullptr)) : "{}";
+    if (jJson) env->ReleaseStringUTFChars(jJson, json.c_str());
+    auto error = progressive::parseMatrixError(json);
+    auto result = progressive::matrixErrorToJson(error);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetErrorDescription(
+    JNIEnv* env, jclass, jstring jErrorCode
+) {
+    auto code = jErrorCode ? std::string(env->GetStringUTFChars(jErrorCode, nullptr)) : "";
+    if (jErrorCode) env->ReleaseStringUTFChars(jErrorCode, code.c_str());
+    auto desc = progressive::getErrorDescription(code);
+    return env->NewStringUTF(desc.c_str());
 }
 
 } // extern "C"
