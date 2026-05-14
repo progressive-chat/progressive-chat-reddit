@@ -117,28 +117,41 @@ RoomCreate parseRoomCreate(const std::string& contentJson);
 bool isUpgradedRoom(const RoomCreate& create);
 
 // ---- Room Tombstone ----
-// Ported from: org.matrix.android.sdk.api.session.room.model.tombstone.RoomTombstoneContent.kt (35L)
-//              org.matrix.android.sdk.internal.session.room.tombstone.RoomTombstoneEventProcessor.kt (49L)
+// Ported from: org.matrix.android.sdk...tombstone.RoomTombstoneContent.kt (35L)
+//              org.matrix.android.sdk...tombstone.RoomTombstoneEventProcessor.kt (49L)
 //
 // Tombstone events signal that a room has been replaced by an upgraded version.
-// When a room is upgraded, a tombstone event is sent with the replacement room ID.
 
 struct RoomTombstone {
-    std::string body;                // server-defined message
-    std::string replacementRoomId;   // new room to visit
-    bool valid = false;              // has replacement_room
+    std::string body;
+    std::string replacementRoomId;
+    bool valid = false;
 };
 
-// Parse m.room.tombstone event content.
-// Original Kotlin (RoomTombstoneContent.kt):
-//   @Json(name = "body") val body: String?
-//   @Json(name = "replacement_room") val replacementRoomId: String?
 RoomTombstone parseTombstone(const std::string& contentJson);
-
-// Check if a room has been upgraded (tombstone with replacement).
 bool isRoomUpgraded(const RoomTombstone& tombstone);
-
 std::string tombstoneToJson(const RoomTombstone& tombstone);
+
+// ---- Room Versioning State ----
+// Ported from: org.matrix.android.sdk.api.session.room.model.VersioningState.kt (39L)
+//
+// Tracks whether a room has been upgraded and whether the user joined the new room.
+
+enum class VersioningState {
+    None,                       // not versioned
+    UpgradedRoomNotJoined,      // upgraded but new room not joined
+    UpgradedRoomJoined          // upgraded and new room joined
+};
+
+inline bool isVersioned(VersioningState state) { return state != VersioningState::None; }
+inline std::string versioningStateToString(VersioningState state) {
+    switch (state) {
+        case VersioningState::None: return "none";
+        case VersioningState::UpgradedRoomNotJoined: return "upgraded_not_joined";
+        case VersioningState::UpgradedRoomJoined: return "upgraded_joined";
+    }
+    return "unknown";
+}
 
 // ---- JSON Serialization ----
 
