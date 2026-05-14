@@ -43,8 +43,14 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         // Keep abiFilter for the universalApk
+        // CI can override with -PciAbi=armeabi-v7a to limit architectures
+        def ciAbi = project.findProperty("ciAbi")
         ndk {
-            abiFilters "armeabi-v7a", "x86", 'arm64-v8a', 'x86_64'
+            if (ciAbi) {
+                abiFilters ciAbi.split(',')
+            } else {
+                abiFilters "armeabi-v7a", "x86", 'arm64-v8a', 'x86_64'
+            }
         }
 
         // Generate a random app task affinity
