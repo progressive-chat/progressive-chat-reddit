@@ -140,6 +140,7 @@
 #include "progressive/string_order.hpp"
 #include "progressive/event_classifier.hpp"
 #include "progressive/content_guard.hpp"
+#include "progressive/user_status.hpp"
 #include "progressive/verification_utils.hpp"
 #include "progressive/account_utils.hpp"
 #include <sstream>
@@ -1647,6 +1648,32 @@ Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeGetModuleCount(
     json << R"("soVersion": "development")";
     json << "}";
     return env->NewStringUTF(json.str().c_str());
+}
+
+// --- User Status (like Element Web) ---
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeParseUserStatus(
+    JNIEnv* env, jclass, jstring jAccountDataJson
+) {
+    auto json = jAccountDataJson ? std::string(env->GetStringUTFChars(jAccountDataJson, nullptr)) : "{}";
+    if (jAccountDataJson) env->ReleaseStringUTFChars(jAccountDataJson, json.c_str());
+    auto status = progressive::parseUserStatus(json);
+    auto result = progressive::userStatusToJson(status);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNIEXPORT jstring JNICALL
+Java_im_vector_app_features_jumptodate_ProgressiveNative_nativeBuildUserStatusJson(
+    JNIEnv* env, jclass, jstring jStatus, jstring jEmoji
+) {
+    auto status = jStatus ? std::string(env->GetStringUTFChars(jStatus, nullptr)) : "";
+    auto emoji = jEmoji ? std::string(env->GetStringUTFChars(jEmoji, nullptr)) : "";
+    if (jStatus) env->ReleaseStringUTFChars(jStatus, status.c_str());
+    if (jEmoji) env->ReleaseStringUTFChars(jEmoji, emoji.c_str());
+    auto now = std::time(nullptr) * 1000;
+    auto json = progressive::buildUserStatusJson(status, emoji, now);
+    return env->NewStringUTF(json.c_str());
 }
 
 } // extern "C"

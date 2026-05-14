@@ -144,6 +144,7 @@ add_library(
     src/event_classifier.cpp
     src/encrypted_file.cpp
     src/content_guard.cpp
+    src/user_status.cpp
     src/olm.cpp
     src/jni_bridge.cpp
 )

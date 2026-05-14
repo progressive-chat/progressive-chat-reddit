@@ -1084,6 +1084,11 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeGetModuleCount(): String
 
+    // --- User Status (like Element Web) ---
+
+    @JvmStatic external fun nativeParseUserStatus(accountDataJson: String): String
+    @JvmStatic external fun nativeBuildUserStatusJson(status: String, emoji: String): String
+
     // --- Content Utils (MXC URLs, Message Types) ---
     // Ported from: ContentUrlResolver.kt, MessageContent.kt
 
