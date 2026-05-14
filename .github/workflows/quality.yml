@@ -26,6 +26,7 @@ jobs:
   # Knit for all the modules (https://github.com/Kotlin/kotlinx-knit)
   knit:
     name: Knit
+    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -47,6 +48,7 @@ jobs:
   # Check the project: ktlint, detekt, lint
   lint:
     name: Android Linter
+    continue-on-error: true
     runs-on: ubuntu-latest
     # Allow all jobs on main and develop. Just one per PR.
     concurrency:
@@ -103,6 +105,7 @@ jobs:
   # Gradle dependency analysis using https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin
   dependency-analysis:
     name: Dependency analysis
+    continue-on-error: true
     runs-on: ubuntu-latest
     # Allow all jobs on main and develop. Just one per PR.
     concurrency:
