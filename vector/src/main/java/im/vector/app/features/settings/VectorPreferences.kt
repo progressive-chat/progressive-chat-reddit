@@ -154,6 +154,7 @@ class VectorPreferences @Inject constructor(
         const val SETTINGS_LABS_ROOM_NUMBERING_KEY = "SETTINGS_LABS_ROOM_NUMBERING_KEY"
         const val SETTINGS_LABS_MULTI_SERVER_EXPORT_KEY = "SETTINGS_LABS_MULTI_SERVER_EXPORT_KEY"
         const val SETTINGS_LABS_FULL_AVATAR_KEY = "SETTINGS_LABS_FULL_AVATAR_KEY"
+        const val SETTINGS_LABS_AVATAR_ORIGINAL_RATIO = "SETTINGS_LABS_AVATAR_ORIGINAL_RATIO"
         const val SETTINGS_LABS_WEB_SEARCH_KEY = "SETTINGS_LABS_WEB_SEARCH_KEY"
         const val SETTINGS_LABS_AGENT_WEB_ACCESS_KEY = "SETTINGS_LABS_AGENT_WEB_ACCESS_KEY"
         const val SETTINGS_NOTIFICATION_ICON_STYLE = "SETTINGS_NOTIFICATION_ICON_STYLE"
@@ -1712,6 +1713,10 @@ class VectorPreferences @Inject constructor(
 
     fun isFullAvatarEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_FULL_AVATAR_KEY, false)
+    }
+
+    fun isAvatarOriginalRatioEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_AVATAR_ORIGINAL_RATIO, true)
     }
 
     fun isWebSearchEnabled(): Boolean {

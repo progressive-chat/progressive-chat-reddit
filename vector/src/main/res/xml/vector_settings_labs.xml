@@ -596,6 +596,13 @@
         android:title="Full-size avatars (not circles)" />
 
     <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="true"
+        android:dependency="SETTINGS_LABS_FULL_AVATAR_KEY"
+        android:key="SETTINGS_LABS_AVATAR_ORIGINAL_RATIO"
+        android:summary="ON = preserve original aspect ratio (rectangle). OFF = force square shape"
+        android:title="Original aspect ratio (not forced square)" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
         android:defaultValue="false"
         android:key="SETTINGS_LABS_WEB_SEARCH_KEY"
         android:summary="/web command: search the web via SearXNG, DuckDuckGo, or Google. Configure endpoints in search settings."
