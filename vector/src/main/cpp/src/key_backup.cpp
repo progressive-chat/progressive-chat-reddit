@@ -121,7 +121,7 @@ std::string extractCurveKeyFromRecoveryKey(const std::string& recoveryKey) {
     if (parity != 0) return "";
 
     // Step 6: Extract key bytes (skip 2 header bytes, skip 1 parity byte at end)
-    return decoded.substr(2, 32);
+    return std::string(decoded.begin() + 2, decoded.begin() + 2 + 32);
 }
 
 std::string computeRecoveryKey(const std::string& curve25519Key) {
