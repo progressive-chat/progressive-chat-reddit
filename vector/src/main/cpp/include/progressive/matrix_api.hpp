@@ -105,4 +105,65 @@ std::string apiUploadMedia(const std::string& fileName,
 // Returns true if the TLS bridge and homeserver URL are configured.
 bool nativeApiAvailable();
 
+// ==== Additional APIs ====
+
+// GET /_matrix/client/r0/account/whoami — get current user info
+std::string apiWhoAmI();
+
+// POST /_matrix/client/r0/logout — invalidate access token
+bool apiLogout();
+
+// POST /_matrix/client/r0/logout/all — invalidate all access tokens
+bool apiLogoutAll();
+
+// GET /_matrix/client/r0/pushrules — get all push rules
+std::string apiGetPushRules();
+
+// GET /_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}
+std::string apiGetPushRule(const std::string& scope, const std::string& kind,
+                           const std::string& ruleId);
+
+// PUT /_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId} — set push rule
+std::string apiSetPushRule(const std::string& scope, const std::string& kind,
+                           const std::string& ruleId, const std::string& body);
+
+// DELETE /_matrix/client/r0/pushrules/{scope}/{kind}/{ruleId}
+bool apiDeletePushRule(const std::string& scope, const std::string& kind,
+                       const std::string& ruleId);
+
+// POST /_matrix/client/r0/user/{userId}/filter — create sync filter
+std::string apiCreateFilter(const std::string& userId, const std::string& filterJson);
+
+// POST /_matrix/client/r0/publicRooms — get public rooms
+std::string apiPublicRooms(const std::string& server = "",
+                           const std::string& searchTerm = "",
+                           int limit = 20);
+
+// POST /_matrix/client/r0/search — search messages
+std::string apiSearch(const std::string& searchTerm,
+                      const std::string& roomId = "",
+                      int limit = 10);
+
+// GET /_matrix/client/r0/rooms/{roomId}/members — get room members
+std::string apiGetRoomMembers(const std::string& roomId);
+
+// POST /_matrix/client/r0/rooms/{roomId}/invite — invite user
+std::string apiInviteUser(const std::string& roomId, const std::string& userId,
+                          const std::string& reason = "");
+
+// POST /_matrix/client/r0/rooms/{roomId}/kick — kick user
+std::string apiKickUser(const std::string& roomId, const std::string& userId,
+                        const std::string& reason = "");
+
+// POST /_matrix/client/r0/rooms/{roomId}/ban — ban user
+std::string apiBanUser(const std::string& roomId, const std::string& userId,
+                       const std::string& reason = "");
+
+// POST /_matrix/client/r0/rooms/{roomId}/unban — unban user
+std::string apiUnbanUser(const std::string& roomId, const std::string& userId);
+
+// POST /_matrix/client/r0/rooms/{roomId}/redact/{eventId}/{txnId} — redact event
+std::string apiRedactEvent(const std::string& roomId, const std::string& eventId,
+                           const std::string& txnId, const std::string& reason = "");
+
 } // namespace progressive

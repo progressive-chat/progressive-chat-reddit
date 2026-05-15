@@ -196,4 +196,123 @@ std::string apiUploadMedia(const std::string& fileName, const std::string& conte
     return resp.success ? resp.body : "";
 }
 
+// ==== Additional API Implementations ====
+
+std::string apiWhoAmI() {
+    auto resp = authGet("/_matrix/client/r0/account/whoami");
+    return resp.success ? resp.body : "";
+}
+
+bool apiLogout() {
+    auto resp = authPost("/_matrix/client/r0/logout", "{}");
+    return resp.isOk();
+}
+
+bool apiLogoutAll() {
+    auto resp = authPost("/_matrix/client/r0/logout/all", "{}");
+    return resp.isOk();
+}
+
+std::string apiGetPushRules() {
+    auto resp = authGet("/_matrix/client/r0/pushrules");
+    return resp.success ? resp.body : "";
+}
+
+std::string apiGetPushRule(const std::string& scope, const std::string& kind,
+                           const std::string& ruleId) {
+    std::string path = "/_matrix/client/r0/pushrules/" + scope + "/" + kind + "/" + ruleId;
+    auto resp = authGet(path);
+    return resp.success ? resp.body : "";
+}
+
+std::string apiSetPushRule(const std::string& scope, const std::string& kind,
+                           const std::string& ruleId, const std::string& body) {
+    std::string path = "/_matrix/client/r0/pushrules/" + scope + "/" + kind + "/" + ruleId;
+    auto resp = authPut(path, body);
+    return resp.success ? resp.body : "";
+}
+
+bool apiDeletePushRule(const std::string& scope, const std::string& kind,
+                       const std::string& ruleId) {
+    std::string path = "/_matrix/client/r0/pushrules/" + scope + "/" + kind + "/" + ruleId;
+    auto resp = httpExecute({"DELETE", g_homeserverBase + path, "",
+        {{"Authorization", "Bearer " + g_accessToken}}});
+    return resp.isOk();
+}
+
+std::string apiCreateFilter(const std::string& userId, const std::string& filterJson) {
+    auto resp = authPost("/_matrix/client/r0/user/" + userId + "/filter", filterJson);
+    return resp.success ? resp.body : "";
+}
+
+std::string apiPublicRooms(const std::string& server, const std::string& searchTerm, int limit) {
+    std::ostringstream body;
+    body << R"({"limit":)" << limit;
+    if (!server.empty()) body << R"(,"server":")" << server << R"(")";
+    if (!searchTerm.empty()) body << R"(,"filter":{"generic_search_term":")" << searchTerm << R"("})";
+    body << "}";
+    auto resp = authPost("/_matrix/client/r0/publicRooms", body.str());
+    return resp.success ? resp.body : "";
+}
+
+std::string apiSearch(const std::string& searchTerm, const std::string& roomId, int limit) {
+    std::ostringstream body;
+    body << R"({"search_categories":{"room_events":{"search_term":")" << searchTerm << R"(")";
+    if (!roomId.empty()) body << R"(,"filter":{"rooms":[")" << roomId << R"("]})";
+    body << R"(,"order_by":"recent","include_state":false)";
+    body << "}}}";
+    auto resp = authPost("/_matrix/client/r0/search", body.str());
+    return resp.success ? resp.body : "";
+}
+
+std::string apiGetRoomMembers(const std::string& roomId) {
+    auto resp = authGet("/_matrix/client/r0/rooms/" + roomId + "/members");
+    return resp.success ? resp.body : "";
+}
+
+std::string apiInviteUser(const std::string& roomId, const std::string& userId,
+                          const std::string& reason) {
+    std::ostringstream body;
+    body << R"({"user_id":")" << userId << R"(")";
+    if (!reason.empty()) body << R"(,"reason":")" << reason << R"(")";
+    body << "}";
+    auto resp = authPost("/_matrix/client/r0/rooms/" + roomId + "/invite", body.str());
+    return resp.success ? resp.body : "";
+}
+
+std::string apiKickUser(const std::string& roomId, const std::string& userId,
+                        const std::string& reason) {
+    std::ostringstream body;
+    body << R"({"user_id":")" << userId << R"(")";
+    if (!reason.empty()) body << R"(,"reason":")" << reason << R"(")";
+    body << "}";
+    auto resp = authPost("/_matrix/client/r0/rooms/" + roomId + "/kick", body.str());
+    return resp.success ? resp.body : "";
+}
+
+std::string apiBanUser(const std::string& roomId, const std::string& userId,
+                       const std::string& reason) {
+    std::ostringstream body;
+    body << R"({"user_id":")" << userId << R"(")";
+    if (!reason.empty()) body << R"(,"reason":")" << reason << R"(")";
+    body << "}";
+    auto resp = authPost("/_matrix/client/r0/rooms/" + roomId + "/ban", body.str());
+    return resp.success ? resp.body : "";
+}
+
+std::string apiUnbanUser(const std::string& roomId, const std::string& userId) {
+    std::ostringstream body;
+    body << R"({"user_id":")" << userId << R"("})";
+    auto resp = authPost("/_matrix/client/r0/rooms/" + roomId + "/unban", body.str());
+    return resp.success ? resp.body : "";
+}
+
+std::string apiRedactEvent(const std::string& roomId, const std::string& eventId,
+                           const std::string& txnId, const std::string& reason) {
+    std::string path = "/_matrix/client/r0/rooms/" + roomId + "/redact/" + eventId + "/" + txnId;
+    std::string body = reason.empty() ? "{}" : R"({"reason":")" + reason + R"("})";
+    auto resp = authPut(path, body);
+    return resp.success ? resp.body : "";
+}
+
 } // namespace progressive
