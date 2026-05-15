@@ -2112,4 +2112,19 @@ JNI_FUNC(jboolean, nativeIsImageUrl)(JNIEnv* env, jclass, jstring jUrl) {
     return progressive::isImageUrl(jStr(env, jUrl)) ? JNI_TRUE : JNI_FALSE;
 }
 
+// --- Key Backup Extended ---
+
+JNI_FUNC(jstring, nativeGetRecoveryKeyExample)(JNIEnv* env, jclass) {
+    auto result = progressive::getRecoveryKeyExample();
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jboolean, nativeIsValidPassphrase)(JNIEnv* env, jclass, jstring jPass) {
+    return progressive::isValidPassphrase(jStr(env, jPass)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jint, nativeGetMinPassphraseLength)(JNIEnv* env, jclass) {
+    return progressive::getMinPassphraseLength();
+}
+
 } // extern "C"

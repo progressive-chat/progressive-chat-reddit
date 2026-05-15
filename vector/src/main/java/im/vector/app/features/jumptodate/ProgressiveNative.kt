@@ -662,10 +662,6 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeFormatTypingText(namesJson: String): String
 
-    // --- Link Preview ---
-
-    @JvmStatic external fun nativeIsImageUrl(url: String): Boolean
-
     // --- Hash Utils ---
 
     @JvmStatic external fun nativeSha256Hex(input: String): String
@@ -1456,9 +1452,13 @@ object ProgressiveNative {
     @JvmStatic external fun nativeIsMsisdn(input: String): Boolean
     @JvmStatic external fun nativeExtractAliasLocalpart(alias: String): String
 
-    // --- Link Preview ---
-
     @JvmStatic external fun nativeIsImageUrl(url: String): Boolean
+
+    // --- Key Backup Extended ---
+
+    @JvmStatic external fun nativeGetRecoveryKeyExample(): String
+    @JvmStatic external fun nativeIsValidPassphrase(passphrase: String): Boolean
+    @JvmStatic external fun nativeGetMinPassphraseLength(): Int
 
     // --- OIDC / MAS Authentication ---
 
@@ -2516,5 +2516,10 @@ object ProgressiveNative {
     // --- Link Preview fallback ---
     @JvmStatic fun nativeIsImageUrlFallback(url: String): Boolean =
         url.endsWith(".jpg") || url.endsWith(".png") || url.endsWith(".gif") || url.endsWith(".webp")
+
+    // --- Key Backup Extended fallbacks ---
+    @JvmStatic fun nativeGetRecoveryKeyExampleFallback(): String = "EsTj 4fGz 8hWq ... (example)"
+    @JvmStatic fun nativeIsValidPassphraseFallback(passphrase: String): Boolean = passphrase.length >= 8
+    @JvmStatic fun nativeGetMinPassphraseLengthFallback(): Int = 8
 
 }
