@@ -734,4 +734,59 @@ struct CacheConfig {
     static CacheConfig infiniteCache() { return {CacheStrategyType::INFINITE_CACHE, 0, true}; }
 };
 
+// ==== Register ThreePid ====
+struct RegisterThreePid {
+    enum Type { EMAIL = 0, MSISDN = 1 };
+    Type type = Type::EMAIL;
+    std::string email;
+    std::string msisdn;
+    std::string countryCode;
+};
+
+// ==== Login Profile Info ====
+struct LoginProfileInfo {
+    std::string matrixId;
+    std::string displayName;
+    std::string fullAvatarUrl;
+};
+
+// ==== URL + Name pair ====
+struct UrlAndName {
+    std::string url;
+    std::string name;
+};
+
+// ==== Thread Editions ====
+struct ThreadEditions {
+    std::string rootThreadEdition;
+    std::string latestThreadEdition;
+};
+
+// ==== Thread Summary Update Type ====
+enum class ThreadSummaryUpdateType { REPLACE = 0, ADD = 1 };
+
+// ==== Fetch Threads Result ====
+enum class FetchThreadsResultType { MORE = 0, REACHED_END = 1 };
+struct FetchThreadsResult {
+    FetchThreadsResultType type = FetchThreadsResultType::REACHED_END;
+    std::string nextBatch;
+};
+
+// ==== Key Ref ====
+struct KeyRef {
+    std::string keyId;
+    std::string keySpecJson; // SsssKeySpec serialized
+};
+
+// ==== Integrity Result ====
+enum class IntegrityResultType { SUCCESS = 0, ERROR = 1 };
+struct IntegrityResult {
+    IntegrityResultType type = IntegrityResultType::ERROR;
+    bool passphraseBased = false;
+    std::string errorDetail;
+};
+
+// ==== Matrix ID Failure ====
+enum class MatrixIdFailureType { INVALID = 0 };
+
 } // namespace progressive
