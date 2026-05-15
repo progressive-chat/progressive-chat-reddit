@@ -1785,4 +1785,83 @@ JNI_FUNC(jstring, nativeFormatCrossSigningStatus)(JNIEnv* env, jclass, jstring j
     return env->NewStringUTF("Setup needed");
 }
 
+// --- Event Display Classification ---
+
+JNI_FUNC(jstring, nativeGetEventTypeDescription)(JNIEnv* env, jclass, jstring jType, jstring jMsgType) {
+    auto dt = progressive::classifyEvent(jStr(env, jType), jStr(env, jMsgType));
+    auto result = progressive::getEventTypeDescription(dt);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeGetEventTypeIcon)(JNIEnv* env, jclass, jstring jType, jstring jMsgType) {
+    auto dt = progressive::classifyEvent(jStr(env, jType), jStr(env, jMsgType));
+    auto result = progressive::getEventTypeIcon(dt);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jboolean, nativeIsContinuation)(JNIEnv* env, jclass, jstring jCurSender, jstring jPrevSender,
+    jlong jCurTs, jlong jPrevTs) {
+    return progressive::isContinuation(
+        jStr(env, jCurSender), jStr(env, jPrevSender), jCurTs, jPrevTs) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeShouldShowAvatar)(JNIEnv* env, jclass, jstring jCurSender, jstring jPrevSender, jboolean jIsLast) {
+    return progressive::shouldShowAvatar(
+        jStr(env, jCurSender), jStr(env, jPrevSender), jIsLast) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Power Levels ---
+
+JNI_FUNC(jstring, nativeParseRoomPowerLevels)(JNIEnv* env, jclass, jstring jStateJson) {
+    auto pl = progressive::parseRoomPowerLevels(jStr(env, jStateJson));
+    std::ostringstream os;
+    os << R"({"users_default":)" << pl.usersDefault
+       << R"(,"events_default":)" << pl.eventsDefault
+       << R"(,"state_default":)" << pl.stateDefault
+       << R"(,"ban":)" << pl.ban << R"(,"kick":)" << pl.kick
+       << R"(,"redact":)" << pl.redact << R"(,"invite":)" << pl.invite
+       << R"(,"notifications_room":)" << pl.notificationsRoom << "}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jboolean, nativeHasPower)(JNIEnv* env, jclass, jstring jPlJson, jstring jUserId, jstring jAction) {
+    auto json = jStr(env, jPlJson);
+    progressive::RoomPowerLevels pl;
+    pl.usersDefault = 0; pl.eventsDefault = 0; pl.stateDefault = 50;
+    pl.ban = 50; pl.kick = 50; pl.redact = 50; pl.invite = 50;
+    // Parse defaults from JSON
+    auto extractInt = [&](const std::string& key) -> int {
+        auto pos = json.find("\"" + key + "\"");
+        if (pos == std::string::npos) return -1;
+        pos = json.find(':', pos);
+        if (pos == std::string::npos) return -1;
+        pos++; while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t')) pos++;
+        int v = 0; while (pos < json.size() && json[pos] >= '0' && json[pos] <= '9') { v = v*10+(json[pos]-'0'); pos++; }
+        return v;
+    };
+    int ud = extractInt("users_default"); if (ud >= 0) pl.usersDefault = ud;
+    int ed = extractInt("events_default"); if (ed >= 0) pl.eventsDefault = ed;
+    int sd = extractInt("state_default"); if (sd >= 0) pl.stateDefault = sd;
+    int ba = extractInt("ban"); if (ba >= 0) pl.ban = ba;
+    int ki = extractInt("kick"); if (ki >= 0) pl.kick = ki;
+    int re = extractInt("redact"); if (re >= 0) pl.redact = re;
+    int inv = extractInt("invite"); if (inv >= 0) pl.invite = inv;
+    // Check user-specific level
+    auto uid = jStr(env, jUserId);
+    auto usersPos = json.find("\"users\"");
+    if (usersPos != std::string::npos) {
+        auto userKey = "\"" + uid + "\"";
+        auto up = json.find(userKey, usersPos);
+        if (up != std::string::npos) {
+            up = json.find(':', up);
+            if (up != std::string::npos) {
+                up++; while (up < json.size() && (json[up] == ' ' || json[up] == '\t')) up++;
+                int lv = 0; while (up < json.size() && json[up] >= '0' && json[up] <= '9') { lv = lv*10+(json[up]-'0'); up++; }
+                pl.users[uid] = lv;
+            }
+        }
+    }
+    return progressive::hasPower(pl, uid, jStr(env, jAction)) ? JNI_TRUE : JNI_FALSE;
+}
+
 } // extern "C"

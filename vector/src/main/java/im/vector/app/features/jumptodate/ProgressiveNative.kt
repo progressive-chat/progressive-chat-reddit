@@ -1371,6 +1371,17 @@ object ProgressiveNative {
     @JvmStatic external fun nativeNeedsCrossSigningSetup(statusJson: String): Boolean
     @JvmStatic external fun nativeFormatCrossSigningStatus(statusJson: String): String
 
+    // --- Event Type Display ---
+
+    @JvmStatic external fun nativeGetEventTypeDescription(eventType: String, msgType: String): String
+    @JvmStatic external fun nativeGetEventTypeIcon(eventType: String, msgType: String): String
+    @JvmStatic external fun nativeIsContinuation(curSender: String, prevSender: String, curTs: Long, prevTs: Long): Boolean
+
+    // --- Power Levels ---
+
+    @JvmStatic external fun nativeParseRoomPowerLevels(stateContentJson: String): String
+    @JvmStatic external fun nativeHasPower(plJson: String, userId: String, action: String): Boolean
+
     // --- OIDC / MAS Authentication ---
 
     @JvmStatic external fun nativeDiscoverOidc(homeserverUrl: String): String
@@ -2250,7 +2261,7 @@ object ProgressiveNative {
     @JvmStatic fun nativeFormatEditSummaryFallback(originalBody: String, newBody: String): String = newBody
     @JvmStatic fun nativeGetEditBadgeTextFallback(editCount: Int): String = if (editCount > 0) "Edited ($editCount)" else ""
 
-    // --- Cross-Signing fallbacks ---
+    // --- Edit History fallbacks ---
     @JvmStatic fun nativeNeedsCrossSigningSetupFallback(statusJson: String): Boolean =
         !statusJson.contains("\"master_key_ok\":true") || !statusJson.contains("\"self_signing_key_ok\":true")
     @JvmStatic fun nativeFormatCrossSigningStatusFallback(statusJson: String): String {
@@ -2296,5 +2307,20 @@ object ProgressiveNative {
     @JvmStatic fun nativeSqliteDbBeginTransactionFallback(key: String) {}
     @JvmStatic fun nativeSqliteDbCommitTransactionFallback(key: String) {}
     @JvmStatic fun nativeSqliteDbSchemaVersionFallback(key: String): Int = 0
+
+    // --- Event Type / Power Level fallbacks ---
+    @JvmStatic fun nativeGetEventTypeDescriptionFallback(eventType: String, msgType: String): String = when(msgType) {
+        "m.image" -> "Image"; "m.video" -> "Video"; "m.audio" -> "Audio"; "m.file" -> "File"
+        "m.emote" -> "* ${eventType}"; "m.notice" -> "Notice"; else -> "Message"
+    }
+    @JvmStatic fun nativeGetEventTypeIconFallback(eventType: String, msgType: String): String = when(msgType) {
+        "m.image" -> "📷"; "m.video" -> "🎥"; "m.audio" -> "🎵"; "m.file" -> "📎"
+        "m.emote" -> "💬"; else -> "💬"
+    }
+    @JvmStatic fun nativeIsContinuationFallback(curSender: String, prevSender: String, curTs: Long, prevTs: Long): Boolean =
+        curSender == prevSender && (curTs - prevTs) < 300_000
+    @JvmStatic fun nativeParseRoomPowerLevelsFallback(stateContentJson: String): String =
+        """{"users_default":0,"events_default":0,"state_default":50,"ban":50,"kick":50,"redact":50,"invite":50}"""
+    @JvmStatic fun nativeHasPowerFallback(plJson: String, userId: String, action: String): Boolean = true
 
 }
