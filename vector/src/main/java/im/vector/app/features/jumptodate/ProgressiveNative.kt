@@ -1439,6 +1439,25 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeIsImageUrl(url: String): Boolean
 
+    // --- Permalink Parser ---
+
+    @JvmStatic external fun nativeExtractRoomIdFromPermalink(url: String): String
+    @JvmStatic external fun nativeExtractEventIdFromPermalink(url: String): String
+    @JvmStatic external fun nativeExtractUserIdFromPermalink(url: String): String
+
+    // --- URL Preview ---
+
+    @JvmStatic external fun nativeStripHtmlTags(html: String): String
+    @JvmStatic external fun nativeTruncateDescription(text: String, maxLen: Int): String
+
+    // --- Device Type ---
+
+    @JvmStatic external fun nativeClassifyDeviceType(userAgent: String, clientName: String): String
+
+    // --- Version Comparison ---
+
+    @JvmStatic external fun nativeCompareSemver(a: String, b: String): Int
+
     // --- OIDC / MAS Authentication ---
 
     @JvmStatic external fun nativeDiscoverOidc(homeserverUrl: String): String
@@ -2494,5 +2513,36 @@ object ProgressiveNative {
     // --- Link Preview fallback ---
     @JvmStatic fun nativeIsImageUrlFallback(url: String): Boolean =
         url.endsWith(".jpg") || url.endsWith(".png") || url.endsWith(".gif") || url.endsWith(".webp")
+
+    // --- Permalink Parser fallbacks ---
+    @JvmStatic fun nativeExtractRoomIdFromPermalinkFallback(url: String): String =
+        Regex("[!#][^:/?#]+").find(url)?.value ?: ""
+    @JvmStatic fun nativeExtractEventIdFromPermalinkFallback(url: String): String =
+        Regex("\\\$[^:/?#]+").find(url)?.value ?: ""
+    @JvmStatic fun nativeExtractUserIdFromPermalinkFallback(url: String): String =
+        Regex("@[^:/?#]+").find(url)?.value ?: ""
+
+    // --- URL Preview fallbacks ---
+    @JvmStatic fun nativeStripHtmlTagsFallback(html: String): String = html.replace(Regex("<[^>]*>"), " ").replace(Regex("\\s+"), " ").trim()
+    @JvmStatic fun nativeTruncateDescriptionFallback(text: String, maxLen: Int): String =
+        if (text.length <= maxLen) text else text.take(maxLen).substringBeforeLast(" ") + "…"
+
+    // --- Device Type fallback ---
+    @JvmStatic fun nativeClassifyDeviceTypeFallback(userAgent: String, clientName: String): String = when {
+        userAgent.contains("Mobile") || userAgent.contains("Android") -> "Mobile"
+        userAgent.contains("Tablet") -> "Tablet"
+        else -> "Desktop"
+    }
+
+    // --- Version Comparison fallback ---
+    @JvmStatic fun nativeCompareSemverFallback(a: String, b: String): Int {
+        val ap = a.split(".").map { it.toIntOrNull() ?: 0 }
+        val bp = b.split(".").map { it.toIntOrNull() ?: 0 }
+        for (i in 0 until maxOf(ap.size, bp.size)) {
+            val av = ap.getOrElse(i) { 0 }; val bv = bp.getOrElse(i) { 0 }
+            if (av != bv) return av.compareTo(bv)
+        }
+        return 0
+    }
 
 }

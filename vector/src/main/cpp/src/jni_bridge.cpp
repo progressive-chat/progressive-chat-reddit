@@ -2119,6 +2119,48 @@ JNI_FUNC(jboolean, nativeIsImageUrl)(JNIEnv* env, jclass, jstring jUrl) {
     return progressive::isImageUrl(jStr(env, jUrl)) ? JNI_TRUE : JNI_FALSE;
 }
 
+// --- Permalink Parser ---
+
+JNI_FUNC(jstring, nativeExtractRoomIdFromPermalink)(JNIEnv* env, jclass, jstring jUrl) {
+    auto result = progressive::extractRoomIdFromPermalink(jStr(env, jUrl));
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeExtractEventIdFromPermalink)(JNIEnv* env, jclass, jstring jUrl) {
+    auto result = progressive::extractEventIdFromPermalink(jStr(env, jUrl));
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeExtractUserIdFromPermalink)(JNIEnv* env, jclass, jstring jUrl) {
+    auto result = progressive::extractUserIdFromPermalink(jStr(env, jUrl));
+    return env->NewStringUTF(result.c_str());
+}
+
+// --- URL Preview ---
+
+JNI_FUNC(jstring, nativeStripHtmlTags)(JNIEnv* env, jclass, jstring jHtml) {
+    auto result = progressive::stripHtmlTags(jStr(env, jHtml));
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeTruncateDescription)(JNIEnv* env, jclass, jstring jText, jint jMax) {
+    auto result = progressive::truncateDescription(jStr(env, jText), jMax);
+    return env->NewStringUTF(result.c_str());
+}
+
+// --- Device Type ---
+
+JNI_FUNC(jstring, nativeClassifyDeviceType)(JNIEnv* env, jclass, jstring jAgent, jstring jClient) {
+    auto result = progressive::classifyDeviceType(jStr(env, jAgent), jStr(env, jClient));
+    return env->NewStringUTF(result.c_str());
+}
+
+// --- Version Comparison ---
+
+JNI_FUNC(jint, nativeCompareSemver)(JNIEnv* env, jclass, jstring jA, jstring jB) {
+    return progressive::compareSemver(jStr(env, jA), jStr(env, jB));
+}
+
 // --- Key Backup Extended ---
 
 JNI_FUNC(jstring, nativeGetRecoveryKeyExample)(JNIEnv* env, jclass) {
