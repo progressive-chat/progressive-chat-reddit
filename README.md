@@ -2,7 +2,7 @@
 
 A Matrix client in the making. The goal: a truly progressive messenger with a **pure C++ native** core.
 
-Currently an active fork of [Element](https://github.com/element-hq) Classic ([element-android](https://github.com/element-hq/element-android)). Kotlin/Java components are being gradually replaced with native C++ — starting with real features.
+Currently an active fork of [Element](https://github.com/element-hq) Classic ([element-android](https://github.com/element-hq/element-android)). The Rust SDK (`matrix-rust-sdk`) is being removed in favor of pure C++ crypto via libolm. Kotlin/Java components are gradually replaced with native C++ — starting with real features.
 
 🚀 **Rocket-speed development** — a full Matrix client implemented in months, not years. 170+ C++ native modules and counting.
 
