@@ -2181,19 +2181,37 @@ JNI_FUNC(jstring, nativeExtractDeviceFingerprint)(JNIEnv* env, jclass, jstring j
     return env->NewStringUTF(result.c_str());
 }
 
-// --- Key Backup Extended ---
+// --- Event Distance ---
 
-JNI_FUNC(jstring, nativeGetRecoveryKeyExample)(JNIEnv* env, jclass) {
-    auto result = progressive::getRecoveryKeyExample();
+JNI_FUNC(jint, nativeEventDistance)(JNIEnv* env, jclass, jint jA, jint jB) {
+    return progressive::eventDistance(jA, jB);
+}
+
+// --- Widget Validation ---
+
+JNI_FUNC(jboolean, nativeIsEtherpadWidget)(JNIEnv* env, jclass, jstring jType) {
+    return progressive::isEtherpadWidget(jStr(env, jType)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeIsValidWidgetUrl)(JNIEnv* env, jclass, jstring jUrl) {
+    return progressive::isValidWidgetUrl(jStr(env, jUrl)) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Encryption Defaults ---
+
+JNI_FUNC(jstring, nativeGetDefaultEncryptionAlgorithm)(JNIEnv* env, jclass) {
+    auto result = progressive::getDefaultEncryptionAlgorithm();
     return env->NewStringUTF(result.c_str());
 }
 
-JNI_FUNC(jboolean, nativeIsValidPassphrase)(JNIEnv* env, jclass, jstring jPass) {
-    return progressive::isValidPassphrase(jStr(env, jPass)) ? JNI_TRUE : JNI_FALSE;
+JNI_FUNC(jboolean, nativeRequiresDeviceVerification)(JNIEnv* env, jclass, jstring jAlgo) {
+    return progressive::requiresDeviceVerification(jStr(env, jAlgo)) ? JNI_TRUE : JNI_FALSE;
 }
 
-JNI_FUNC(jint, nativeGetMinPassphraseLength)(JNIEnv* env, jclass) {
-    return progressive::getMinPassphraseLength();
+// --- Event Timestamp Validation ---
+
+JNI_FUNC(jboolean, nativeIsReasonableTimestamp)(JNIEnv* env, jclass, jstring jTs, jlong jMaxFuture) {
+    return progressive::isReasonableTimestamp(jStr(env, jTs), jMaxFuture) ? JNI_TRUE : JNI_FALSE;
 }
 
 } // extern "C"

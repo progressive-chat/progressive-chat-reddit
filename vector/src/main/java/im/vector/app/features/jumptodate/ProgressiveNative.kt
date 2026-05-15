@@ -1472,6 +1472,24 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeExtractDeviceFingerprint(deviceId: String, keysJson: String): String
 
+    // --- Event Distance ---
+
+    @JvmStatic external fun nativeEventDistance(indexA: Int, indexB: Int): Int
+
+    // --- Widget Validation ---
+
+    @JvmStatic external fun nativeIsEtherpadWidget(type: String): Boolean
+    @JvmStatic external fun nativeIsValidWidgetUrl(url: String): Boolean
+
+    // --- Encryption Defaults ---
+
+    @JvmStatic external fun nativeGetDefaultEncryptionAlgorithm(): String
+    @JvmStatic external fun nativeRequiresDeviceVerification(algorithm: String): Boolean
+
+    // --- Event Timestamp Validation ---
+
+    @JvmStatic external fun nativeIsReasonableTimestamp(originServerTs: String, maxFutureMs: Long): Boolean
+
     // --- OIDC / MAS Authentication ---
 
     @JvmStatic external fun nativeDiscoverOidc(homeserverUrl: String): String
@@ -2566,5 +2584,23 @@ object ProgressiveNative {
         return r >= 0
     }
     @JvmStatic fun nativeExtractDeviceFingerprintFallback(deviceId: String, keysJson: String): String = deviceId.take(10)
+
+    // --- Event Distance fallback ---
+    @JvmStatic fun nativeEventDistanceFallback(indexA: Int, indexB: Int): Int = kotlin.math.abs(indexA - indexB)
+
+    // --- Widget Validation fallbacks ---
+    @JvmStatic fun nativeIsEtherpadWidgetFallback(type: String): Boolean = type == "m.etherpad" || type == "etherpad"
+    @JvmStatic fun nativeIsValidWidgetUrlFallback(url: String): Boolean = url.startsWith("https://")
+
+    // --- Encryption Defaults fallbacks ---
+    @JvmStatic fun nativeGetDefaultEncryptionAlgorithmFallback(): String = "m.megolm.v1.aes-sha2"
+    @JvmStatic fun nativeRequiresDeviceVerificationFallback(algorithm: String): Boolean =
+        !algorithm.isEmpty() && algorithm != "m.olm.v1.curve25519-aes-sha2"
+
+    // --- Timestamp fallback ---
+    @JvmStatic fun nativeIsReasonableTimestampFallback(originServerTs: String, maxFutureMs: Long): Boolean {
+        val ts = originServerTs.toLongOrNull() ?: return true
+        return (System.currentTimeMillis() - ts) < maxFutureMs
+    }
 
 }
