@@ -1266,6 +1266,16 @@ object ProgressiveNative {
     @JvmStatic external fun nativeGenerateOAuthState(): String
     @JvmStatic external fun nativeGeneratePkce(): String
 
+    // --- Native Sync Response Parser (bypass Moshi) ---
+    // Controlled by Labs: SETTINGS_LABS_NATIVE_SYNC_PARSER
+
+    @JvmStatic external fun nativeParseSyncResponse(json: String): String
+    @JvmStatic external fun nativeGetNextBatch(json: String): String
+    @JvmStatic external fun nativeParseSyncRoomsJson(json: String): String
+    @JvmStatic external fun nativeParseEvent(json: String): String
+    @JvmStatic external fun nativeParseTimeline(json: String): String
+    @JvmStatic external fun nativeCountEventsInSync(json: String): Int
+
     // --- Timeline Chunk (native pagination engine) ---
 
     @JvmStatic external fun nativeTimelineAddEvents(roomId: String, eventsJson: String, prevToken: String, nextToken: String, direction: Int): Int
@@ -1954,6 +1964,16 @@ object ProgressiveNative {
     @JvmStatic fun wrapWithRelationFallback(contentJson: String, relationJson: String): String {
         return contentJson.dropLast(1) + ",\"m.relates_to\":" + relationJson + "}"
     }
+
+    // --- Native Sync Response Parser fallbacks ---
+    @JvmStatic fun nativeParseSyncResponseFallback(json: String): String =
+        """{"next_batch":"","account_data_count":0,"presence_count":0,"to_device_count":0,"rooms_join_count":0,"rooms_invite_count":0,"rooms_leave_count":0,"device_lists_changed":0}"""
+    @JvmStatic fun nativeGetNextBatchFallback(json: String): String = ""
+    @JvmStatic fun nativeParseSyncRoomsJsonFallback(json: String): String = "[]"
+    @JvmStatic fun nativeParseEventFallback(json: String): String = "{}"
+    @JvmStatic fun nativeParseTimelineFallback(json: String): String =
+        """{"events_count":0,"limited":false,"prev_batch":""}"""
+    @JvmStatic fun nativeCountEventsInSyncFallback(json: String): Int = 0
 
     // --- Native SQLite DB fallbacks ---
     @JvmStatic fun nativeSqliteDbOpenFallback(dbPath: String, key: String): Boolean =

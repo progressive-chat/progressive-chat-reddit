@@ -124,6 +124,8 @@
 #include "progressive/eventdb.hpp"
 #include "progressive/room_filter.hpp"
 #include "progressive/thumbnail.hpp"
+#include "progressive/sync_models.hpp"
+#include "progressive/event_models.hpp"
 #include "progressive/cross_signing.hpp"
 #include "progressive/edit_history.hpp"
 #include "progressive/read_marker.hpp"
@@ -1245,6 +1247,84 @@ JNI_FUNC(jint, nativeSqliteDbSchemaVersion)(JNIEnv* env, jclass, jstring jKey) {
     auto it = g_sqliteDbs.find(jStr(env, jKey));
     if (it == g_sqliteDbs.end()) return 0;
     return it->second.schemaVersion();
+}
+
+// --- Native Sync Response Parser (bypass Moshi) ---
+// Controlled by Labs: SETTINGS_LABS_NATIVE_SYNC_PARSER
+
+JNI_FUNC(jstring, nativeParseSyncResponse)(JNIEnv* env, jclass, jstring jJson) {
+    auto response = progressive::parseSyncResponse(jStr(env, jJson));
+    std::ostringstream os;
+    os << R"({"next_batch":")" << response.nextBatch
+       << R"(","account_data_count":)" << response.accountData.events.size()
+       << R"(,"presence_count":)" << response.presence.events.size()
+       << R"(,"to_device_count":)" << response.toDevice.events.size()
+       << R"(,"rooms_join_count":)" << response.rooms.join.size()
+       << R"(,"rooms_invite_count":)" << response.rooms.invite.size()
+       << R"(,"rooms_leave_count":)" << response.rooms.leave.size()
+       << R"(,"device_lists_changed":)" << response.deviceLists.changed.size()
+       << "}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jstring, nativeGetNextBatch)(JNIEnv* env, jclass, jstring jJson) {
+    auto response = progressive::parseSyncResponse(jStr(env, jJson));
+    return env->NewStringUTF(response.nextBatch.c_str());
+}
+
+JNI_FUNC(jstring, nativeParseSyncRoomsJson)(JNIEnv* env, jclass, jstring jJson) {
+    auto rooms = progressive::parseSyncRooms(jStr(env, jJson));
+    std::ostringstream os; os << "[";
+    bool first = true;
+    for (auto& kv : rooms.join) {
+        if (!first) os << ","; first = false;
+        os << R"({"room_id":")" << kv.first << R"(","state":"join"})";
+    }
+    for (auto& kv : rooms.invite) {
+        if (!first) os << ","; first = false;
+        os << R"({"room_id":")" << kv.first << R"(","state":"invite"})";
+    }
+    for (auto& kv : rooms.leave) {
+        if (!first) os << ","; first = false;
+        os << R"({"room_id":")" << kv.first << R"(","state":"leave"})";
+    }
+    os << "]";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jstring, nativeParseEvent)(JNIEnv* env, jclass, jstring jJson) {
+    auto event = progressive::parseEvent(jStr(env, jJson));
+    std::ostringstream os;
+    os << R"({"event_id":")" << event.eventId
+       << R"(","type":")" << event.type
+       << R"(","sender":")" << event.senderId
+       << R"(","room_id":")" << event.roomId
+       << R"(","ts":)" << event.originServerTs
+       << R"(,"state_key":")" << event.stateKey << "\""
+       << R"(,"send_state":)" << static_cast<int>(event.sendState) << "}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jstring, nativeParseTimeline)(JNIEnv* env, jclass, jstring jJson) {
+    auto timeline = progressive::parseSyncTimeline(jStr(env, jJson));
+    std::ostringstream os;
+    os << R"({"events_count":)" << timeline.events.size()
+       << R"(,"limited":)" << (timeline.limited ? "true" : "false")
+       << R"(,"prev_batch":")" << timeline.prevToken << "\"}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jint, nativeCountEventsInSync)(JNIEnv* env, jclass, jstring jJson) {
+    auto response = progressive::parseSyncResponse(jStr(env, jJson));
+    int total = 0;
+    total += response.accountData.events.size();
+    total += response.presence.events.size();
+    total += response.toDevice.events.size();
+    for (auto& kv : response.rooms.join) {
+        total += kv.second.state.events.size();
+        total += kv.second.timeline.events.size();
+    }
+    return total;
 }
 
 } // extern "C"
