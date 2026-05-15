@@ -1278,6 +1278,9 @@ object ProgressiveNative {
     @JvmStatic external fun nativeApiCreateFilter(userId: String, filterJson: String): String
     @JvmStatic external fun nativeApiGetDisplayName(userId: String): String
     @JvmStatic external fun nativeApiSetDisplayName(userId: String, displayName: String): String
+    @JvmStatic external fun nativeApiGetVersions(): String
+    @JvmStatic external fun nativeApiLogoutAll(): Boolean
+    @JvmStatic external fun nativeApiPublicRooms(server: String, query: String, limit: Int): String
 
     // --- OIDC / MAS Authentication ---
 
@@ -2025,6 +2028,9 @@ object ProgressiveNative {
     @JvmStatic fun nativeApiCreateFilterFallback(userId: String, filterJson: String): String = ""
     @JvmStatic fun nativeApiGetDisplayNameFallback(userId: String): String = ""
     @JvmStatic fun nativeApiSetDisplayNameFallback(userId: String, displayName: String): String = ""
+    @JvmStatic fun nativeApiGetVersionsFallback(): String = """{"versions":[]}"""
+    @JvmStatic fun nativeApiLogoutAllFallback(): Boolean = false
+    @JvmStatic fun nativeApiPublicRoomsFallback(server: String, query: String, limit: Int): String = """{"chunk":[]}"""
 
     // --- Native SQLite DB fallbacks ---
     @JvmStatic fun nativeSqliteDbOpenFallback(dbPath: String, key: String): Boolean =

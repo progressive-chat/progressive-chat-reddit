@@ -1493,4 +1493,18 @@ JNI_FUNC(jstring, nativeApiSetDisplayName)(JNIEnv* env, jclass, jstring jUser, j
     return env->NewStringUTF(result.c_str());
 }
 
+JNI_FUNC(jstring, nativeApiGetVersions)(JNIEnv* env, jclass) {
+    auto result = progressive::apiGetVersions();
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jboolean, nativeApiLogoutAll)(JNIEnv* env, jclass) {
+    return progressive::apiLogoutAll() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeApiPublicRooms)(JNIEnv* env, jclass, jstring jServer, jstring jQuery, jint jLimit) {
+    auto result = progressive::apiPublicRooms(jStr(env, jServer), jStr(env, jQuery), jLimit);
+    return env->NewStringUTF(result.c_str());
+}
+
 } // extern "C"
