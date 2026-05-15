@@ -15,9 +15,19 @@
     <attr name="room_color_hash_07" format="color" />
     <attr name="room_color_hash_08" format="color" />
     <attr name="unread_line_unimportant" format="color" />
-    <attr name="background" format="color|reference" />
+    <attr name="background" format="reference|color" />
     <attr name="boxStrokeColor" format="color" />
     <attr name="chipBackgroundColor" format="color" />
     <attr name="closeIconTint" format="color" />
     <attr name="InReplyToViewParams" format="reference" />
+    <attr name="unread_line_unimportant" format="color" />
+    <attr name="sc_notice_text_color" format="color" />
+    <attr name="sc_notice_secondary_text_color" format="color" />
+    <attr name="sc_tombstone_text_color" format="color" />
+    <attr name="sc_tombstone_bg" format="color" />
+    <attr name="sc_e2e_badge_bg" format="color" />
+    <attr name="sc_e2e_badge_text" format="color" />
+    <attr name="sc_read_receipts_bg" format="color" />
+    <attr name="sc_fab_scrim_color" format="color" />
+    <attr name="sc_link_color" format="color" />
 </resources>
