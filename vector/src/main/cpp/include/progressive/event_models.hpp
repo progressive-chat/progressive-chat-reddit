@@ -628,4 +628,27 @@ struct ContentAttachmentData {
 SearchResult parseSearchResult(const std::string& json);
 ContentAttachmentData parseContentAttachmentData(const std::string& json);
 
+// ==== Timeline Event Filter Constants ====
+//
+// Original Kotlin (TimelineEventFilter.kt:11-46):
+//   Object with query-string constants used to filter timeline events.
+//   Content.EDIT = """{*"m.relates_to"*"rel_type":*"m.replace"*}""" etc.
+
+namespace TimelineEventFilter {
+    namespace Content {
+        constexpr const char* EDIT = R"({"m.relates_to":{"rel_type":"m.replace")";
+        constexpr const char* RESPONSE = R"({"m.relates_to":{"rel_type":"org.matrix.response")";
+        constexpr const char* REFERENCE = R"({"m.relates_to":{"rel_type":"m.reference")";
+    }
+    namespace DecryptedContent {
+        constexpr const char* URL = R"({"file":{"url":)";
+        inline std::string type(const std::string& t) {
+            return R"({"type":")" + t + R"(")";
+        }
+    }
+    namespace Unsigned {
+        constexpr const char* REDACTED = R"({"redacted_because":)";
+    }
+}
+
 } // namespace progressive

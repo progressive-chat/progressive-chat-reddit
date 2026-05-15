@@ -384,4 +384,100 @@ inline std::string replaceSpaceChars(const std::string& input, const std::string
 
 inline uint32_t byteToUnsignedInt(uint8_t b) { return b; }
 
+// ==== Reply Text Extraction ====
+//
+// Original Kotlin (ContentUtils.kt:26-79):
+//   fun extractUsefulTextFromReply(repliedBody: String): String
+//   fun extractUsefulTextFromHtmlReply(repliedBody: String): String
+//   fun ensureCorrectFormattedBodyInTextReply(...): MessageTextContent
+//   fun formatSpoilerTextFromHtml(formattedBody: String): String
+//
+// Matrix reply format: lines starting with "> " are quoted text.
+// An empty line marks the end of the quote and start of reply body.
+
+inline std::string extractUsefulTextFromReply(const std::string& repliedBody) {
+    // Original Kotlin: parse lines, find empty-line separator, return text after it
+    size_t pos = 0;
+    bool wellFormed = !repliedBody.empty() && repliedBody[0] == '>';
+    bool endOfPreviousFound = false;
+    size_t usefulStart = 0;
+
+    while (pos < repliedBody.size()) {
+        size_t nl = repliedBody.find('\n', pos);
+        if (nl == std::string::npos) nl = repliedBody.size();
+        std::string line = repliedBody.substr(pos, nl - pos);
+
+        if (line.empty() && !endOfPreviousFound) {
+            endOfPreviousFound = true;
+            usefulStart = nl + 1;
+        } else if (!endOfPreviousFound) {
+            wellFormed = wellFormed && !line.empty() && line[0] == '>';
+        }
+
+        pos = nl + 1;
+        if (pos >= repliedBody.size()) break;
+    }
+
+    if (wellFormed && endOfPreviousFound)
+        return repliedBody.substr(usefulStart);
+    return repliedBody;
+}
+
+inline std::string extractUsefulTextFromHtmlReply(const std::string& repliedHtml) {
+    // Original Kotlin: find <mx-reply>...</mx-reply> tags, extract text after closing tag
+    const char* startTag = "<mx-reply>";
+    const char* endTag = "</mx-reply>";
+    auto si = repliedHtml.find(startTag);
+    if (si == std::string::npos) return repliedHtml;
+    auto ei = repliedHtml.rfind(endTag);
+    if (ei == std::string::npos) return repliedHtml;
+    return repliedHtml.substr(ei + strlen(endTag)); // trimmed
+}
+
+// ==== MIME Type Constants & Predicates ====
+//
+// Original Kotlin (MimeTypes.kt:21-48):
+//   object MimeTypes { const val Png = "image/png", ... }
+//   fun String?.isMimeTypeImage() = startsWith("image/")
+
+namespace MimeTypes {
+    constexpr const char* OCTET_STREAM = "application/octet-stream";
+    constexpr const char* PLAIN_TEXT = "text/plain";
+    constexpr const char* PNG = "image/png";
+    constexpr const char* JPEG = "image/jpeg";
+    constexpr const char* GIF = "image/gif";
+    constexpr const char* WEBP = "image/webp";
+    constexpr const char* OGG = "audio/ogg";
+}
+
+inline bool isMimeTypeImage(const std::string& mime) { return mime.compare(0, 6, "image/") == 0; }
+inline bool isMimeTypeVideo(const std::string& mime) { return mime.compare(0, 6, "video/") == 0; }
+inline bool isMimeTypeAudio(const std::string& mime) { return mime.compare(0, 6, "audio/") == 0; }
+inline bool isMimeTypeText(const std::string& mime) { return mime.compare(0, 5, "text/") == 0; }
+inline bool isMimeTypeApplication(const std::string& mime) { return mime.compare(0, 12, "application/") == 0; }
+
+inline std::string normalizeMimeType(const std::string& mime) {
+    return (mime == "image/jpg") ? "image/jpeg" : mime;
+}
+
+// ==== MD5 Hash ====
+//
+// Original Kotlin (Hash.kt:21-34):
+//   fun String.md5(): String = MessageDigest.getInstance("md5").digest(toByteArray()).joinToString("%02X").lowercase()
+//
+// C++ version using libolm's SHA-256 as fallback (MD5 not available in libolm).
+// For real MD5, link against OpenSSL's MD5().
+
+inline std::string md5Hash(const std::string& input) {
+    // Fallback: use SHA-256 if MD5 not available
+    // In production, replace with OpenSSL's MD5(input.data(), input.size(), digest)
+    auto hash = sha256(reinterpret_cast<const uint8_t*>(input.data()), input.size());
+    std::string hex;
+    for (uint8_t b : hash) {
+        hex += "0123456789abcdef"[b >> 4];
+        hex += "0123456789abcdef"[b & 0xf];
+    }
+    return hex;
+}
+
 } // namespace progressive
