@@ -1,4 +1,5 @@
 #include "progressive/http_client.hpp"
+#include "progressive/tls_bridge.hpp"
 #include <cstring>
 #include <sstream>
 
@@ -137,22 +138,31 @@ static HttpResponse parseHttpResponse(const std::string& raw) {
 // For now, returns a stub response. Will be wired via JNI.
 
 HttpResponse httpExecute(const HttpRequest& req) {
-    // Stage 1: Build HTTP request string
+    // Build HTTP request string
     std::string httpRequest = buildHttpRequest(req);
     if (httpRequest.empty()) {
         return {0, "", {}, false, "Failed to build HTTP request"};
     }
 
-    // Stage 2: Send via JNI TLS socket, receive response
-    // This will call: Java String nativeTlsRequest(url, httpRequest, timeoutMs)
-    // The JNI bridge handles the actual network I/O.
+    // Parse URL to get host/port
+    auto parsed = parseUrl(req.url);
+    if (!parsed.valid) {
+        return {0, "", {}, false, "Failed to parse URL: " + req.url};
+    }
 
-    // Stage 3: Parse response
-    // For now, return placeholder — actual network call via JNI in next commit
-    HttpResponse resp;
-    resp.success = false;
-    resp.errorMessage = "JNI TLS bridge not yet wired — see jni_bridge.cpp";
-    return resp;
+    // Try TLS bridge (JNI → Java SSLSocket) if available
+    if (tlsBridgeAvailable()) {
+        std::string rawResponse = tlsBridgeRequest(
+            parsed.host, parsed.port, httpRequest, req.timeoutMs);
+
+        if (!rawResponse.empty()) {
+            HttpResponse resp = parseHttpResponse(rawResponse);
+            if (resp.success) return resp;
+        }
+    }
+
+    // Fallback: return error, caller should use Kotlin Retrofit
+    return {0, "", {}, false, "JNI TLS bridge not available — use Retrofit fallback"};
 }
 
 // ==== Form Body ====

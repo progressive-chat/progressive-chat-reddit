@@ -1213,6 +1213,14 @@ object ProgressiveNative {
     @JvmStatic external fun nativeParseWebCommand(commandArgs: String): String
     @JvmStatic external fun nativeFormatSearchResultsForAgent(responseJson: String): String
 
+    // --- Native HTTP Client (TLS bridge) ---
+
+    @JvmStatic external fun nativeInitTlsBridge(): Boolean
+
+    @JvmStatic fun nativeTlsRequest(host: String, port: Int, request: String, timeoutMs: Int): String {
+        return tlsRequestFallback(host, port, request, timeoutMs)
+    }
+
     // --- Live Draft ---
 
     @JvmStatic external fun nativeShouldAutoDraft(text: String, threshold: Int): Boolean
@@ -1712,6 +1720,38 @@ object ProgressiveNative {
 
     @JvmStatic fun finalizeDraftFallback(full: String, prefix: String): String {
         return if (full.startsWith(prefix)) full.removePrefix(prefix) else full
+    }
+
+    // --- TLS Request Fallback (called from C++ via JNI) ---
+
+    @JvmStatic fun tlsRequestFallback(host: String, port: Int, request: String, timeoutMs: Int): String {
+        try {
+            val socket = javax.net.ssl.SSLSocketFactory.getDefault().createSocket(host, port) as javax.net.ssl.SSLSocket
+            socket.soTimeout = timeoutMs
+            socket.startHandshake()
+
+            val out = socket.outputStream
+            out.write(request.toByteArray(Charsets.UTF_8))
+            out.flush()
+
+            val input = socket.inputStream
+            val response = input.bufferedReader().readText()
+            socket.close()
+            return response
+        } catch (e: Exception) {
+            return ""
+        }
+    }
+
+    // --- Native HTTP client initialization ---
+
+    @JvmStatic fun initTlsBridge(): Boolean {
+        return try {
+            System.loadLibrary("progressive_native")
+            true
+        } catch (e: UnsatisfiedLinkError) {
+            false
+        }
     }
 
 }

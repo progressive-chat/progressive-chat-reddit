@@ -591,6 +591,12 @@
 
     <im.vector.app.core.preference.VectorSwitchPreference
         android:defaultValue="false"
+        android:key="SETTINGS_LABS_NATIVE_HTTP_KEY"
+        android:summary="Use C++ HTTP client (via JNI TLS bridge) instead of Retrofit/OkHttp. Restart required."
+        android:title="Native HTTP client (experimental)" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
         android:key="SETTINGS_LABS_FULL_AVATAR_KEY"
         android:summary="Show full avatars (square/rectangle) instead of circles for rooms and users"
         android:title="Full-size avatars (not circles)" />

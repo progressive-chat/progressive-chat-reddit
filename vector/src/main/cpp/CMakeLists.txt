@@ -59,6 +59,7 @@ add_library(
     src/profile_swiper.cpp
     src/rainbow.cpp
     src/text_formats.cpp
+    src/tls_bridge.cpp
     src/url_tools.cpp
     src/notif_priority.cpp
     src/matrix_patterns.cpp
