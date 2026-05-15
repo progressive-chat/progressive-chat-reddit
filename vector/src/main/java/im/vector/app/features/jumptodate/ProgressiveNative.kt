@@ -1382,6 +1382,23 @@ object ProgressiveNative {
     @JvmStatic external fun nativeParseRoomPowerLevels(stateContentJson: String): String
     @JvmStatic external fun nativeHasPower(plJson: String, userId: String, action: String): Boolean
 
+    // --- SSO ---
+
+    @JvmStatic external fun nativeIsSsoCallbackUrl(url: String): Boolean
+    @JvmStatic external fun nativeExtractSsoProvider(idpId: String): String
+
+    // --- Room Tombstone ---
+
+    @JvmStatic external fun nativeParseRoomTombstoneContent(stateEventJson: String): String
+
+    // --- Network Quality ---
+
+    @JvmStatic external fun nativeClassifyNetworkQuality(signalStrength: Int, latencyMs: Double, lossRate: Double): String
+
+    // --- Connection Monitor ---
+
+    @JvmStatic external fun nativeFormatDowntime(downtimeMs: Long): String
+
     // --- OIDC / MAS Authentication ---
 
     @JvmStatic external fun nativeDiscoverOidc(homeserverUrl: String): String
@@ -2322,5 +2339,29 @@ object ProgressiveNative {
     @JvmStatic fun nativeParseRoomPowerLevelsFallback(stateContentJson: String): String =
         """{"users_default":0,"events_default":0,"state_default":50,"ban":50,"kick":50,"redact":50,"invite":50}"""
     @JvmStatic fun nativeHasPowerFallback(plJson: String, userId: String, action: String): Boolean = true
+
+    // --- SSO fallbacks ---
+    @JvmStatic fun nativeIsSsoCallbackUrlFallback(url: String): Boolean = url.contains("loginToken")
+    @JvmStatic fun nativeExtractSsoProviderFallback(idpId: String): String = when(idpId) {
+        "google" -> "Google"; "github" -> "GitHub"; "facebook" -> "Facebook"
+        "apple" -> "Apple"; "gitlab" -> "GitLab"; else -> idpId
+    }
+
+    // --- Room Tombstone fallback ---
+    @JvmStatic fun nativeParseRoomTombstoneContentFallback(stateEventJson: String): String = "{}"
+
+    // --- Network Quality fallback ---
+    @JvmStatic fun nativeClassifyNetworkQualityFallback(signalStrength: Int, latencyMs: Double, lossRate: Double): String =
+        when {
+            lossRate > 10.0 || latencyMs > 500 -> "Poor"
+            lossRate > 2.0 || latencyMs > 200 -> "Fair"
+            else -> "Good"
+        }
+
+    // --- Connection Monitor fallback ---
+    @JvmStatic fun nativeFormatDowntimeFallback(downtimeMs: Long): String {
+        val s = downtimeMs / 1000
+        return when { s < 60 -> "${s}s"; s < 3600 -> "${s/60}m ${s%60}s"; else -> "${s/3600}h ${(s%3600)/60}m" }
+    }
 
 }

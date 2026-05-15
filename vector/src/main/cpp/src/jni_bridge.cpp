@@ -1864,4 +1864,39 @@ JNI_FUNC(jboolean, nativeHasPower)(JNIEnv* env, jclass, jstring jPlJson, jstring
     return progressive::hasPower(pl, uid, jStr(env, jAction)) ? JNI_TRUE : JNI_FALSE;
 }
 
+// --- SSO ---
+
+JNI_FUNC(jboolean, nativeIsSsoCallbackUrl)(JNIEnv* env, jclass, jstring jUrl) {
+    return progressive::isSsoCallbackUrl(jStr(env, jUrl)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeExtractSsoProvider)(JNIEnv* env, jclass, jstring jIdpId) {
+    auto result = progressive::extractSsoProvider(jStr(env, jIdpId));
+    return env->NewStringUTF(result.c_str());
+}
+
+// --- Room Tombstone ---
+
+JNI_FUNC(jstring, nativeParseRoomTombstoneContent)(JNIEnv* env, jclass, jstring jStateJson) {
+    auto ts = progressive::parseRoomTombstoneContent(jStr(env, jStateJson));
+    std::ostringstream os;
+    os << R"({"replacement_room":")" << ts.replacementRoomId << R"(")"
+       << R"(,"body":")" << ts.body << "\"}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+// --- Network Quality ---
+
+JNI_FUNC(jstring, nativeClassifyNetworkQuality)(JNIEnv* env, jclass, jint jSignal, jdouble jLatency, jdouble jLossRate) {
+    auto result = progressive::classifyQualityLabel(jSignal, jLatency, jLossRate);
+    return env->NewStringUTF(result.c_str());
+}
+
+// --- Connection Monitor ---
+
+JNI_FUNC(jstring, nativeFormatDowntime)(JNIEnv* env, jclass, jlong jDowntimeMs) {
+    auto result = progressive::ConnectionMonitor::formatDowntime(jDowntimeMs);
+    return env->NewStringUTF(result.c_str());
+}
+
 } // extern "C"
