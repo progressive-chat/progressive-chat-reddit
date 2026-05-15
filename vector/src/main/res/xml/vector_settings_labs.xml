@@ -589,4 +589,10 @@
         android:summary="Export from multiple servers simultaneously; keep the best dump"
         android:title="Multi-server export" />
 
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_FULL_AVATAR_KEY"
+        android:summary="Show full avatars (square/rectangle) instead of circles for rooms and users"
+        android:title="Full-size avatars (not circles)" />
+
 </androidx.preference.PreferenceScreen>

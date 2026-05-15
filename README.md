@@ -4,6 +4,8 @@ A Matrix client in the making. The goal: a truly progressive messenger with a **
 
 Currently an active fork of [Element](https://github.com/element-hq) Classic ([element-android](https://github.com/element-hq/element-android)). Kotlin/Java/Rust components are being gradually replaced with native C++ — starting with real features.
 
+🚀 **Rocket-speed development** — a full Matrix client implemented in months, not years. 170+ C++ native modules and counting.
+
 **Website:** [progressive.chat](https://progressive.chat)
 
 ## The Vision
@@ -111,8 +113,6 @@ Progressive Chat is in active development. We have months of debugging and polis
 - **Documentation** — improve setup guides, feature descriptions
 - **Spread the word** — tell your Matrix friends about `progressive.chat`
 
-Every bit helps us ship the truly progressive Matrix client we all want.
-
 ## License
 
-AGPL-3.0-only (inherited from Element)
+AGPL-3.0-only — inherited from Element and likely to remain forever. All original C++ code and Progressive Chat modifications are AGPL-3.0-only as well.
