@@ -1212,6 +1212,12 @@ object ProgressiveNative {
     @JvmStatic external fun nativeParseWebCommand(commandArgs: String): String
     @JvmStatic external fun nativeFormatSearchResultsForAgent(responseJson: String): String
 
+    // --- Live Draft ---
+
+    @JvmStatic external fun nativeShouldAutoDraft(text: String, threshold: Int): Boolean
+    @JvmStatic external fun nativeBuildDraftMessage(prefix: String, text: String): String
+    @JvmStatic external fun nativeFinalizeDraftMessage(fullDraftText: String, prefix: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
@@ -1692,6 +1698,19 @@ object ProgressiveNative {
             }
             return sb.toString()
         } catch (e: Exception) { return "" }
+    }
+
+    // --- Live Draft fallbacks ---
+
+    @JvmStatic fun shouldAutoDraftFallback(text: String, threshold: Int): Boolean {
+        if (text.length < threshold) return false
+        return text.contains(" ") || text.contains("\t") || text.contains("\n")
+    }
+
+    @JvmStatic fun buildDraftMessageFallback(prefix: String, text: String): String = "$prefix$text"
+
+    @JvmStatic fun finalizeDraftFallback(full: String, prefix: String): String {
+        return if (full.startsWith(prefix)) full.removePrefix(prefix) else full
     }
 
 }

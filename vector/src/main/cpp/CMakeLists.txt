@@ -65,6 +65,7 @@ add_library(
     src/desync_detector.cpp
     src/latency_stats.cpp
     src/lightweight_settings.cpp
+    src/live_draft.cpp
     src/string_utils.cpp
     src/location_sharing.cpp
     src/color_utils.cpp

@@ -158,6 +158,9 @@ class VectorPreferences @Inject constructor(
         const val SETTINGS_LABS_AGENT_WEB_ACCESS_KEY = "SETTINGS_LABS_AGENT_WEB_ACCESS_KEY"
         const val SETTINGS_NOTIFICATION_ICON_STYLE = "SETTINGS_NOTIFICATION_ICON_STYLE"
         const val SETTINGS_NOTIFICATION_SHOW_COUNT = "SETTINGS_NOTIFICATION_SHOW_COUNT"
+        const val SETTINGS_LABS_LIVE_DRAFT_KEY = "SETTINGS_LABS_LIVE_DRAFT_KEY"
+        const val SETTINGS_LIVE_DRAFT_CHAR_THRESHOLD = "SETTINGS_LIVE_DRAFT_CHAR_THRESHOLD"
+        const val SETTINGS_LIVE_DRAFT_UPDATE_INTERVAL_MS = "SETTINGS_LIVE_DRAFT_UPDATE_INTERVAL_MS"
         const val SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY"
@@ -1729,6 +1732,18 @@ class VectorPreferences @Inject constructor(
 
     fun isNotificationShowCountEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_NOTIFICATION_SHOW_COUNT, false)
+    }
+
+    fun isLiveDraftEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_LIVE_DRAFT_KEY, false)
+    }
+
+    fun getLiveDraftCharThreshold(): Int {
+        return defaultPrefs.getInt(SETTINGS_LIVE_DRAFT_CHAR_THRESHOLD, 20)
+    }
+
+    fun getLiveDraftUpdateIntervalMs(): Int {
+        return defaultPrefs.getInt(SETTINGS_LIVE_DRAFT_UPDATE_INTERVAL_MS, 3000)
     }
 
     fun showIpAddressInSessionManagerScreens(): Boolean {

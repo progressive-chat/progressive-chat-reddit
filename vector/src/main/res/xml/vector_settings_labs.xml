@@ -624,4 +624,26 @@
         android:summary="Show room notification count (1-9, or + for 10+) on the notification icon"
         android:title="Show notification count on icon" />
 
+    <!-- === Live Draft (auto-save messages while typing) === -->
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_LIVE_DRAFT_KEY"
+        android:summary="Auto-send drafts as you type (prefix 'draft: '), updated at configurable intervals. Final send removes prefix. WARNING: previous versions may be visible to users of clients that don't honour redactions."
+        android:title="Live draft (while typing)" />
+
+    <im.vector.app.core.preference.VectorEditTextPreference
+        android:defaultValue="20"
+        android:dependency="SETTINGS_LABS_LIVE_DRAFT_KEY"
+        android:inputType="number"
+        android:key="SETTINGS_LIVE_DRAFT_CHAR_THRESHOLD"
+        android:title="Character threshold (needs at least one space)" />
+
+    <im.vector.app.core.preference.VectorEditTextPreference
+        android:defaultValue="3000"
+        android:dependency="SETTINGS_LABS_LIVE_DRAFT_KEY"
+        android:inputType="number"
+        android:key="SETTINGS_LIVE_DRAFT_UPDATE_INTERVAL_MS"
+        android:title="Update interval (milliseconds)" />
+
 </androidx.preference.PreferenceScreen>
