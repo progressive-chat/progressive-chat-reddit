@@ -1205,6 +1205,13 @@ object ProgressiveNative {
     @JvmStatic external fun nativeIsDumpBetter(candidateEventCount: Int, candidateStartMs: Long, candidateEndMs: Long, baselineEventCount: Int, baselineStartMs: Long, baselineEndMs: Long, candidateHasGaps: Boolean, baselineHasGaps: Boolean): Boolean
     @JvmStatic external fun nativePrioritizeExportServers(serversJson: String): String
 
+    // --- Web Search ---
+
+    @JvmStatic external fun nativeBuildSearchUrl(engine: String, endpoint: String, apiKey: String, engineId: String, query: String, maxResults: Int): String
+    @JvmStatic external fun nativeParseSearchResponse(engine: String, responseJson: String, query: String): String
+    @JvmStatic external fun nativeParseWebCommand(commandArgs: String): String
+    @JvmStatic external fun nativeFormatSearchResultsForAgent(responseJson: String): String
+
     // --- Pure Kotlin fallback implementations ---
 
     fun validateAndBuildFallback(
@@ -1600,6 +1607,91 @@ object ProgressiveNative {
             active.sortBy { it.optInt("priority", 0) }
             return JSONArray(active).toString()
         } catch (e: Exception) { return serversJson }
+    }
+
+    // --- Web Search fallbacks ---
+
+    @JvmStatic fun buildSearchUrlFallback(engine: String, endpoint: String, apiKey: String, engineId: String, query: String, maxResults: Int): String {
+        val q = query.replace(" ", "+")
+        return when (engine) {
+            "searxng" -> "${endpoint}search?q=${q}&format=json&pageno=1"
+            "ddg" -> "https://api.duckduckgo.com/?q=${q}&format=json&no_html=1"
+            "google" -> "https://customsearch.googleapis.com/customsearch/v1?key=${apiKey}&cx=${engineId}&q=${q}&num=${maxResults}"
+            else -> ""
+        }
+    }
+
+    @JvmStatic fun parseSearchResponseFallback(engine: String, json: String, query: String): String {
+        try {
+            val r = JSONObject(json)
+            val result = JSONObject()
+            result.put("query", query)
+            val results = JSONArray()
+            if (engine == "searxng") {
+                val arr = r.optJSONArray("results") ?: return result.put("results", results).toString()
+                for (i in 0 until arr.length()) {
+                    val item = arr.getJSONObject(i)
+                    val ri = JSONObject()
+                    ri.put("title", item.optString("title"))
+                    ri.put("url", item.optString("url"))
+                    ri.put("snippet", item.optString("content"))
+                    ri.put("source", item.optString("engine"))
+                    results.put(ri)
+                }
+            } else if (engine == "google") {
+                val arr = r.optJSONArray("items") ?: return result.put("results", results).toString()
+                for (i in 0 until arr.length()) {
+                    val item = arr.getJSONObject(i)
+                    val ri = JSONObject()
+                    ri.put("title", item.optString("title"))
+                    ri.put("url", item.optString("link"))
+                    ri.put("snippet", item.optString("snippet"))
+                    ri.put("source", "google")
+                    results.put(ri)
+                }
+            } else if (engine == "ddg") {
+                val abstract = r.optString("Abstract")
+                if (abstract.isNotEmpty()) {
+                    val ri = JSONObject()
+                    ri.put("title", r.optString("Heading", "Instant Answer"))
+                    ri.put("url", r.optString("AbstractURL"))
+                    ri.put("snippet", abstract)
+                    ri.put("source", "duckduckgo")
+                    results.put(ri)
+                }
+            }
+            result.put("results", results)
+            result.put("success", results.length() > 0)
+            return result.toString()
+        } catch (e: Exception) {
+            return """{"query":"$query","results":[],"success":false,"error":"${e.message}"}"""
+        }
+    }
+
+    @JvmStatic fun parseWebCommandFallback(args: String): String {
+        val parts = args.trim().split(Regex("\\s+"), limit = 2)
+        if (parts.isEmpty() || parts[0].isEmpty()) return """{"isValid":false}"""
+        val engineWords = mapOf("ddg" to "ddg", "duckduckgo" to "ddg", "google" to "google", "g" to "google", "searxng" to "searxng", "sx" to "searxng")
+        val engine = if (parts.size >= 2 && parts[0] in engineWords) engineWords[parts[0]] else ""
+        val query = if (engine.isNotEmpty() && parts.size >= 2) parts[1] else args.trim()
+        return """{"engine":"$engine","query":"$query","isValid":${query.isNotEmpty()}}"""
+    }
+
+    @JvmStatic fun formatSearchForAgentFallback(responseJson: String): String {
+        try {
+            val r = JSONObject(responseJson)
+            val sb = StringBuilder()
+            sb.append("Web results for '${r.optString("query")}':\n")
+            val results = r.optJSONArray("results") ?: return sb.toString()
+            for (i in 0 until results.length()) {
+                val item = results.getJSONObject(i)
+                sb.append("${i+1}. ${item.optString("title")}\n")
+                sb.append("   ${item.optString("url")}\n")
+                val snippet = item.optString("snippet")
+                if (snippet.isNotEmpty()) sb.append("   $snippet\n")
+            }
+            return sb.toString()
+        } catch (e: Exception) { return "" }
     }
 
 }

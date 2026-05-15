@@ -150,6 +150,7 @@ add_library(
     src/slash_command.cpp
     src/typing_monitor.cpp
     src/url_preview.cpp
+    src/web_search.cpp
     src/power_levels.cpp
     src/well_known.cpp
     src/room_sort.cpp

@@ -595,4 +595,17 @@
         android:summary="Show full avatars (square/rectangle) instead of circles for rooms and users"
         android:title="Full-size avatars (not circles)" />
 
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:key="SETTINGS_LABS_WEB_SEARCH_KEY"
+        android:summary="/web command: search the web via SearXNG, DuckDuckGo, or Google. Configure endpoints in search settings."
+        android:title="Web search (/web command)" />
+
+    <im.vector.app.core.preference.VectorSwitchPreference
+        android:defaultValue="false"
+        android:dependency="SETTINGS_LABS_WEB_SEARCH_KEY"
+        android:key="SETTINGS_LABS_AGENT_WEB_ACCESS_KEY"
+        android:summary="Allow /agent to search the web when answering questions"
+        android:title="Agent web access" />
+
 </androidx.preference.PreferenceScreen>

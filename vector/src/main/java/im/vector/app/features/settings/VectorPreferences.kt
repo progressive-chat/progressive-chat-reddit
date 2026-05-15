@@ -154,6 +154,8 @@ class VectorPreferences @Inject constructor(
         const val SETTINGS_LABS_ROOM_NUMBERING_KEY = "SETTINGS_LABS_ROOM_NUMBERING_KEY"
         const val SETTINGS_LABS_MULTI_SERVER_EXPORT_KEY = "SETTINGS_LABS_MULTI_SERVER_EXPORT_KEY"
         const val SETTINGS_LABS_FULL_AVATAR_KEY = "SETTINGS_LABS_FULL_AVATAR_KEY"
+        const val SETTINGS_LABS_WEB_SEARCH_KEY = "SETTINGS_LABS_WEB_SEARCH_KEY"
+        const val SETTINGS_LABS_AGENT_WEB_ACCESS_KEY = "SETTINGS_LABS_AGENT_WEB_ACCESS_KEY"
         const val SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_DIVIDER_PREFERENCE_KEY"
         const val SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY = "SETTINGS_CRYPTOGRAPHY_MANAGE_PREFERENCE_KEY"
@@ -1705,6 +1707,14 @@ class VectorPreferences @Inject constructor(
 
     fun isFullAvatarEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_FULL_AVATAR_KEY, false)
+    }
+
+    fun isWebSearchEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_WEB_SEARCH_KEY, false)
+    }
+
+    fun isAgentWebAccessEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_AGENT_WEB_ACCESS_KEY, false)
     }
 
     fun showIpAddressInSessionManagerScreens(): Boolean {
