@@ -5,7 +5,7 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
-package chat.progressive.app.fdroid
+package im.vector.app.fdroid
 
 import android.content.Context
 import im.vector.app.core.di.ActiveSessionHolder

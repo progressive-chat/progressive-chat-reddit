@@ -6,7 +6,7 @@
  */
 @file:Suppress("UNUSED_PARAMETER")
 
-package chat.progressive.app.push.fcm
+package im.vector.app.push.fcm
 
 import android.content.Context
 import im.vector.app.core.di.ActiveSessionHolder

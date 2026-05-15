@@ -5,7 +5,7 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
-package chat.progressive.app.di
+package im.vector.app.di
 
 import android.content.Context
 import dagger.Binds

@@ -8,4 +8,4 @@
 /**
  * Code exclusively used by the FDroid build and not referenced on the main source code
  */
-package chat.progressive.app.fdroid
+package im.vector.app.fdroid
