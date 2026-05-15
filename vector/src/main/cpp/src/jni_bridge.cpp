@@ -142,6 +142,11 @@
 #include "progressive/device_naming.hpp"
 #include "progressive/account_utils.hpp"
 #include "progressive/login_utils.hpp"
+#include "progressive/poll_utils.hpp"
+#include "progressive/membership_utils.hpp"
+#include "progressive/invite_utils.hpp"
+#include "progressive/event_validator.hpp"
+#include "progressive/widget_utils.hpp"
 #include "progressive/cross_signing.hpp"
 #include "progressive/edit_history.hpp"
 #include "progressive/read_marker.hpp"
@@ -1602,9 +1607,9 @@ JNI_FUNC(jstring, nativeFormatDuration)(JNIEnv* env, jclass, jlong jMs) {
 
 JNI_FUNC(jstring, nativeFormatPresence)(JNIEnv* env, jclass, jstring jPresence, jlong jLastActiveMs) {
     auto ps = jStr(env, jPresence);
-    progressive::Presence p = progressive::Presence::OFFLINE;
-    if (ps == "online") p = progressive::Presence::ONLINE;
-    else if (ps == "unavailable") p = progressive::Presence::UNAVAILABLE;
+    progressive::Presence p = progressive::Presence::Offline;
+    if (ps == "online") p = progressive::Presence::Online;
+    else if (ps == "unavailable") p = progressive::Presence::Unavailable;
     auto result = progressive::formatPresenceWithTime(p, jLastActiveMs);
     return env->NewStringUTF(result.c_str());
 }
@@ -1625,6 +1630,64 @@ JNI_FUNC(jstring, nativeGenerateDeviceName)(JNIEnv* env, jclass, jstring jModel,
 
 JNI_FUNC(jboolean, nativeIsValidDisplayName)(JNIEnv* env, jclass, jstring jName, jint jMax) {
     return progressive::isValidDisplayName(jStr(env, jName), jMax) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Well-Known Server Discovery ---
+
+JNI_FUNC(jstring, nativeParseWellKnown)(JNIEnv* env, jclass, jstring jJson) {
+    auto result = progressive::parseWellKnown(jStr(env, jJson));
+    std::ostringstream os;
+    os << R"({"homeserver_url":")" << result.homeServerBaseUrl
+       << R"(","identity_server":")" << result.identityServerBaseUrl
+       << R"(","valid":)" << (result.valid ? "true" : "false") << "}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jboolean, nativeNeedsWellKnownDiscovery)(JNIEnv* env, jclass, jstring jUrl) {
+    return progressive::needsWellKnownDiscovery(jStr(env, jUrl)) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Polls ---
+
+JNI_FUNC(jboolean, nativeIsPollEnded)(JNIEnv* env, jclass, jlong jCloseTs) {
+    return progressive::isPollEnded(jCloseTs) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Membership ---
+
+JNI_FUNC(jboolean, nativeCanReadMessages)(JNIEnv* env, jclass, jstring jMembership) {
+    auto ms = jStr(env, jMembership);
+    progressive::Membership m = progressive::Membership::Leave;
+    if (ms == "join") m = progressive::Membership::Join;
+    else if (ms == "invite") m = progressive::Membership::Invite;
+    else if (ms == "knock") m = progressive::Membership::Knock;
+    else if (ms == "ban") m = progressive::Membership::Ban;
+    else if (ms == "leave") m = progressive::Membership::Leave;
+    return progressive::canReadMessages(m) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Invites ---
+
+JNI_FUNC(jstring, nativeBuildInviteBody)(JNIEnv* env, jclass, jstring jUser, jstring jReason) {
+    auto result = progressive::buildInviteBody(jStr(env, jUser), jStr(env, jReason));
+    return env->NewStringUTF(result.c_str());
+}
+
+// --- Event Validation ---
+
+JNI_FUNC(jboolean, nativeIsBodyWithinLimits)(JNIEnv* env, jclass, jstring jBody, jint jMax) {
+    return progressive::isBodyWithinLimits(jStr(env, jBody), jMax) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Widgets ---
+
+JNI_FUNC(jboolean, nativeIsJitsiWidget)(JNIEnv* env, jclass, jstring jType) {
+    return progressive::isJitsiWidget(jStr(env, jType)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeGetWidgetTypeName)(JNIEnv* env, jclass, jstring jType) {
+    auto result = progressive::getWidgetTypeName(jStr(env, jType));
+    return env->NewStringUTF(result.c_str());
 }
 
 } // extern "C"

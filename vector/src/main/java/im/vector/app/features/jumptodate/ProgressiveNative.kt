@@ -1317,6 +1317,32 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeIsValidDisplayName(name: String, maxLen: Int): Boolean
 
+    // --- Well-Known / Server Discovery ---
+
+    @JvmStatic external fun nativeParseWellKnown(responseJson: String): String
+    @JvmStatic external fun nativeNeedsWellKnownDiscovery(homeserverUrl: String): Boolean
+
+    // --- Polls ---
+
+    @JvmStatic external fun nativeIsPollEnded(closeTimestampMs: Long): Boolean
+
+    // --- Membership ---
+
+    @JvmStatic external fun nativeCanReadMessages(membership: String): Boolean
+
+    // --- Invites ---
+
+    @JvmStatic external fun nativeBuildInviteBody(userId: String, reason: String): String
+
+    // --- Event Validation ---
+
+    @JvmStatic external fun nativeIsBodyWithinLimits(body: String, maxLength: Int): Boolean
+
+    // --- Widgets ---
+
+    @JvmStatic external fun nativeIsJitsiWidget(type: String): Boolean
+    @JvmStatic external fun nativeGetWidgetTypeName(type: String): String
+
     // --- OIDC / MAS Authentication ---
 
     @JvmStatic external fun nativeDiscoverOidc(homeserverUrl: String): String
@@ -2125,6 +2151,33 @@ object ProgressiveNative {
     @JvmStatic fun nativeBuildDeviceDisplayNameFallback(appName: String, deviceModel: String): String = "$appName ($deviceModel)"
     @JvmStatic fun nativeGenerateDeviceNameFallback(model: String, osVersion: String): String = "Progressive Chat ($model, Android $osVersion)"
     @JvmStatic fun nativeIsValidDisplayNameFallback(name: String, maxLen: Int): Boolean = name.isNotEmpty() && name.length <= maxLen
+
+    // --- Well-Known fallbacks ---
+    @JvmStatic fun nativeParseWellKnownFallback(responseJson: String): String = """{"homeserver_url":"","identity_server":"","valid":false}"""
+    @JvmStatic fun nativeNeedsWellKnownDiscoveryFallback(homeserverUrl: String): Boolean = !homeserverUrl.startsWith("https://matrix.")
+
+    // --- Polls fallback ---
+    @JvmStatic fun nativeIsPollEndedFallback(closeTimestampMs: Long): Boolean = closeTimestampMs > 0 && closeTimestampMs < System.currentTimeMillis()
+
+    // --- Membership fallback ---
+    @JvmStatic fun nativeCanReadMessagesFallback(membership: String): Boolean = membership == "join" || membership == "invite"
+
+    // --- Invites fallback ---
+    @JvmStatic fun nativeBuildInviteBodyFallback(userId: String, reason: String): String {
+        val r = if (reason.isNotEmpty()) ""","reason":"$reason"""" else ""
+        return """{"user_id":"$userId"$r}"""
+    }
+
+    // --- Event Validation fallback ---
+    @JvmStatic fun nativeIsBodyWithinLimitsFallback(body: String, maxLength: Int): Boolean = body.length <= maxLength
+
+    // --- Widgets fallback ---
+    @JvmStatic fun nativeIsJitsiWidgetFallback(type: String): Boolean = type == "jitsi" || type == "m.jitsi"
+    @JvmStatic fun nativeGetWidgetTypeNameFallback(type: String): String = when(type) {
+        "jitsi", "m.jitsi" -> "Jitsi Meet"
+        "etherpad", "m.etherpad" -> "Etherpad"
+        else -> type
+    }
 
     // --- Native SQLite DB fallbacks ---
     @JvmStatic fun nativeSqliteDbOpenFallback(dbPath: String, key: String): Boolean =
