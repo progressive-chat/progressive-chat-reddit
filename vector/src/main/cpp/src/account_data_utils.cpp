@@ -70,7 +70,9 @@ std::string buildDirectMessageMapJson(const DirectMessageMap& map) {
     std::ostringstream os;
     os << "{";
     bool firstUser = true;
-    for (const auto& [uid, rooms] : map) {
+    for (auto it = map.begin(); it != map.end(); ++it) {
+        const auto& uid = it->first;
+        const auto& rooms = it->second;
         if (!firstUser) os << ",";
         firstUser = false;
         os << "\"" << uid << "\":[";
