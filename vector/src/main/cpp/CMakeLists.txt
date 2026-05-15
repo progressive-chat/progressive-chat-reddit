@@ -152,6 +152,7 @@ add_library(
     src/edit_history.cpp
     src/read_marker.cpp
     src/slash_command.cpp
+    src/sliding_sync.cpp
     src/typing_monitor.cpp
     src/url_preview.cpp
     src/web_search.cpp
