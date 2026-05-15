@@ -1975,6 +1975,15 @@ object ProgressiveNative {
         """{"events_count":0,"limited":false,"prev_batch":""}"""
     @JvmStatic fun nativeCountEventsInSyncFallback(json: String): Int = 0
 
+    // --- Native API fallbacks ---
+    @JvmStatic fun nativeSetHomeserverUrlFallback(url: String) {}
+    @JvmStatic fun nativeSetAccessTokenFallback(token: String) {}
+    @JvmStatic fun nativeApiLoginFallback(userId: String, password: String, deviceId: String): String =
+        """{"success":false,"error":"Native library not loaded"}"""
+    @JvmStatic fun nativeApiSyncFallback(filter: String, since: String, timeout: Int): String =
+        """{"next_batch":"","rooms_joined":0,"rooms_invited":0,"rooms_left":0,"events_total_timeline":0}"""
+    @JvmStatic fun nativeApiSendEventFallback(roomId: String, eventType: String, txnId: String, contentJson: String): String = ""
+
     // --- Native SQLite DB fallbacks ---
     @JvmStatic fun nativeSqliteDbOpenFallback(dbPath: String, key: String): Boolean =
         false // Fallback: no-op, use Realm

@@ -126,6 +126,7 @@
 #include "progressive/thumbnail.hpp"
 #include "progressive/sync_models.hpp"
 #include "progressive/event_models.hpp"
+#include "progressive/matrix_api.hpp"
 #include "progressive/cross_signing.hpp"
 #include "progressive/edit_history.hpp"
 #include "progressive/read_marker.hpp"
@@ -1325,6 +1326,50 @@ JNI_FUNC(jint, nativeCountEventsInSync)(JNIEnv* env, jclass, jstring jJson) {
         total += kv.second.timeline.events.size();
     }
     return total;
+}
+
+// --- Native Matrix API (login, sync, send) ---
+// Controlled by Labs: SETTINGS_LABS_NATIVE_HTTP
+
+JNI_FUNC(void, nativeSetHomeserverUrl)(JNIEnv* env, jclass, jstring jUrl) {
+    progressive::setHomeserverBaseUrl(jStr(env, jUrl));
+}
+
+JNI_FUNC(void, nativeSetAccessToken)(JNIEnv* env, jclass, jstring jToken) {
+    progressive::setAccessToken(jStr(env, jToken));
+}
+
+JNI_FUNC(jstring, nativeApiLogin)(JNIEnv* env, jclass, jstring jUser, jstring jPass, jstring jDev) {
+    auto creds = progressive::apiLogin(jStr(env, jUser), jStr(env, jPass), jStr(env, jDev));
+    std::ostringstream os;
+    os << R"({"user_id":")" << creds.userId
+       << R"(","access_token":")" << creds.accessToken
+       << R"(","device_id":")" << creds.deviceId
+       << R"(","home_server":")" << creds.homeServer
+       << R"(","success":)" << (creds.isValid() ? "true" : "false") << "}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jstring, nativeApiSync)(JNIEnv* env, jclass, jstring jFilter, jstring jSince, jint jTimeout) {
+    auto response = progressive::apiSync(
+        jStr(env, jFilter), jStr(env, jSince), jTimeout);
+    std::ostringstream os;
+    os << R"({"next_batch":")" << response.nextBatch
+       << R"(","rooms_joined":)" << response.rooms.join.size()
+       << R"(,"rooms_invited":)" << response.rooms.invite.size()
+       << R"(,"rooms_left":)" << response.rooms.leave.size()
+       << R"(,"events_total_timeline":)";
+    int totalTimeline = 0;
+    for (auto& kv : response.rooms.join) totalTimeline += kv.second.timeline.events.size();
+    for (auto& kv : response.rooms.leave) totalTimeline += kv.second.timeline.events.size();
+    os << totalTimeline << "}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jstring, nativeApiSendEvent)(JNIEnv* env, jclass, jstring jRoom, jstring jType, jstring jTxn, jstring jContent) {
+    auto result = progressive::apiSendEvent(
+        jStr(env, jRoom), jStr(env, jType), jStr(env, jTxn), jStr(env, jContent));
+    return env->NewStringUTF(result.c_str());
 }
 
 } // extern "C"
