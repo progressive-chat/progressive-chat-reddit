@@ -157,6 +157,33 @@ struct RuleSet {
 RuleSet parseRuleSet(const std::string& json);
 std::string ruleSetToJson(const RuleSet& rs);
 
+// ==== Push Notification Evaluation ====
+
+struct PushEvaluation {
+    bool shouldNotify = true;      // false = dont_notify
+    bool shouldHighlight = false;  // true = @room or display_name matched
+    bool isNoisy = true;           // false = silent notification
+    std::string matchedRuleId;     // which rule triggered the result
+    std::string matchedAction;     // "notify", "dont_notify", "coalesce"
+};
+
+// Evaluate whether a Matrix event should trigger a push notification.
+// eventJson: the full event JSON (with content, type, sender, room_id)
+// rules: the push rule set from /pushrules API
+// myDisplayName: the user's display name for .m.rule.contains_display_name
+// myUserId: the user's MXID for sender and room rules
+PushEvaluation evaluatePushNotification(
+    const std::string& eventJson,
+    const PushRuleSet& rules,
+    const std::string& myDisplayName,
+    const std::string& myUserId);
+
+// Check if a single condition matches an event.
+bool conditionMatches(const PushCondition& condition,
+    const std::string& eventType, const std::string& sender,
+    const std::string& roomId, const std::string& body,
+    const std::string& myDisplayName, const std::string& myUserId);
+
 } // namespace progressive
 
 #endif // PROGRESSIVE_PUSH_RULES_HPP

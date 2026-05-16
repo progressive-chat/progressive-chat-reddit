@@ -3578,6 +3578,20 @@ JNI_FUNC(jstring, nativeFormatUnreadCounter)(JNIEnv* env, jclass, jint jCount) {
     auto result = progressive::formatUnreadCounter(jCount);
     return env->NewStringUTF(result.c_str());
 }
+
+// --- Push Notification Evaluator ---
+
+JNI_FUNC(jstring, nativeEvaluatePushNotification)(JNIEnv* env, jclass, jstring jEventJson, jstring jRulesJson, jstring jDisplayName, jstring jMyUserId) {
+    auto rules = progressive::parsePushRules(jStr(env, jRulesJson));
+    auto result = progressive::evaluatePushNotification(
+        jStr(env, jEventJson), rules, jStr(env, jDisplayName), jStr(env, jMyUserId));
+    std::ostringstream os;
+    os << R"({"notify":)" << (result.shouldNotify ? "true" : "false")
+       << R"(,"highlight":)" << (result.shouldHighlight ? "true" : "false")
+       << R"(,"noisy":)" << (result.isNoisy ? "true" : "false")
+       << R"(,"rule":")" << result.matchedRuleId << "\"}";
+    return env->NewStringUTF(os.str().c_str());
+}
     }
     result.isEnded = json.find("\"closed\":true") != std::string::npos;
 

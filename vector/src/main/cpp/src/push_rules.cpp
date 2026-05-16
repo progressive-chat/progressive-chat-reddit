@@ -406,4 +406,116 @@ std::string ruleSetToJson(const RuleSet&) {
     return "{}"; // placeholder — full serialization when needed
 }
 
+// ==== Push Notification Evaluation ====
+
+static std::string extractJsonValue(const std::string& json, const std::string& key) {
+    auto pos = json.find("\"" + key + "\"");
+    if (pos == std::string::npos) return "";
+    pos = json.find(':', pos);
+    if (pos == std::string::npos) return "";
+    pos++;
+    while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t')) pos++;
+    if (pos >= json.size()) return "";
+    if (json[pos] == '"') {
+        pos++; size_t e = pos;
+        while (e < json.size() && json[e] != '"') { if (json[e] == '\\') e++; e++; }
+        return json.substr(pos, e - pos);
+    }
+    return "";
+}
+
+static bool globMatch(const std::string& pattern, const std::string& text) {
+    if (pattern == "*") return true;
+    // Simple wildcard: *hello* matches if text contains "hello"
+    if (pattern.size() >= 2 && pattern.front() == '*' && pattern.back() == '*') {
+        return text.find(pattern.substr(1, pattern.size() - 2)) != std::string::npos;
+    }
+    // Exact match
+    return pattern == text;
+}
+
+bool conditionMatches(const PushCondition& condition,
+    const std::string& eventType, const std::string& sender,
+    const std::string& roomId, const std::string& body,
+    const std::string& myDisplayName, const std::string& myUserId)
+{
+    if (condition.kind == "event_match") {
+        if (condition.key == "content.body") return globMatch(condition.pattern, body);
+        if (condition.key == "type") return eventType == condition.pattern;
+        if (condition.key == "room_id") return roomId == condition.pattern;
+        if (condition.key == "sender") return sender == condition.pattern;
+        return false;
+    }
+    if (condition.kind == "contains_display_name") {
+        return !myDisplayName.empty() && body.find(myDisplayName) != std::string::npos;
+    }
+    if (condition.kind == "room_member_count") {
+        // Simplified: always match (would need actual member count)
+        return true;
+    }
+    if (condition.kind == "sender_notification_permission") {
+        return condition.pattern == "room";
+    }
+    return true; // unknown condition → match
+}
+
+PushEvaluation evaluatePushNotification(
+    const std::string& eventJson,
+    const PushRuleSet& rules,
+    const std::string& myDisplayName,
+    const std::string& myUserId)
+{
+    PushEvaluation result;
+
+    // Extract event fields
+    auto eventType = extractJsonValue(eventJson, "type");
+    auto sender = extractJsonValue(eventJson, "sender");
+    auto roomId = extractJsonValue(eventJson, "room_id");
+    auto body = extractJsonValue(eventJson, "content.body");
+    if (body.empty()) body = extractJsonValue(eventJson, "\"body\"");
+
+    // Skip own events
+    if (sender == myUserId) {
+        result.shouldNotify = false;
+        return result;
+    }
+
+    // Check rules in priority order
+    for (const auto& rule : rules.rules) {
+        if (!rule.enabled) continue;
+
+        bool allMatch = true;
+        for (const auto& cond : rule.conditions) {
+            if (!conditionMatches(cond, eventType, sender, roomId, body, myDisplayName, myUserId)) {
+                allMatch = false;
+                break;
+            }
+        }
+        if (!allMatch) continue;
+
+        // Rule matched — determine action
+        result.matchedRuleId = rule.ruleId;
+        bool hasDontNotify = false;
+        bool hasNotify = true; // default
+        bool hasHighlight = false;
+        bool hasCoalesce = false;
+
+        for (const auto& action : rule.actions) {
+            if (action == "dont_notify") { hasDontNotify = true; hasNotify = false; }
+            if (action == "notify") hasNotify = true;
+            if (action == "set_tweak" || action == "highlight") hasHighlight = true;
+            if (action == "coalesce") hasCoalesce = true;
+        }
+
+        result.shouldNotify = hasNotify && !hasDontNotify;
+        result.shouldHighlight = hasHighlight;
+        result.isNoisy = hasNotify && !hasCoalesce;
+        result.matchedAction = hasDontNotify ? "dont_notify" : "notify";
+        return result;
+    }
+
+    // No rules matched — default to notify
+    return result;
+}
+
 } // namespace progressive

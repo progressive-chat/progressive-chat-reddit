@@ -386,6 +386,10 @@ object ProgressiveNative {
     @JvmStatic external fun nativeFormatThreadNotificationCount(threadCount: Int, highlightCount: Int): String
     @JvmStatic external fun nativeFormatUnreadCounter(count: Int): String
 
+    // --- Push Notification Evaluator ---
+
+    @JvmStatic external fun nativeEvaluatePushNotification(eventJson: String, rulesJson: String, myDisplayName: String, myUserId: String): String
+
     // --- Member / Call Notices ---
 
     @JvmStatic external fun nativeFormatMemberNotice(membership: String, prevMembership: String, senderId: String, senderName: String, targetId: String, targetName: String, reason: String, isDirect: Boolean, sentBySelf: Boolean): String
@@ -1504,7 +1508,6 @@ object ProgressiveNative {
     // --- Notification Count Formatter ---
     // Ported from: RoomSummaryFormatter.kt
 
-    @JvmStatic external fun nativeFormatUnreadCounter(count: Int): String
     @JvmStatic external fun nativeFormatBadgeText(totalCount: Int): String
 
     // --- Permalink Parser (updated) ---
@@ -3412,6 +3415,10 @@ object ProgressiveNative {
         if (threadCount > 99) "99+" else if (threadCount > 0) "$threadCount" else ""
     @JvmStatic fun nativeFormatUnreadCounterFallback(count: Int): String =
         if (count > 99) "99+" else if (count > 0) "$count" else ""
+
+    // --- Push Evaluator fallback ---
+    @JvmStatic fun nativeEvaluatePushNotificationFallback(eventJson: String, rulesJson: String, myDisplayName: String, myUserId: String): String =
+        """{"notify":true,"highlight":false,"noisy":true,"rule":""}"""
 
     // --- Member/Call/Edit fallbacks ---
     @JvmStatic fun nativeFormatMemberNoticeFallback(membership: String, prevMembership: String, senderId: String, senderName: String, targetId: String, targetName: String, reason: String, isDirect: Boolean, sentBySelf: Boolean): String {
