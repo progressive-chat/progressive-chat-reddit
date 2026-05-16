@@ -3243,6 +3243,41 @@ JNI_FUNC(jstring, nativeParseServerNotice)(JNIEnv* env, jclass, jstring jJson, j
     return env->NewStringUTF(result.c_str());
 }
 
+// --- Member List (JSON round-trip) ---
+
+JNI_FUNC(jstring, nativeParseMemberList)(JNIEnv* env, jclass, jstring jRoomId, jstring jJson, jboolean jTruncated) {
+    auto list = progressive::parseMemberList(jStr(env, jRoomId), jStr(env, jJson), jTruncated);
+    std::ostringstream os;
+    os << R"({"room_id":")" << list.roomId
+       << R"(","total":)" << list.totalMembers
+       << R"(,"joined":)" << list.joinedMembers
+       << R"(,"invited":)" << list.invitedMembers
+       << R"(,"banned":)" << list.bannedMembers
+       << R"(,"truncated":)" << (list.isTruncated ? "true" : "false")
+       << R"(,"members":[)";
+    for (size_t i = 0; i < list.members.size(); i++) {
+        if (i > 0) os << ",";
+        os << R"({"user_id":")" << list.members[i].userId
+           << R"(","display_name":")" << list.members[i].displayName << "\"}";
+    }
+    os << "]}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+// --- Public Room (JSON round-trip) ---
+
+JNI_FUNC(jstring, nativeParsePublicRoom)(JNIEnv* env, jclass, jstring jJson) {
+    auto room = progressive::parsePublicRoom(jStr(env, jJson));
+    std::ostringstream os;
+    os << R"({"room_id":")" << room.roomId
+       << R"(","name":")" << room.name
+       << R"(","topic":")" << room.topic
+       << R"(,"members":)" << room.numJoinedMembers
+       << R"(,"world_readable":)" << (room.worldReadable ? "true" : "false")
+       << R"(,"guest_can_join":)" << (room.guestCanJoin ? "true" : "false") << "}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
 // --- Poll Validation ---
 
 JNI_FUNC(jboolean, nativeIsValidPollQuestion)(JNIEnv* env, jclass, jstring jQuestion) {

@@ -311,6 +311,14 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeParseServerNotice(eventContentJson: String, eventId: String): String
 
+    // --- Member List ---
+
+    @JvmStatic external fun nativeParseMemberList(roomId: String, apiResponseJson: String, isTruncated: Boolean): String
+
+    // --- Public Room ---
+
+    @JvmStatic external fun nativeParsePublicRoom(json: String): String
+
     // --- Poll Validation ---
 
     @JvmStatic external fun nativeIsValidPollQuestion(question: String): Boolean
@@ -3246,6 +3254,12 @@ object ProgressiveNative {
     @JvmStatic fun nativeParseTombstoneFallback(contentJson: String): String = "{}"
     @JvmStatic fun nativeParseScanResultFallback(apiResponseJson: String): String = "Clean"
     @JvmStatic fun nativeParseServerNoticeFallback(eventContentJson: String, eventId: String): String = "Notice"
+
+    // --- Member/Public Room fallbacks ---
+    @JvmStatic fun nativeParseMemberListFallback(roomId: String, apiResponseJson: String, isTruncated: Boolean): String =
+        """{"room_id":"$roomId","total":0,"joined":0,"invited":0,"banned":0,"truncated":false,"members":[]}"""
+    @JvmStatic fun nativeParsePublicRoomFallback(json: String): String =
+        """{"room_id":"","name":"","topic":"","members":0,"world_readable":false,"guest_can_join":false}"""
 
     // --- Poll fallback ---
     @JvmStatic fun nativeIsValidPollQuestionFallback(question: String): Boolean =
