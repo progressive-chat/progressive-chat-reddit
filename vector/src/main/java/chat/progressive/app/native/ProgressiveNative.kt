@@ -864,6 +864,11 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeIsContentScannerAvailable(serverCapabilitiesJson: String): Boolean
 
+    // --- Matrix Error ---
+
+    @JvmStatic external fun nativeIsPasswordError(errorCode: String): Boolean
+    @JvmStatic external fun nativeGetAllErrorCodes(): String
+
     // --- Megolm Decryptor ---
 
     @JvmStatic external fun nativeMegolmAddSession(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean
@@ -2789,6 +2794,10 @@ object ProgressiveNative {
 
     // --- Content Scanner fallback ---
     @JvmStatic fun nativeIsContentScannerAvailableFallback(serverCapabilitiesJson: String): Boolean = false
+
+    // --- Matrix Error fallbacks ---
+    @JvmStatic fun nativeIsPasswordErrorFallback(errorCode: String): Boolean = errorCode == "M_WEAK_PASSWORD"
+    @JvmStatic fun nativeGetAllErrorCodesFallback(): String = """["M_UNKNOWN","M_FORBIDDEN","M_BAD_JSON","M_NOT_JSON","M_NOT_FOUND","M_LIMIT_EXCEEDED","M_UNKNOWN_TOKEN","M_MISSING_TOKEN","M_WEAK_PASSWORD","M_INVALID_USERNAME","M_USER_IN_USE","M_EXCLUSIVE","M_THREEPID_IN_USE","M_THREEPID_NOT_FOUND","M_SERVER_NOT_TRUSTED","M_CONSENT_NOT_GIVEN","M_UNSUPPORTED_ROOM_VERSION","M_INCOMPATIBLE_ROOM_VERSION","M_CANNOT_LEAVE_SERVER_NOTICE_ROOM","M_RESOURCE_LIMIT_EXCEEDED"]"""
 
     // --- Megolm fallbacks ---
     @JvmStatic fun nativeMegolmAddSessionFallback(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean = false

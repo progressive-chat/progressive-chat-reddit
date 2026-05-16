@@ -2606,6 +2606,23 @@ JNI_FUNC(jboolean, nativeIsContentScannerAvailable)(JNIEnv* env, jclass, jstring
     return progressive::isContentScannerAvailable(jStr(env, jCapabilitiesJson)) ? JNI_TRUE : JNI_FALSE;
 }
 
+// --- Matrix Error ---
+
+JNI_FUNC(jboolean, nativeIsPasswordError)(JNIEnv* env, jclass, jstring jErrorCode) {
+    return progressive::isPasswordError(jStr(env, jErrorCode)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeGetAllErrorCodes)(JNIEnv* env, jclass) {
+    auto codes = progressive::getAllErrorCodes();
+    std::ostringstream os; os << "[";
+    for (size_t i = 0; i < codes.size(); i++) {
+        if (i > 0) os << ",";
+        os << R"(")" << codes[i] << R"(")";
+    }
+    os << "]";
+    return env->NewStringUTF(os.str().c_str());
+}
+
 // --- Megolm Decryptor ---
 // Controlled by Labs: SETTINGS_LABS_NATIVE_CRYPTO
 
