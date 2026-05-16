@@ -1185,6 +1185,74 @@ static void test_end_call_reason_to_string() {
     ASSERT_STREQ(progressive::endCallReasonToString(progressive::EndCallReason::USER_HUNG_UP), "user_hung_up");
 }
 
+// ==== Call Manager ====
+
+#include "progressive/call_manager.hpp"
+
+static void test_call_state_to_string() {
+    ASSERT_STREQ(progressive::callStateToString(progressive::CallState::CONNECTED), "connected");
+    ASSERT_STREQ(progressive::callStateToString(progressive::CallState::RINGING), "ringing");
+}
+
+static void test_call_start_outgoing() {
+    progressive::CallManager mgr;
+    std::string error;
+    auto json = mgr.startOutgoingCall("!room:org", "@bob:org", "Bob", progressive::CallType::VOICE, "v=0\r\n", error);
+    ASSERT_TRUE(!json.empty());
+    ASSERT_STREQ(error.c_str(), "");
+    ASSERT_EQ(mgr.totalCalls(), 1);
+    ASSERT_TRUE(mgr.isRoomInCall("!room:org"));
+}
+
+static void test_call_incoming() {
+    progressive::CallManager mgr;
+    mgr.handleIncomingCall("call_123", "!room:org", "@alice:org", "Alice", progressive::CallType::VIDEO, "v=0\r\n", 120);
+    ASSERT_EQ(mgr.totalCalls(), 1);
+    progressive::CallInfo ci;
+    ASSERT_TRUE(mgr.getIncomingCall(ci));
+    ASSERT_STREQ(ci.callId.c_str(), "call_123");
+    ASSERT_TRUE(ci.type == progressive::CallType::VIDEO);
+}
+
+static void test_call_answer_reject() {
+    progressive::CallManager mgr;
+    mgr.handleIncomingCall("call_1", "!room:org", "@alice:org", "Alice", progressive::CallType::VOICE, "v=0\r\n", 120);
+    std::string error;
+    auto answerJson = mgr.answerCall("call_1", "v=0\r\na=sendrecv\r\n", error);
+    ASSERT_TRUE(!answerJson.empty());
+    ASSERT_STREQ(error.c_str(), "");
+}
+
+static void test_call_hangup() {
+    progressive::CallManager mgr;
+    std::string error;
+    mgr.startOutgoingCall("!room:org", "@bob:org", "Bob", progressive::CallType::VOICE, "v=0\r\n", error);
+    auto json = mgr.hangupCall("call_1", progressive::EndCallReason::USER_HUNG_UP);
+    ASSERT_TRUE(!json.empty());
+}
+
+static void test_call_room_in_call() {
+    progressive::CallManager mgr;
+    ASSERT_FALSE(mgr.isRoomInCall("!room:org"));
+    std::string error;
+    mgr.startOutgoingCall("!room:org", "@bob:org", "Bob", progressive::CallType::VOICE, "v=0\r\n", error);
+    ASSERT_TRUE(mgr.isRoomInCall("!room:org"));
+}
+
+static void test_call_format_duration() {
+    progressive::CallManager mgr;
+    ASSERT_STREQ(mgr.formatCallDuration(65).c_str(), "01:05");
+    ASSERT_STREQ(mgr.formatCallDuration(3661).c_str(), "1:01:01");
+}
+
+static void test_call_sdp_parse() {
+    std::string sdp = "v=0\r\no=- 123 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\nc=IN IP4 0.0.0.0\r\na=ice-ufrag:test\r\na=ice-pwd:secret\r\na=fingerprint:sha-256 AB:CD\r\na=setup:actpass\r\n";
+    auto parsed = progressive::parseSdp(sdp, "offer");
+    ASSERT_TRUE(parsed.valid);
+    ASSERT_TRUE(parsed.hasAudio);
+    ASSERT_STREQ(parsed.hash.c_str(), "sha-256");
+}
+
 // ==== Run all tests ====
 int main() {
     printf("=== Progressive Chat C++ Unit Tests ===\n");
@@ -1413,6 +1481,16 @@ int main() {
     ADD_TEST(runner, test_sdp_type_to_string);
     ADD_TEST(runner, test_parse_json_string_value);
     ADD_TEST(runner, test_end_call_reason_to_string);
+    
+    printf("\n-- Call Manager --\n");
+    ADD_TEST(runner, test_call_state_to_string);
+    ADD_TEST(runner, test_call_start_outgoing);
+    ADD_TEST(runner, test_call_incoming);
+    ADD_TEST(runner, test_call_answer_reject);
+    ADD_TEST(runner, test_call_hangup);
+    ADD_TEST(runner, test_call_room_in_call);
+    ADD_TEST(runner, test_call_format_duration);
+    ADD_TEST(runner, test_call_sdp_parse);
     
     return runner.summary();
 }

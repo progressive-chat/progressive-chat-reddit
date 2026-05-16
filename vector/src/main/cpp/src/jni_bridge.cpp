@@ -145,6 +145,7 @@
 #include "progressive/widget_utils.hpp"
 #include "progressive/key_backup_manager.hpp"
 #include "progressive/live_location.hpp"
+#include "progressive/call_manager.hpp"
 #include "progressive/cross_signing.hpp"
 #include "progressive/edit_history.hpp"
 #include "progressive/read_marker.hpp"
@@ -5138,6 +5139,96 @@ JNI_FUNC(jboolean, nativeLiveLocationWithinGeofence)(JNIEnv* env, jclass, jdoubl
     progressive::GeoCoordinate c; c.latitude = jLat; c.longitude = jLon;
     progressive::GeofenceRegion r; r.centerLat = jCenterLat; r.centerLon = jCenterLon; r.radiusMeters = jRadius;
     return progressive::isWithinGeofence(c, r) ? JNI_TRUE : JNI_FALSE;
+}
+
+// ============================================================
+// Call Manager — full VoIP call lifecycle
+// ============================================================
+
+static std::unique_ptr<progressive::CallManager> g_callMgr;
+
+static progressive::CallManager* getCallMgr() {
+    if (!g_callMgr) g_callMgr.reset(new progressive::CallManager());
+    return g_callMgr.get();
+}
+
+JNI_FUNC(jstring, nativeCallStartOutgoing)(JNIEnv* env, jclass, jstring jRoomId, jstring jCalleeId,
+                                            jstring jCalleeName, jint jType, jstring jSdp) {
+    std::string error;
+    auto r = getCallMgr()->startOutgoingCall(jStr(env, jRoomId), jStr(env, jCalleeId),
+        jStr(env, jCalleeName), static_cast<progressive::CallType>(jType), jStr(env, jSdp), error);
+    if (r.empty()) return env->NewStringUTF(("{\"error\":\"" + error + "\"}").c_str());
+    return env->NewStringUTF(r.c_str());
+}
+
+JNI_FUNC(jstring, nativeCallHandleIncoming)(JNIEnv* env, jclass, jstring jCallId, jstring jRoomId,
+                                             jstring jCallerId, jstring jCallerName, jint jType, jstring jSdp, jint jLifetime) {
+    auto r = getCallMgr()->handleIncomingCall(jStr(env, jCallId), jStr(env, jRoomId),
+        jStr(env, jCallerId), jStr(env, jCallerName),
+        static_cast<progressive::CallType>(jType), jStr(env, jSdp), jLifetime);
+    return env->NewStringUTF(r.c_str());
+}
+
+JNI_FUNC(jstring, nativeCallAnswer)(JNIEnv* env, jclass, jstring jCallId, jstring jSdp) {
+    std::string error;
+    auto r = getCallMgr()->answerCall(jStr(env, jCallId), jStr(env, jSdp), error);
+    if (r.empty()) return env->NewStringUTF(("{\"error\":\"" + error + "\"}").c_str());
+    return env->NewStringUTF(r.c_str());
+}
+
+JNI_FUNC(jstring, nativeCallReject)(JNIEnv* env, jclass, jstring jCallId) {
+    std::string error;
+    auto r = getCallMgr()->rejectCall(jStr(env, jCallId), "rejected", error);
+    return env->NewStringUTF(r.c_str());
+}
+
+JNI_FUNC(jstring, nativeCallHangup)(JNIEnv* env, jclass, jstring jCallId) {
+    auto r = getCallMgr()->hangupCall(jStr(env, jCallId), progressive::EndCallReason::USER_HUNG_UP);
+    return env->NewStringUTF(r.c_str());
+}
+
+JNI_FUNC(jstring, nativeCallGetActive)(JNIEnv* env, jclass) {
+    progressive::CallInfo call;
+    if (getCallMgr()->getActiveCall(call))
+        return env->NewStringUTF(getCallMgr()->callToJson(call).c_str());
+    return env->NewStringUTF("{}");
+}
+
+JNI_FUNC(jstring, nativeCallGetIncoming)(JNIEnv* env, jclass) {
+    progressive::CallInfo call;
+    if (getCallMgr()->getIncomingCall(call))
+        return env->NewStringUTF(getCallMgr()->callToJson(call).c_str());
+    return env->NewStringUTF("{}");
+}
+
+JNI_FUNC(jstring, nativeCallGetRoomCalls)(JNIEnv* env, jclass, jstring jRoomId) {
+    return env->NewStringUTF(getCallMgr()->allCallsToJson().c_str());
+}
+
+JNI_FUNC(jboolean, nativeCallIsRoomInCall)(JNIEnv* env, jclass, jstring jRoomId) {
+    return getCallMgr()->isRoomInCall(jStr(env, jRoomId)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeCallFormatDuration)(JNIEnv* env, jclass, jint jSecs) {
+    auto r = getCallMgr()->formatCallDuration(jSecs);
+    return env->NewStringUTF(r.c_str());
+}
+
+JNI_FUNC(jstring, nativeCallParseSdp)(JNIEnv* env, jclass, jstring jSdpText, jstring jType) {
+    auto sdp = progressive::parseSdp(jStr(env, jSdpText), jStr(env, jType));
+    return env->NewStringUTF(progressive::sdpToJson(sdp).c_str());
+}
+
+JNI_FUNC(void, nativeCallSetMuted)(JNIEnv* env, jclass, jstring jCallId, jboolean jMuted) {
+    getCallMgr()->setMuted(jStr(env, jCallId), jMuted);
+}
+
+JNI_FUNC(void, nativeCallSetVideo)(JNIEnv* env, jclass, jstring jCallId, jboolean jOn) {
+    getCallMgr()->setVideoEnabled(jStr(env, jCallId), jOn);
+}
+
+JNI_FUNC(void, nativeCallReset)(JNIEnv*, jclass) {
+    g_callMgr.reset(new progressive::CallManager());
 }
 
 } // extern "C"

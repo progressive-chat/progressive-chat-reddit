@@ -1423,6 +1423,23 @@ object ProgressiveNative {
     @JvmStatic external fun nativeLiveLocationCluster(coordsJson: String, radiusMeters: Double): String
     @JvmStatic external fun nativeLiveLocationWithinGeofence(lat: Double, lon: Double, centerLat: Double, centerLon: Double, radiusMeters: Double): Boolean
 
+    // --- Call Manager ---
+
+    @JvmStatic external fun nativeCallStartOutgoing(roomId: String, calleeId: String, calleeName: String, callType: Int, sdpOffer: String): String
+    @JvmStatic external fun nativeCallHandleIncoming(callId: String, roomId: String, callerId: String, callerName: String, callType: Int, sdpOffer: String, lifetimeSec: Int): String
+    @JvmStatic external fun nativeCallAnswer(callId: String, sdpAnswer: String): String
+    @JvmStatic external fun nativeCallReject(callId: String): String
+    @JvmStatic external fun nativeCallHangup(callId: String): String
+    @JvmStatic external fun nativeCallGetActive(): String
+    @JvmStatic external fun nativeCallGetIncoming(): String
+    @JvmStatic external fun nativeCallGetRoomCalls(roomId: String): String
+    @JvmStatic external fun nativeCallIsRoomInCall(roomId: String): Boolean
+    @JvmStatic external fun nativeCallFormatDuration(seconds: Int): String
+    @JvmStatic external fun nativeCallParseSdp(sdpText: String, type: String): String
+    @JvmStatic external fun nativeCallSetMuted(callId: String, muted: Boolean)
+    @JvmStatic external fun nativeCallSetVideo(callId: String, enabled: Boolean)
+    @JvmStatic external fun nativeCallReset()
+
     // --- WebRTC Utils ---
 
     @JvmStatic external fun nativeFormatCallDuration(seconds: Int): String
@@ -4097,6 +4114,28 @@ object ProgressiveNative {
     @JvmStatic fun nativeLiveLocationClusterFallback(coordsJson: String, radiusMeters: Double): String = "[]"
     @JvmStatic fun nativeLiveLocationWithinGeofenceFallback(lat: Double, lon: Double, centerLat: Double, centerLon: Double, radiusMeters: Double): Boolean =
         nativeLiveLocationDistanceFallback(lat, lon, centerLat, centerLon) <= radiusMeters
+
+    // --- Call Manager fallbacks ---
+    @JvmStatic fun nativeCallStartOutgoingFallback(roomId: String, calleeId: String, calleeName: String, callType: Int, sdpOffer: String): String =
+        """{"call_id":"call_1","offer":{"type":"offer","sdp":"$sdpOffer"},"version":1}"""
+    @JvmStatic fun nativeCallHandleIncomingFallback(callId: String, roomId: String, callerId: String, callerName: String, callType: Int, sdpOffer: String, lifetimeSec: Int): String = callId
+    @JvmStatic fun nativeCallAnswerFallback(callId: String, sdpAnswer: String): String =
+        """{"call_id":"$callId","answer":{"type":"answer","sdp":"$sdpAnswer"},"version":1}"""
+    @JvmStatic fun nativeCallRejectFallback(callId: String): String = """{"call_id":"$callId","reason":"rejected","version":1}"""
+    @JvmStatic fun nativeCallHangupFallback(callId: String): String = """{"call_id":"$callId","reason":"user_hung_up","version":1}"""
+    @JvmStatic fun nativeCallGetActiveFallback(): String = "{}"
+    @JvmStatic fun nativeCallGetIncomingFallback(): String = "{}"
+    @JvmStatic fun nativeCallGetRoomCallsFallback(roomId: String): String = "[]"
+    @JvmStatic fun nativeCallIsRoomInCallFallback(roomId: String): Boolean = false
+    @JvmStatic fun nativeCallFormatDurationFallback(seconds: Int): String {
+        val h = seconds / 3600; val m = (seconds % 3600) / 60; val s = seconds % 60
+        return if (h > 0) "${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}"
+        else "${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}"
+    }
+    @JvmStatic fun nativeCallParseSdpFallback(sdpText: String, type: String): String = """{"type":"$type","sdp":"","valid":false}"""
+    @JvmStatic fun nativeCallSetMutedFallback(callId: String, muted: Boolean) {}
+    @JvmStatic fun nativeCallSetVideoFallback(callId: String, enabled: Boolean) {}
+    @JvmStatic fun nativeCallResetFallback() {}
 
     // --- URL Preview fallbacks ---
     @JvmStatic fun nativeIsPreviewableUrlFallback(url: String): Boolean = url.startsWith("http")
