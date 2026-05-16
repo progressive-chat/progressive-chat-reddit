@@ -26,6 +26,7 @@ struct RoomListItem {
     bool hasUnread = false;
     bool hasDraft = false;
     bool isEncrypted = false;
+    bool isMuted = false;          // notifications disabled
     int memberCount = 0;
 
     // Computed priority (higher = more important)
@@ -69,6 +70,27 @@ std::string formatRoomListItem(const RoomListItem& room);
 
 // Get the notification badge text: empty, "N", or "N+".
 std::string getBadgeText(const RoomListItem& room, int maxDisplay = 99);
+
+// ==== Notification State (Element Web algorithm) ====
+
+enum class NotificationLevel { NONE, GREY, RED };
+
+struct NotificationState {
+    NotificationLevel level = NotificationLevel::NONE;
+    int count = 0;             // number to display
+    std::string badgeText;     // "3", "99+", or ""
+    bool showBadge = false;
+};
+
+// Compute notification state for a room (Element Web Badge logic):
+//   - If has highlights → RED badge with highlight count
+//   - If has notifications but muted → GREY badge  
+//   - If has notifications and not muted → RED badge with notification count
+//   - Otherwise → no badge
+NotificationState computeNotificationState(const RoomListItem& room);
+
+// Format the notification state as JSON for Kotlin UI.
+std::string notificationStateToJson(const NotificationState& state);
 
 } // namespace progressive
 

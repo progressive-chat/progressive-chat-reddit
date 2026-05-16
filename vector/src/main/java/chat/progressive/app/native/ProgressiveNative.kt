@@ -401,6 +401,10 @@ object ProgressiveNative {
     @JvmStatic external fun nativeGetEditCountBadge(editCount: Int): String
     @JvmStatic external fun nativeComputeEditDiffSummary(oldBody: String, newBody: String): String
 
+    // --- Notification State ---
+
+    @JvmStatic external fun nativeComputeNotificationState(roomJson: String): String
+
     // --- Event Classifier ---
 
     @JvmStatic external fun nativeIsStateEvent(eventType: String): Boolean
@@ -1313,7 +1317,6 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeGetEditBadgeText(editCount: Int): String
     @JvmStatic external fun nativeGetEditCountBadge(editCount: Int): String
-    @JvmStatic external fun nativeComputeEditDiffSummary(oldBody: String, newBody: String): String
 
     // --- Read Marker / Unread Count ---
     // Ported from: TimelineViewModel.kt (read marker index math)
@@ -3496,6 +3499,10 @@ object ProgressiveNative {
         val removed = (oldBody.length - newBody.length).coerceAtLeast(0)
         return "+$added/-$removed chars"
     }
+
+    // --- Notification State fallback ---
+    @JvmStatic fun nativeComputeNotificationStateFallback(roomJson: String): String =
+        """{"level":"none","count":0,"badge_text":"","show_badge":false}"""
 
     // --- Event Classifier fallback ---
     @JvmStatic fun nativeIsStateEventFallback(eventType: String): Boolean =

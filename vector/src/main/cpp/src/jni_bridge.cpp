@@ -3627,6 +3627,36 @@ JNI_FUNC(jstring, nativeComputeEditDiffSummary)(JNIEnv* env, jclass, jstring jOl
     auto result = progressive::computeEditDiffSummary(jStr(env, jOld), jStr(env, jNew));
     return env->NewStringUTF(result.c_str());
 }
+
+// --- Notification State (Element Web algorithm) ---
+
+JNI_FUNC(jstring, nativeComputeNotificationState)(JNIEnv* env, jclass, jstring jRoomJson) {
+    progressive::RoomListItem room;
+    auto json = jStr(env, jRoomJson);
+    // Parse key fields from JSON
+    auto extractInt = [&](const std::string& key) -> int {
+        auto p = json.find("\"" + key + "\"");
+        if (p == std::string::npos) return 0;
+        p = json.find(':', p); if (p == std::string::npos) return 0;
+        p++; while (p < json.size() && (json[p] == ' ' || json[p] == '\t')) p++;
+        int v = 0; while (p < json.size() && json[p] >= '0' && json[p] <= '9') { v=v*10+(json[p]-'0'); p++; }
+        return v;
+    };
+    auto extractBool = [&](const std::string& key) -> bool {
+        auto p = json.find("\"" + key + "\"");
+        if (p == std::string::npos) return false;
+        p = json.find(':', p); if (p == std::string::npos) return false;
+        p++; while (p < json.size() && (json[p] == ' ' || json[p] == '\t')) p++;
+        return json.compare(p, 4, "true") == 0;
+    };
+    room.notificationCount = extractInt("notification_count");
+    room.highlightCount = extractInt("highlight_count");
+    room.isMuted = extractBool("is_muted");
+
+    auto state = progressive::computeNotificationState(room);
+    auto result = progressive::notificationStateToJson(state);
+    return env->NewStringUTF(result.c_str());
+}
     // Format: "Alice, Bob and 3 others online"
     std::ostringstream os;
     int total = static_cast<int>(names.size());

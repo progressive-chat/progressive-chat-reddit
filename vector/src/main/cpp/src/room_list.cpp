@@ -113,4 +113,46 @@ std::string roomListLayoutToJson(const RoomListLayout& layout) {
     return json.str();
 }
 
+// ==== Notification State (Element Web algorithm) ====
+
+NotificationState computeNotificationState(const RoomListItem& room) {
+    NotificationState state;
+
+    // Element Web logic: highlights override notifications
+    if (room.highlightCount > 0) {
+        state.level = NotificationLevel::RED;
+        state.count = room.highlightCount;
+    } else if (room.notificationCount > 0) {
+        // Muted rooms get grey badge
+        if (room.isMuted) {
+            state.level = NotificationLevel::GREY;
+        } else {
+            state.level = NotificationLevel::RED;
+        }
+        state.count = room.notificationCount;
+    } else {
+        state.level = NotificationLevel::NONE;
+        return state;
+    }
+
+    // Format badge text: "3", "99+"
+    if (state.count > 99) state.badgeText = "99+";
+    else if (state.count > 0) state.badgeText = std::to_string(state.count);
+
+    state.showBadge = state.level != NotificationLevel::NONE;
+    return state;
+}
+
+std::string notificationStateToJson(const NotificationState& state) {
+    std::ostringstream json;
+    json << "{";
+    json << R"("level":")" << (state.level == NotificationLevel::RED ? "red" : 
+                                state.level == NotificationLevel::GREY ? "grey" : "none") << R"(",)";
+    json << R"("count":)" << state.count << ",";
+    json << R"("badge_text":")" << state.badgeText << R"(",)";
+    json << R"("show_badge":)" << (state.showBadge ? "true" : "false");
+    json << "}";
+    return json.str();
+}
+
 } // namespace progressive
