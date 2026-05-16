@@ -2422,4 +2422,30 @@ JNI_FUNC(jstring, nativeGenerateDeviceId)(JNIEnv* env, jclass) {
     return env->NewStringUTF(result.c_str());
 }
 
+// --- Password Validator ---
+
+JNI_FUNC(jstring, nativeValidatePassword)(JNIEnv* env, jclass, jstring jPassword) {
+    auto result = progressive::validatePassword(jStr(env, jPassword));
+    std::ostringstream os;
+    os << R"({"valid":)" << (result.valid ? "true" : "false")
+       << R"(,"strength":)" << result.strength
+       << R"(,"strength_label":")" << result.strengthLabel
+       << R"(","feedback":")" << result.feedback << "\"}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jint, nativeComputePasswordStrength)(JNIEnv* env, jclass, jstring jPassword) {
+    return progressive::computePasswordStrength(jStr(env, jPassword));
+}
+
+JNI_FUNC(jstring, nativeGetStrengthLabel)(JNIEnv* env, jclass, jint jStrength) {
+    auto result = progressive::getStrengthLabel(jStrength);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeGeneratePasswordFeedback)(JNIEnv* env, jclass, jstring jPassword) {
+    auto result = progressive::generatePasswordFeedback(jStr(env, jPassword));
+    return env->NewStringUTF(result.c_str());
+}
+
 } // extern "C"

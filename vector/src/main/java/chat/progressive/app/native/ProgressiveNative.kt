@@ -1477,6 +1477,13 @@ object ProgressiveNative {
     @JvmStatic external fun nativeIsValidLoginCredentials(userId: String, password: String): Boolean
     @JvmStatic external fun nativeGenerateDeviceId(): String
 
+    // --- Password Validator ---
+
+    @JvmStatic external fun nativeValidatePassword(password: String): String
+    @JvmStatic external fun nativeComputePasswordStrength(password: String): Int
+    @JvmStatic external fun nativeGetStrengthLabel(strength: Int): String
+    @JvmStatic external fun nativeGeneratePasswordFeedback(password: String): String
+
     // --- URL Preview ---
 
     @JvmStatic external fun nativeIsPreviewableUrl(url: String): Boolean
@@ -2632,6 +2639,32 @@ object ProgressiveNative {
         userId.isNotEmpty() && password.isNotEmpty()
     @JvmStatic fun nativeGenerateDeviceIdFallback(): String =
         "PC" + java.util.UUID.randomUUID().toString().take(8).uppercase()
+
+    // --- Password Validator fallbacks ---
+    @JvmStatic fun nativeValidatePasswordFallback(password: String): String {
+        val len = password.length
+        val hasUpper = password.any { it.isUpperCase() }
+        val hasLower = password.any { it.isLowerCase() }
+        val hasDigit = password.any { it.isDigit() }
+        val valid = len >= 8 && hasUpper && hasLower && hasDigit
+        val strength = (len * 5 + (if (hasUpper) 20 else 0) + (if (hasLower) 20 else 0) + (if (hasDigit) 20 else 0)).coerceAtMost(100)
+        val label = when { strength >= 80 -> "Strong"; strength >= 60 -> "Good"; strength >= 40 -> "Fair"; else -> "Weak" }
+        return """{"valid":$valid,"strength":$strength,"strength_label":"$label","feedback":""}"""
+    }
+    @JvmStatic fun nativeComputePasswordStrengthFallback(password: String): Int {
+        val len = password.length.coerceAtMost(20)
+        val classes = listOf(password.any { it.isUpperCase() }, password.any { it.isLowerCase() }, password.any { it.isDigit() }).count { it }
+        return (len * 4 + classes * 15).coerceAtMost(100)
+    }
+    @JvmStatic fun nativeGetStrengthLabelFallback(strength: Int): String = when {
+        strength >= 80 -> "Strong"; strength >= 60 -> "Good"; strength >= 40 -> "Fair"; else -> "Weak"
+    }
+    @JvmStatic fun nativeGeneratePasswordFeedbackFallback(password: String): String = when {
+        password.length < 8 -> "Use at least 8 characters"
+        !password.any { it.isUpperCase() } -> "Add an uppercase letter"
+        !password.any { it.isDigit() } -> "Add a digit"
+        else -> ""
+    }
 
     // --- URL Preview fallbacks ---
     @JvmStatic fun nativeIsPreviewableUrlFallback(url: String): Boolean = url.startsWith("http")
