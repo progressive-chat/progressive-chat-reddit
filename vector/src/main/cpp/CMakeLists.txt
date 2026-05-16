@@ -26,6 +26,7 @@ add_library(
     src/network_stats.cpp
     src/masquerade.cpp
     src/megolm_decryptor.cpp
+    src/olm_session.cpp
     src/user_mask.cpp
     src/chunked_upload.cpp
     src/chat_features.cpp

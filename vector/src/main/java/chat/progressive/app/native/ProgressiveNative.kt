@@ -871,6 +871,17 @@ object ProgressiveNative {
     @JvmStatic external fun nativeMegolmSessionCount(): Int
     @JvmStatic external fun nativeMegolmClearRoom(roomId: String)
 
+    // --- Olm Account & Session ---
+
+    @JvmStatic external fun nativeOlmCreateAccount(userId: String, deviceId: String): Boolean
+    @JvmStatic external fun nativeOlmGetIdentityKeys(): String
+    @JvmStatic external fun nativeOlmGenerateOneTimeKeys(count: Int): String
+    @JvmStatic external fun nativeOlmSignMessage(message: String): String
+    @JvmStatic external fun nativeOlmCreateInboundSession(theirIdentityKey: String, preKeyMessage: String): String
+    @JvmStatic external fun nativeOlmDecryptMessage(senderKey: String, sessionId: String, ciphertext: String): String
+    @JvmStatic external fun nativeOlmPickleAccount(): String
+    @JvmStatic external fun nativeOlmUnpickleAccount(pickled: String, userId: String, deviceId: String): Boolean
+
     // --- WebRTC Utils ---
 
     @JvmStatic external fun nativeFormatCallDuration(seconds: Int): String
@@ -2770,6 +2781,16 @@ object ProgressiveNative {
     @JvmStatic fun nativeMegolmDecryptFallback(roomId: String, senderKey: String, sessionId: String, ciphertext: String): String = ""
     @JvmStatic fun nativeMegolmSessionCountFallback(): Int = 0
     @JvmStatic fun nativeMegolmClearRoomFallback(roomId: String) {}
+
+    // --- Olm Account fallbacks ---
+    @JvmStatic fun nativeOlmCreateAccountFallback(userId: String, deviceId: String): Boolean = false
+    @JvmStatic fun nativeOlmGetIdentityKeysFallback(): String = "{}"
+    @JvmStatic fun nativeOlmGenerateOneTimeKeysFallback(count: Int): String = "{}"
+    @JvmStatic fun nativeOlmSignMessageFallback(message: String): String = ""
+    @JvmStatic fun nativeOlmCreateInboundSessionFallback(theirIdentityKey: String, preKeyMessage: String): String = ""
+    @JvmStatic fun nativeOlmDecryptMessageFallback(senderKey: String, sessionId: String, ciphertext: String): String = ""
+    @JvmStatic fun nativeOlmPickleAccountFallback(): String = ""
+    @JvmStatic fun nativeOlmUnpickleAccountFallback(pickled: String, userId: String, deviceId: String): Boolean = false
 
     // --- URL Preview fallbacks ---
     @JvmStatic fun nativeIsPreviewableUrlFallback(url: String): Boolean = url.startsWith("http")

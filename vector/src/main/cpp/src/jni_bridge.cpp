@@ -134,6 +134,7 @@
 #include "progressive/room_tombstone.hpp"
 #include "progressive/openid_token.hpp"
 #include "progressive/megolm_decryptor.hpp"
+#include "progressive/olm_session.hpp"
 #include "progressive/event_utils.hpp"
 #include "progressive/content_builder.hpp"
 #include "progressive/displayname_utils.hpp"
@@ -2627,6 +2628,54 @@ JNI_FUNC(jint, nativeMegolmSessionCount)(JNIEnv*, jclass) {
 
 JNI_FUNC(void, nativeMegolmClearRoom)(JNIEnv* env, jclass, jstring jRoom) {
     g_megolmManager.clearRoom(jStr(env, jRoom));
+}
+
+// --- Olm Account & Session ---
+static progressive::OlmAccountData g_olmAccount;
+static progressive::OlmSessionManager g_olmSessionMgr;
+
+JNI_FUNC(jboolean, nativeOlmCreateAccount)(JNIEnv* env, jclass, jstring jUserId, jstring jDeviceId) {
+    g_olmAccount = progressive::createOlmAccount(jStr(env, jUserId), jStr(env, jDeviceId));
+    return g_olmAccount.valid ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeOlmGetIdentityKeys)(JNIEnv* env, jclass) {
+    return env->NewStringUTF(progressive::getAccountIdentityKeys(g_olmAccount).c_str());
+}
+
+JNI_FUNC(jstring, nativeOlmGenerateOneTimeKeys)(JNIEnv* env, jclass, jint jCount) {
+    auto result = progressive::generateOneTimeKeys(g_olmAccount, jCount);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeOlmSignMessage)(JNIEnv* env, jclass, jstring jMessage) {
+    auto result = progressive::accountSign(g_olmAccount, jStr(env, jMessage));
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeOlmCreateInboundSession)(JNIEnv* env, jclass, jstring jTheirKey, jstring jPreKeyMsg) {
+    auto session = progressive::createInboundOlmSession(g_olmAccount, jStr(env, jTheirKey), jStr(env, jPreKeyMsg));
+    if (!session.valid) return env->NewStringUTF("");
+    auto sid = session.sessionId;
+    g_olmSessionMgr.addSession(jStr(env, jTheirKey), sid, std::move(session));
+    return env->NewStringUTF(sid.c_str());
+}
+
+JNI_FUNC(jstring, nativeOlmDecryptMessage)(JNIEnv* env, jclass, jstring jSenderKey, jstring jSessionId, jstring jCiphertext) {
+    auto* session = g_olmSessionMgr.findSession(jStr(env, jSenderKey), jStr(env, jSessionId));
+    if (!session) return env->NewStringUTF("");
+    auto result = progressive::olmDecryptMessage(*session, jStr(env, jCiphertext));
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeOlmPickleAccount)(JNIEnv* env, jclass) {
+    auto result = progressive::pickleOlmAccount(g_olmAccount);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jboolean, nativeOlmUnpickleAccount)(JNIEnv* env, jclass, jstring jPickled, jstring jUserId, jstring jDeviceId) {
+    g_olmAccount = progressive::unpickleOlmAccount(jStr(env, jPickled), jStr(env, jUserId), jStr(env, jDeviceId));
+    return g_olmAccount.valid ? JNI_TRUE : JNI_FALSE;
 }
 
 } // extern "C"
