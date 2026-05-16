@@ -984,8 +984,8 @@ JNI_FUNC(jstring, nativeWrapWithRelation)(JNIEnv* env, jclass, jstring jContent,
 JNI_FUNC(jint, nativeTimelineAddEvents)(JNIEnv* env, jclass, jstring jRoom, jstring jEvents, jstring jPrev, jstring jNext, jint jDir) {
     static std::unordered_map<std::string, std::unique_ptr<progressive::TimelineChunkManager>> managers;
     auto room = jStr(env, jRoom);
-    if (managers.find(room) == managers.end()) managers.emplace(std::piecewise_construct, std::forward_as_tuple(room), std::forward_as_tuple(room));
-    auto& mgr = managers[room];
+    if (managers.find(room) == managers.end()) managers[room] = std::make_unique<progressive::TimelineChunkManager>(room);
+    auto& mgr = *managers[room];
     // Parse events JSON array
     auto eventsJson = jStr(env, jEvents);
     std::vector<progressive::TimelineEventData> events;
@@ -998,8 +998,8 @@ JNI_FUNC(jint, nativeTimelineAddEvents)(JNIEnv* env, jclass, jstring jRoom, jstr
 JNI_FUNC(jstring, nativeTimelineGetEvents)(JNIEnv* env, jclass, jstring jRoom) {
     static std::unordered_map<std::string, std::unique_ptr<progressive::TimelineChunkManager>> managers;
     auto room = jStr(env, jRoom);
-    if (managers.find(room) == managers.end()) managers.emplace(std::piecewise_construct, std::forward_as_tuple(room), std::forward_as_tuple(room));
-    auto& mgr = managers[room];
+    if (managers.find(room) == managers.end()) managers[room] = std::make_unique<progressive::TimelineChunkManager>(room);
+    auto& mgr = *managers[room];
     auto events = mgr.getEventsInOrder();
     std::ostringstream os; os << "[";
     for (size_t i = 0; i < events.size(); i++) {
