@@ -3607,6 +3607,14 @@ JNI_FUNC(jstring, nativeFormatPositionInfo)(JNIEnv* env, jclass, jlong jPos, jlo
     auto result = progressive::formatPositionInfo(jPos, jDur);
     return env->NewStringUTF(result.c_str());
 }
+
+// --- Direct Message Map ---
+
+JNI_FUNC(jstring, nativeParseDirectMessageMap)(JNIEnv* env, jclass, jstring jJson) {
+    auto dmMap = progressive::parseDirectMessageMap(jStr(env, jJson));
+    auto result = progressive::buildDirectMessageMapJson(dmMap);
+    return env->NewStringUTF(result.c_str());
+}
     // Format: "Alice, Bob and 3 others online"
     std::ostringstream os;
     int total = static_cast<int>(names.size());

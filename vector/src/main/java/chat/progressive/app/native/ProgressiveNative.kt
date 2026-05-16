@@ -392,6 +392,10 @@ object ProgressiveNative {
     @JvmStatic external fun nativeIsSupportedAudioType(mimeType: String): Boolean
     @JvmStatic external fun nativeFormatPositionInfo(positionMs: Long, durationMs: Long): String
 
+    // --- Direct Messages ---
+
+    @JvmStatic external fun nativeParseDirectMessageMap(json: String): String
+
     // --- Event Classifier ---
 
     @JvmStatic external fun nativeIsStateEvent(eventType: String): Boolean
@@ -3475,6 +3479,9 @@ object ProgressiveNative {
         mimeType.startsWith("audio/") || mimeType == "application/ogg"
     @JvmStatic fun nativeFormatPositionInfoFallback(positionMs: Long, durationMs: Long): String =
         "${positionMs / 1000}s / ${durationMs / 1000}s"
+
+    // --- Direct Message fallback ---
+    @JvmStatic fun nativeParseDirectMessageMapFallback(json: String): String = "{}"
 
     // --- Event Classifier fallback ---
     @JvmStatic fun nativeIsStateEventFallback(eventType: String): Boolean =
