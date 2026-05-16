@@ -269,6 +269,13 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeIsKnownPushRuleKind(kind: String): Boolean
     @JvmStatic external fun nativeGetRuleKindDescription(kind: String, enabled: Boolean): String
+    @JvmStatic external fun nativeIsMsc3061SharedKey(roomKeyContentJson: String): Boolean
+    @JvmStatic external fun nativeFormatMsc3061Status(isShared: Boolean, visibilitySetting: String): String
+    @JvmStatic external fun nativeCanShareHistory(roomVisibility: String): Boolean
+
+    // --- Poll Utilities ---
+
+    @JvmStatic external fun nativeGeneratePollOptionId(): String
 
     // --- Poll Validation ---
 
@@ -3165,6 +3172,16 @@ object ProgressiveNative {
         kind in listOf("override", "underride", "sender", "room", "content")
     @JvmStatic fun nativeGetRuleKindDescriptionFallback(kind: String, enabled: Boolean): String =
         "${kind.replaceFirstChar { it.uppercase() }} rules${if (enabled) "" else " (disabled)"}"
+    @JvmStatic fun nativeIsMsc3061SharedKeyFallback(roomKeyContentJson: String): Boolean =
+        roomKeyContentJson.contains("\"shared\"")
+    @JvmStatic fun nativeFormatMsc3061StatusFallback(isShared: Boolean, visibilitySetting: String): String =
+        if (isShared) "Shared ($visibilitySetting)" else "Not shared"
+    @JvmStatic fun nativeCanShareHistoryFallback(roomVisibility: String): Boolean =
+        roomVisibility in listOf("shared", "world_readable")
+
+    // --- Poll fallbacks ---
+    @JvmStatic fun nativeGeneratePollOptionIdFallback(): String =
+        java.util.UUID.randomUUID().toString().take(8)
 
     // --- Poll fallback ---
     @JvmStatic fun nativeIsValidPollQuestionFallback(question: String): Boolean =

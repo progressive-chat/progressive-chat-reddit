@@ -3124,6 +3124,26 @@ JNI_FUNC(jstring, nativeGetRuleKindDescription)(JNIEnv* env, jclass, jstring jKi
     return env->NewStringUTF(result.c_str());
 }
 
+JNI_FUNC(jboolean, nativeIsMsc3061SharedKey)(JNIEnv* env, jclass, jstring jContentJson) {
+    return progressive::isMsc3061SharedKey(jStr(env, jContentJson)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeFormatMsc3061Status)(JNIEnv* env, jclass, jboolean jShared, jstring jVisibility) {
+    auto result = progressive::formatMsc3061Status(jShared, jStr(env, jVisibility));
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jboolean, nativeCanShareHistory)(JNIEnv* env, jclass, jstring jVisibility) {
+    return progressive::canShareHistory(jStr(env, jVisibility)) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Poll Utilities ---
+
+JNI_FUNC(jstring, nativeGeneratePollOptionId)(JNIEnv* env, jclass) {
+    auto result = progressive::generatePollOptionId();
+    return env->NewStringUTF(result.c_str());
+}
+
 // --- Poll Validation ---
 
 JNI_FUNC(jboolean, nativeIsValidPollQuestion)(JNIEnv* env, jclass, jstring jQuestion) {
