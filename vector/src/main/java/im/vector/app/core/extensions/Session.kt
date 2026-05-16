@@ -98,6 +98,22 @@ fun Session.startSyncing(context: Context) {
         }
     }
 
+    // Progressive Chat: create native OlmAccount (device identity) alongside Rust SDK
+    try {
+        ProgressiveNative.ensureLoaded()
+        val deviceId = sessionParams.deviceId ?: "NATIVE01"
+        val ok = ProgressiveNative.nativeOlmCreateAccount(myUserId, deviceId)
+        if (ok) {
+            val keys = ProgressiveNative.nativeOlmGetIdentityKeys()
+            Timber.i("PROGRESSIVE native OlmAccount created: $myUserId/$deviceId keys=$keys")
+            // Generate OTKs for key exchange
+            val otks = ProgressiveNative.nativeOlmGenerateOneTimeKeys(50)
+            Timber.d("PROGRESSIVE generated OTKs: len=${otks.length}")
+        }
+    } catch (e: Exception) {
+        Timber.w(e, "PROGRESSIVE native OlmAccount creation skipped")
+    }
+
     if (!syncService().hasAlreadySynced()) {
         // initial sync is done as a service so it can continue below app lifecycle
         VectorSyncAndroidService.newOneShotIntent(
