@@ -137,6 +137,7 @@
 #include "progressive/olm_session.hpp"
 #include "progressive/sas_verification.hpp"
 #include "progressive/markdown.hpp"
+#include "progressive/room_content.hpp"
 #include "progressive/event_utils.hpp"
 #include "progressive/content_builder.hpp"
 #include "progressive/displayname_utils.hpp"
@@ -3031,6 +3032,29 @@ JNI_FUNC(jstring, nativeExtractEditSource)(JNIEnv* env, jclass, jstring jContent
 JNI_FUNC(jstring, nativeBuildReplyRelationWithThread)(JNIEnv* env, jclass, jstring jEventId, jstring jThreadRoot) {
     auto result = progressive::buildReplyRelationWithThread(jStr(env, jEventId), jStr(env, jThreadRoot));
     return env->NewStringUTF(result.c_str());
+}
+
+// --- Room Content Parsers (room name, topic, avatar — displayed in every room header) ---
+
+JNI_FUNC(jstring, nativeParseRoomNameContent)(JNIEnv* env, jclass, jstring jContentJson) {
+    auto content = progressive::parseRoomNameContent(jStr(env, jContentJson));
+    std::ostringstream os;
+    os << R"({"name":")" << content.name << "\"}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jstring, nativeParseRoomTopicContent)(JNIEnv* env, jclass, jstring jContentJson) {
+    auto content = progressive::parseRoomTopicContent(jStr(env, jContentJson));
+    std::ostringstream os;
+    os << R"({"topic":")" << content.topic << "\"}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jstring, nativeParseRoomAvatarContent)(JNIEnv* env, jclass, jstring jContentJson) {
+    auto content = progressive::parseRoomAvatarContent(jStr(env, jContentJson));
+    std::ostringstream os;
+    os << R"({"avatar_url":")" << content.avatarUrl << "\"}";
+    return env->NewStringUTF(os.str().c_str());
 }
 
 JNI_FUNC(jstring, nativeParseMarkdownTable)(JNIEnv* env, jclass, jstring jTableBlock, jboolean jWithScroll) {

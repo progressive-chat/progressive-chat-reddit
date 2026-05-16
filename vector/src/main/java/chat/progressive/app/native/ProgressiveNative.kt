@@ -238,6 +238,12 @@ object ProgressiveNative {
     @JvmStatic external fun nativeExtractEditSource(contentJson: String): String
     @JvmStatic external fun nativeBuildReplyRelationWithThread(eventId: String, threadRoot: String): String
 
+    // --- Room Content Parsers ---
+
+    @JvmStatic external fun nativeParseRoomNameContent(contentJson: String): String
+    @JvmStatic external fun nativeParseRoomTopicContent(contentJson: String): String
+    @JvmStatic external fun nativeParseRoomAvatarContent(contentJson: String): String
+
     // --- Account Export ---
 
     @JvmStatic external fun nativeEncryptAccount(
@@ -3075,6 +3081,20 @@ object ProgressiveNative {
         Regex("\"m\\.replace\".*?\"event_id\":\"(\\\$[^\"]+)\"").find(contentJson)?.groupValues?.get(1) ?: ""
     @JvmStatic fun nativeBuildReplyRelationWithThreadFallback(eventId: String, threadRoot: String): String =
         """{"m.in_reply_to":{"event_id":"$eventId"},"m.thread":{"event_id":"$threadRoot"}}"""
+
+    // --- Room Content fallbacks ---
+    @JvmStatic fun nativeParseRoomNameContentFallback(contentJson: String): String {
+        val name = Regex("\"name\":\"([^\"]+)\"").find(contentJson)?.groupValues?.get(1) ?: ""
+        return """{"name":"$name"}"""
+    }
+    @JvmStatic fun nativeParseRoomTopicContentFallback(contentJson: String): String {
+        val topic = Regex("\"topic\":\"([^\"]+)\"").find(contentJson)?.groupValues?.get(1) ?: ""
+        return """{"topic":"$topic"}"""
+    }
+    @JvmStatic fun nativeParseRoomAvatarContentFallback(contentJson: String): String {
+        val url = Regex("\"url\":\"(mxc://[^\"]+)\"").find(contentJson)?.groupValues?.get(1) ?: ""
+        return """{"avatar_url":"$url"}"""
+    }
 
     // --- Megolm fallbacks ---
     @JvmStatic fun nativeMegolmAddSessionFallback(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean = false
