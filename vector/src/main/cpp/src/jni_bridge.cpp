@@ -2677,8 +2677,53 @@ JNI_FUNC(jboolean, nativeAreGuestsAllowed)(JNIEnv* env, jclass, jstring jStateJs
 
 JNI_FUNC(jboolean, nativeIsRoomUpgraded)(JNIEnv* env, jclass, jstring jStateJson) {
     auto tombstone = progressive::parseRoomTombstoneContent(jStr(env, jStateJson));
-    // Room is upgraded if it has a replacement_room field
     return !tombstone.replacementRoomId.empty() ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Matrix Pattern Validators (ID validation, link parsing, URL checks) ---
+// Critical: used everywhere — before API calls, for linkification, input validation
+
+JNI_FUNC(jboolean, nativeIsUserId)(JNIEnv* env, jclass, jstring jInput) {
+    return progressive::isUserId(jStr(env, jInput)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeIsRoomId)(JNIEnv* env, jclass, jstring jInput) {
+    return progressive::isRoomId(jStr(env, jInput)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeIsRoomAlias)(JNIEnv* env, jclass, jstring jInput) {
+    return progressive::isRoomAlias(jStr(env, jInput)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeIsEventId)(JNIEnv* env, jclass, jstring jInput) {
+    return progressive::isEventId(jStr(env, jInput)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeIsMxcUrl)(JNIEnv* env, jclass, jstring jUrl) {
+    return progressive::isMxcUrl(jStr(env, jUrl)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeIsPhoneNumber)(JNIEnv* env, jclass, jstring jInput) {
+    return progressive::isPhoneNumber(jStr(env, jInput)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeIsValidEmail)(JNIEnv* env, jclass, jstring jInput) {
+    return progressive::isValidEmail(jStr(env, jInput)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeExtractServerNameFromId)(JNIEnv* env, jclass, jstring jMxid) {
+    auto result = progressive::extractServerNameFromId(jStr(env, jMxid));
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeExtractUserNameFromId)(JNIEnv* env, jclass, jstring jMxid) {
+    auto result = progressive::extractUserNameFromId(jStr(env, jMxid));
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeCandidateAliasFromRoomName)(JNIEnv* env, jclass, jstring jName, jstring jDomain, jint jMaxLen) {
+    auto result = progressive::candidateAliasFromRoomName(jStr(env, jName), jStr(env, jDomain), jMaxLen);
+    return env->NewStringUTF(result.c_str());
 }
 
 // --- Megolm Decryptor ---

@@ -885,6 +885,19 @@ object ProgressiveNative {
     @JvmStatic external fun nativeAreGuestsAllowed(stateContentJson: String): Boolean
     @JvmStatic external fun nativeIsRoomUpgraded(stateContentJson: String): Boolean
 
+    // --- Matrix Pattern Validators ---
+
+    @JvmStatic external fun nativeIsUserId(input: String): Boolean
+    @JvmStatic external fun nativeIsRoomId(input: String): Boolean
+    @JvmStatic external fun nativeIsRoomAlias(input: String): Boolean
+    @JvmStatic external fun nativeIsEventId(input: String): Boolean
+    @JvmStatic external fun nativeIsMxcUrl(url: String): Boolean
+    @JvmStatic external fun nativeIsPhoneNumber(input: String): Boolean
+    @JvmStatic external fun nativeIsValidEmail(input: String): Boolean
+    @JvmStatic external fun nativeExtractServerNameFromId(mxid: String): String
+    @JvmStatic external fun nativeExtractUserNameFromId(mxid: String): String
+    @JvmStatic external fun nativeCandidateAliasFromRoomName(roomName: String, domain: String, maxLength: Int): String
+
     // --- Megolm Decryptor ---
 
     @JvmStatic external fun nativeMegolmAddSession(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean
@@ -2837,6 +2850,19 @@ object ProgressiveNative {
         stateContentJson.contains("\"guest_access\":\"can_join\"")
     @JvmStatic fun nativeIsRoomUpgradedFallback(stateContentJson: String): Boolean =
         stateContentJson.contains("\"replacement_room\"")
+
+    // --- Matrix Pattern fallbacks ---
+    @JvmStatic fun nativeIsUserIdFallback(input: String): Boolean = input.startsWith("@") && input.contains(":") && input.length > 3
+    @JvmStatic fun nativeIsRoomIdFallback(input: String): Boolean = input.startsWith("!") && input.contains(":") && input.length > 3
+    @JvmStatic fun nativeIsRoomAliasFallback(input: String): Boolean = input.startsWith("#") && input.contains(":") && input.length > 3
+    @JvmStatic fun nativeIsEventIdFallback(input: String): Boolean = input.startsWith("\$") && input.length > 10
+    @JvmStatic fun nativeIsMxcUrlFallback(url: String): Boolean = url.startsWith("mxc://")
+    @JvmStatic fun nativeIsPhoneNumberFallback(input: String): Boolean = input.startsWith("+") && input.drop(1).all { it.isDigit() }
+    @JvmStatic fun nativeIsValidEmailFallback(input: String): Boolean = input.contains("@") && input.contains(".")
+    @JvmStatic fun nativeExtractServerNameFromIdFallback(mxid: String): String = mxid.substringAfter(":")
+    @JvmStatic fun nativeExtractUserNameFromIdFallback(mxid: String): String = mxid.removePrefix("@").substringBefore(":")
+    @JvmStatic fun nativeCandidateAliasFromRoomNameFallback(roomName: String, domain: String, maxLength: Int): String =
+        "#${roomName.lowercase().replace(" ", "_").take(maxLength)}:$domain"
 
     // --- Megolm fallbacks ---
     @JvmStatic fun nativeMegolmAddSessionFallback(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean = false
