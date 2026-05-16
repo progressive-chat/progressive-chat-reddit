@@ -316,12 +316,12 @@ ValidDecryptedEvent ValidDecryptedEvent::fromEncryptedEvent(
     return vd;
 }
 
-// ==== Parse SearchResult ====
+// ==== Parse EventSearchResult ====
 //
-// Original Kotlin (SearchResult.kt:25-44)
+// Original Kotlin (EventSearchResult.kt:25-44)
 
-SearchResult parseSearchResult(const std::string& json) {
-    SearchResult r;
+EventSearchResult parseEventSearchResult(const std::string& json) {
+    EventSearchResult r;
     r.nextBatch = extractJsonString(json, "next_batch");
 
     auto highPos = json.find("\"highlights\"");
