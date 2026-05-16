@@ -43,6 +43,10 @@ struct TimelineChunkData {
     bool isLastBackward = false; // Reached the beginning of history
     bool isLastForward = false;  // Reached the end of live stream
     int nextDisplayIndex = 0;    // Display index to assign to next inserted event
+
+    // Linked-list references (indices into chunks_ vector, -1 = none)
+    int prevChunkIdx = -1;       // Older chunk
+    int nextChunkIdx = -1;       // Newer chunk
 };
 
 // Direction of pagination.
@@ -85,6 +89,20 @@ public:
 
     // Check if more events can be loaded in a direction.
     bool canLoadMore(TimelineDirection dir) const;
+
+    // ==== Linked-List Chunk Navigation ====
+
+    // Link chunks after insertion — rebuilds prevChunkIdx/nextChunkIdx.
+    void linkChunks();
+
+    // Get the first (oldest) chunk index, or -1 if empty.
+    int getFirstChunkIdx() const;
+
+    // Get the last (newest) chunk index, or -1 if empty.
+    int getLastChunkIdx() const;
+
+    // Get chunk count.
+    int chunkCount() const { return (int)chunks_.size(); }
 
     // Clear all chunks (for room change).
     void clear();

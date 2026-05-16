@@ -56,6 +56,9 @@ int TimelineChunkManager::addChunk(
         chunks_[insertIdx].events = newEvents;
     }
 
+    // Link chunks after insertion
+    linkChunks();
+
     return (int)newEvents.size();
 }
 
@@ -123,9 +126,81 @@ std::string TimelineChunkManager::getNextToken() const {
 
 bool TimelineChunkManager::canLoadMore(TimelineDirection dir) const {
     if (dir == TimelineDirection::BACKWARDS) {
-        return !chunks_.empty() && !chunks_.front().isLastBackward;
+        int firstIdx = -1;
+        for (int i = 0; i < (int)chunks_.size(); i++) {
+            if (chunks_[i].prevChunkIdx < 0 && (firstIdx < 0 || i < firstIdx)) {
+                firstIdx = i;
+            }
+        }
+        if (firstIdx < 0 && !chunks_.empty()) firstIdx = 0;
+        return firstIdx >= 0 && !chunks_[firstIdx].isLastBackward;
     }
-    return !chunks_.empty() && !chunks_.back().isLastForward;
+    int lastIdx = -1;
+    for (int i = 0; i < (int)chunks_.size(); i++) {
+        if (chunks_[i].nextChunkIdx < 0 && (lastIdx < 0 || i > lastIdx)) {
+            lastIdx = i;
+        }
+    }
+    if (lastIdx < 0 && !chunks_.empty()) lastIdx = (int)chunks_.size() - 1;
+    return lastIdx >= 0 && !chunks_[lastIdx].isLastForward;
+}
+
+// ==== Linked-List Chunk Navigation ====
+
+void TimelineChunkManager::linkChunks() {
+    // Reset all links
+    for (auto& c : chunks_) {
+        c.prevChunkIdx = -1;
+        c.nextChunkIdx = -1;
+    }
+    if (chunks_.empty()) return;
+
+    // Sort chunks by display index of first event
+    std::vector<int> order(chunks_.size());
+    for (int i = 0; i < (int)chunks_.size(); i++) order[i] = i;
+    std::sort(order.begin(), order.end(), [&](int a, int b) {
+        if (chunks_[a].events.empty()) return false;
+        if (chunks_[b].events.empty()) return true;
+        return chunks_[a].events.front().displayIndex < chunks_[b].events.front().displayIndex;
+    });
+
+    // Link in order
+    for (int i = 0; i < (int)order.size(); i++) {
+        int ci = order[i];
+        int prevIdx = (i > 0) ? order[i - 1] : -1;
+        int nextIdx = (i < (int)order.size() - 1) ? order[i + 1] : -1;
+        // Only link if we have matching tokens
+        if (prevIdx >= 0 && !chunks_[ci].prevToken.empty()) {
+            chunks_[ci].prevChunkIdx = prevIdx;
+        }
+        if (nextIdx >= 0 && !chunks_[ci].nextToken.empty()) {
+            chunks_[ci].nextChunkIdx = nextIdx;
+        }
+    }
+}
+
+int TimelineChunkManager::getFirstChunkIdx() const {
+    int firstIdx = -1;
+    for (int i = 0; i < (int)chunks_.size(); i++) {
+        if (chunks_[i].prevChunkIdx < 0) {
+            if (firstIdx < 0 || chunks_[i].events.front().displayIndex < chunks_[firstIdx].events.front().displayIndex) {
+                firstIdx = i;
+            }
+        }
+    }
+    return firstIdx;
+}
+
+int TimelineChunkManager::getLastChunkIdx() const {
+    int lastIdx = -1;
+    for (int i = 0; i < (int)chunks_.size(); i++) {
+        if (chunks_[i].nextChunkIdx < 0) {
+            if (lastIdx < 0 || chunks_[i].events.back().displayIndex > chunks_[lastIdx].events.back().displayIndex) {
+                lastIdx = i;
+            }
+        }
+    }
+    return lastIdx;
 }
 
 void TimelineChunkManager::clear() {
