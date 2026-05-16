@@ -2640,6 +2640,47 @@ JNI_FUNC(jstring, nativeGetCallState)(JNIEnv* env, jclass, jstring jContentJson)
     return env->NewStringUTF(result.c_str());
 }
 
+// --- Room State (Join Rules, History, Guests, Create, Tombstone) ---
+// Critical for room settings UI: who can join, history visibility, upgrades
+
+JNI_FUNC(jboolean, nativeIsPublicRoom)(JNIEnv* env, jclass, jstring jStateJson) {
+    auto rules = progressive::parseJoinRules(jStr(env, jStateJson));
+    return progressive::isPublicRoom(rules) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeIsInviteOnly)(JNIEnv* env, jclass, jstring jStateJson) {
+    auto rules = progressive::parseJoinRules(jStr(env, jStateJson));
+    return progressive::isInviteOnly(rules) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeJoinRuleToString)(JNIEnv* env, jclass, jstring jStateJson) {
+    auto rules = progressive::parseJoinRules(jStr(env, jStateJson));
+    auto result = progressive::joinRuleToString(rules.rule);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jboolean, nativeIsHistoryPubliclyVisible)(JNIEnv* env, jclass, jstring jStateJson) {
+    auto vis = progressive::parseHistoryVisibility(jStr(env, jStateJson));
+    return progressive::isHistoryPubliclyVisible(vis) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeHistoryVisibilityToString)(JNIEnv* env, jclass, jstring jStateJson) {
+    auto vis = progressive::parseHistoryVisibility(jStr(env, jStateJson));
+    auto result = progressive::historyVisibilityToString(vis.visibility);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jboolean, nativeAreGuestsAllowed)(JNIEnv* env, jclass, jstring jStateJson) {
+    auto access = progressive::parseGuestAccess(jStr(env, jStateJson));
+    return progressive::areGuestsAllowed(access) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeIsRoomUpgraded)(JNIEnv* env, jclass, jstring jStateJson) {
+    auto tombstone = progressive::parseRoomTombstoneContent(jStr(env, jStateJson));
+    // Room is upgraded if it has a replacement_room field
+    return !tombstone.replacementRoomId.empty() ? JNI_TRUE : JNI_FALSE;
+}
+
 // --- Megolm Decryptor ---
 // Controlled by Labs: SETTINGS_LABS_NATIVE_CRYPTO
 

@@ -875,6 +875,16 @@ object ProgressiveNative {
     @JvmStatic external fun nativeBuildCallAnswerContent(callId: String, sdpAnswer: String): String
     @JvmStatic external fun nativeGetCallState(eventContentJson: String): String
 
+    // --- Room State ---
+
+    @JvmStatic external fun nativeIsPublicRoom(stateContentJson: String): Boolean
+    @JvmStatic external fun nativeIsInviteOnly(stateContentJson: String): Boolean
+    @JvmStatic external fun nativeJoinRuleToString(stateContentJson: String): String
+    @JvmStatic external fun nativeIsHistoryPubliclyVisible(stateContentJson: String): Boolean
+    @JvmStatic external fun nativeHistoryVisibilityToString(stateContentJson: String): String
+    @JvmStatic external fun nativeAreGuestsAllowed(stateContentJson: String): Boolean
+    @JvmStatic external fun nativeIsRoomUpgraded(stateContentJson: String): Boolean
+
     // --- Megolm Decryptor ---
 
     @JvmStatic external fun nativeMegolmAddSession(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean
@@ -2811,6 +2821,22 @@ object ProgressiveNative {
     @JvmStatic fun nativeBuildCallAnswerContentFallback(callId: String, sdpAnswer: String): String =
         """{"call_id":"$callId","answer":{"type":"answer","sdp":"$sdpAnswer"},"version":1}"""
     @JvmStatic fun nativeGetCallStateFallback(eventContentJson: String): String = "unknown"
+
+    // --- Room State fallbacks ---
+    @JvmStatic fun nativeIsPublicRoomFallback(stateContentJson: String): Boolean =
+        stateContentJson.contains("\"join_rule\":\"public\"")
+    @JvmStatic fun nativeIsInviteOnlyFallback(stateContentJson: String): Boolean =
+        stateContentJson.contains("\"join_rule\":\"invite\"")
+    @JvmStatic fun nativeJoinRuleToStringFallback(stateContentJson: String): String =
+        Regex("\"join_rule\":\"(\\w+)\"").find(stateContentJson)?.groupValues?.get(1) ?: "unknown"
+    @JvmStatic fun nativeIsHistoryPubliclyVisibleFallback(stateContentJson: String): Boolean =
+        stateContentJson.contains("\"world_readable\"")
+    @JvmStatic fun nativeHistoryVisibilityToStringFallback(stateContentJson: String): String =
+        Regex("\"history_visibility\":\"(\\w+)\"").find(stateContentJson)?.groupValues?.get(1) ?: "unknown"
+    @JvmStatic fun nativeAreGuestsAllowedFallback(stateContentJson: String): Boolean =
+        stateContentJson.contains("\"guest_access\":\"can_join\"")
+    @JvmStatic fun nativeIsRoomUpgradedFallback(stateContentJson: String): Boolean =
+        stateContentJson.contains("\"replacement_room\"")
 
     // --- Megolm fallbacks ---
     @JvmStatic fun nativeMegolmAddSessionFallback(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean = false
