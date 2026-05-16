@@ -213,12 +213,30 @@ public:
     ProfileSummary getSummary(const std::string& name) const;
 
     // ====== Action Reporting ======
-
-    // Generate a user-action-focused report (JSON).
     std::string actionReportToJson() const;
-
-    // Generate action report as text (for /profile action slash command).
     std::string actionReportToText() const;
+
+    // ====== Real-Time Overlay (HUD data provider) ======
+
+    // Compact JSON snapshot for real-time overlay rendering (~10fps poll).
+    // Kotlin reads this and renders a translucent HUD.
+    std::string realTimeSnapshotJson() const;
+
+    // Real-time snapshot as compact text (for overlay).
+    std::string realTimeSnapshotText() const;
+
+    // Get hot actions (top 3 slowest in last 30 seconds).
+    std::vector<ActionStats> hotActions() const;
+
+    // Get any budget violations in the last N seconds.
+    std::vector<std::string> recentViolations(int windowSec = 30) const;
+
+    // Color code for a duration relative to budget.
+    // Returns "green", "yellow", or "red" hex.
+    static std::string colorForDuration(int64_t durationNs, int64_t budgetNs = 200000000LL);
+
+    // Color string for FPS value.
+    static std::string colorForFps(double fps);
 
     // ====== Stats ======
     int totalEntries() const { return static_cast<int>(entries_.size()); }

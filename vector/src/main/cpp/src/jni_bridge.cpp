@@ -5876,6 +5876,16 @@ JNI_FUNC(jstring, nativeProfileActionReportText)(JNIEnv* env, jclass) {
     return env->NewStringUTF(progressive::Profiler::instance().actionReportToText().c_str());
 }
 
+// --- Real-Time Overlay ---
+
+JNI_FUNC(jstring, nativeProfileOverlaySnapshot)(JNIEnv* env, jclass) {
+    return env->NewStringUTF(progressive::Profiler::instance().realTimeSnapshotJson().c_str());
+}
+
+JNI_FUNC(jstring, nativeProfileOverlayText)(JNIEnv* env, jclass) {
+    return env->NewStringUTF(progressive::Profiler::instance().realTimeSnapshotText().c_str());
+}
+
 // ============================================================
 // Device Manager Full
 // ============================================================

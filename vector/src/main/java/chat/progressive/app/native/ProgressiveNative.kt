@@ -1541,6 +1541,10 @@ object ProgressiveNative {
     @JvmStatic external fun nativeProfileActionReport(): String
     @JvmStatic external fun nativeProfileActionReportText(): String
 
+    // --- Profiler: Real-Time Overlay ---
+    @JvmStatic external fun nativeProfileOverlaySnapshot(): String
+    @JvmStatic external fun nativeProfileOverlayText(): String
+
     // --- Device Manager Full ---
 
     @JvmStatic external fun nativeDeviceParseList(json: String): String
@@ -4510,6 +4514,10 @@ object ProgressiveNative {
     @JvmStatic fun nativeProfileActionReportFallback(): String =
         """{"actions":[],"frame_fps":0,"frame_count":0}"""
     @JvmStatic fun nativeProfileActionReportTextFallback(): String = "Action profiler not available (native lib not loaded)"
+
+    @JvmStatic fun nativeProfileOverlaySnapshotFallback(): String =
+        """{"fps":0.0,"fps_color":"#F44336","memory_bytes":0,"memory_mb":0.0,"active_actions":0,"violations":0,"violation_list":[],"hot_actions":[],"drops":0,"total_frames":0}"""
+    @JvmStatic fun nativeProfileOverlayTextFallback(): String = "Profiler N/A"
 
     private val _actionTimers = mutableMapOf<String, Long>()
 

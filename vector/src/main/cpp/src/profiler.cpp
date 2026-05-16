@@ -559,4 +559,91 @@ std::string Profiler::actionReportToText() const {
     return os.str();
 }
 
+// ====== Real-Time Overlay (HUD) ======
+
+std::string Profiler::realTimeSnapshotJson() const {
+    auto hot = const_cast<Profiler*>(this)->getAllActionStats();
+    auto violations = const_cast<Profiler*>(this)->recentViolations(30);
+    double fps = getCurrentFps();
+
+    std::ostringstream os;
+    os << R"({"fps":)" << std::fixed << std::setprecision(1) << fps
+       << R"(,"fps_color":")" << colorForFps(fps) << R"(")"
+       << R"(,"memory_bytes":)" << trackedMemory_
+       << R"(,"memory_mb":)" << std::fixed << std::setprecision(1) << (trackedMemory_ / 1048576.0)
+       << R"(,"active_actions":)" << getActiveCount()
+       << R"(,"violations":)" << static_cast<int>(violations.size())
+       << R"(,"violation_list":[)";
+    for (size_t i = 0; i < violations.size() && i < 5; i++) {
+        if (i > 0) os << ","; os << "\"" << violations[i] << "\"";
+    }
+    os << R"(],"hot_actions":[)";
+    int shown = 0;
+    for (size_t i = 0; i < hot.size() && shown < 3; i++) {
+        if (hot[i].runCount == 0) continue;
+        if (shown > 0) os << ",";
+        int64_t lastMs = hot[i].history.empty() ? 0 : hot[i].history.back() / 1000000;
+        os << R"({"name":")" << hot[i].actionName
+           << R"(","last_ms":)" << lastMs
+           << R"(,"avg_ms":)" << (hot[i].avgNs / 1000000)
+           << R"(,"color":")" << colorForDuration(hot[i].avgNs, hot[i].budgetNs) << R"(")"
+           << R"(,"over_budget":)" << hot[i].overBudgetCount << "}";
+        shown++;
+    }
+    os << R"(],"drops":)" << static_cast<int>(std::count_if(frames_.begin(), frames_.end(),
+        [](const FrameTiming& f) { return f.dropped; }))
+       << R"(,"total_frames":)" << static_cast<int>(frames_.size())
+       << "}";
+    return os.str();
+}
+
+std::string Profiler::realTimeSnapshotText() const {
+    double fps = getCurrentFps();
+    auto violations = const_cast<Profiler*>(this)->recentViolations(30);
+
+    std::ostringstream os;
+    os << std::fixed << std::setprecision(1) << fps << " FPS";
+    if (!violations.empty()) os << " [" << violations.size() << "!]";
+    os << " | " << (trackedMemory_ / 1048576.0) << " MB";
+    return os.str();
+}
+
+std::vector<ActionStats> Profiler::hotActions() const {
+    auto all = const_cast<Profiler*>(this)->getAllActionStats();
+    if (all.size() > 3) all.resize(3);
+    return all;
+}
+
+std::vector<std::string> Profiler::recentViolations(int windowSec) const {
+    std::vector<std::string> result;
+    int64_t cutoff = nowNs() - windowSec * 1000000000LL;
+    for (auto it = actions_.rbegin(); it != actions_.rend(); ++it) {
+        if (it->endNs < cutoff) break;
+        if (!it->withinBudget && it->completed) {
+            result.push_back(it->actionName);
+        }
+    }
+    // Remove duplicates
+    std::sort(result.begin(), result.end());
+    result.erase(std::unique(result.begin(), result.end()), result.end());
+    return result;
+}
+
+std::string Profiler::colorForDuration(int64_t durationNs, int64_t budgetNs) {
+    if (budgetNs <= 0) return "#2196F3"; // No budget set
+
+    double ratio = static_cast<double>(durationNs) / budgetNs;
+    if (ratio <= 0.5) return "#4CAF50";   // Green: well under budget
+    if (ratio <= 0.8) return "#FFC107";   // Yellow: approaching budget
+    if (ratio <= 1.0) return "#FF9800";   // Orange: near budget
+    return "#F44336";                      // Red: over budget
+}
+
+std::string Profiler::colorForFps(double fps) {
+    if (fps >= 55.0) return "#4CAF50";   // Green: smooth
+    if (fps >= 30.0) return "#FFC107";   // Yellow: acceptable
+    if (fps >= 15.0) return "#FF9800";   // Orange: laggy
+    return "#F44336";                      // Red: slideshow
+}
+
 } // namespace progressive
