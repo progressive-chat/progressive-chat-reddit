@@ -293,6 +293,36 @@ static std::string jStr(JNIEnv* env, jstring js) {
     return result;
 }
 
+// Shared JSON extraction helpers — replace 19 duplicate lambdas
+static std::string jExtractStr(const std::string& json, const std::string& key) {
+    auto pp = json.find("\"" + key + "\"");
+    if (pp == std::string::npos) return "";
+    pp = json.find('"', pp + key.size() + 2);
+    if (pp == std::string::npos) return "";
+    pp++;
+    size_t e = pp;
+    while (e < json.size() && json[e] != '"') e++;
+    return json.substr(pp, e - pp);
+}
+
+static int64_t jExtractInt(const std::string& json, const std::string& key) {
+    auto pp = json.find("\"" + key + "\"");
+    if (pp == std::string::npos) return 0;
+    pp = json.find(':', pp);
+    if (pp == std::string::npos) return 0;
+    pp++;
+    while (pp < json.size() && (json[pp] == ' ' || json[pp] == '\t')) pp++;
+    int64_t v = 0;
+    while (pp < json.size() && json[pp] >= '0' && json[pp] <= '9') {
+        v = v * 10 + (json[pp] - '0'); pp++;
+    }
+    return v;
+}
+
+static bool jExtractBool(const std::string& json, const std::string& key) {
+    return json.find("\"" + key + "\":true") != std::string::npos;
+}
+
 extern "C" {
 
 /*
@@ -865,7 +895,7 @@ Java_chat_progressive_app_native_ProgressiveNative_nativeFormatJumpToUnreadLabel
     progressive::ReadMarkerState state;
     // Quick parse from JSON
     if (json.find("\"hasUnread\": true") != std::string::npos ||
-        json.find("\"hasUnread\":true") != std::string::npos) state.hasUnread = true;
+        jExtractBool(json, "hasUnread")) state.hasUnread = true;
     // Extract timestamp
     auto tsPos = json.find("\"firstUnreadTimestampMs\"");
     if (tsPos != std::string::npos) {
@@ -1829,19 +1859,19 @@ JNI_FUNC(jboolean, nativeNeedsCrossSigningSetup)(JNIEnv* env, jclass, jstring jS
     // Parse status from JSON, call needsCrossSigningSetup
     auto json = jStr(env, jStatusJson);
     bool masterKeyOk = json.find("\"master_key_ok\"") != std::string::npos &&
-                       json.find("\"master_key_ok\":true") != std::string::npos;
+                       jExtractBool(json, "master_key_ok");
     bool selfSigningOk = json.find("\"self_signing_key_ok\"") != std::string::npos &&
-                         json.find("\"self_signing_key_ok\":true") != std::string::npos;
+                         jExtractBool(json, "self_signing_key_ok");
     return (!masterKeyOk || !selfSigningOk) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNI_FUNC(jstring, nativeFormatCrossSigningStatus)(JNIEnv* env, jclass, jstring jStatusJson) {
     auto json = jStr(env, jStatusJson);
-    bool masterOk = json.find("\"master_ok\":true") != std::string::npos ||
-                    json.find("\"master_key_ok\":true") != std::string::npos;
-    bool selfOk = json.find("\"self_signing_ok\":true") != std::string::npos ||
-                  json.find("\"self_signing_key_ok\":true") != std::string::npos;
-    bool userOk = json.find("\"user_signing_ok\":true") != std::string::npos;
+    bool masterOk = jExtractBool(json, "master_ok") ||
+                    jExtractBool(json, "master_key_ok");
+    bool selfOk = jExtractBool(json, "self_signing_ok") ||
+                  jExtractBool(json, "self_signing_key_ok");
+    bool userOk = jExtractBool(json, "user_signing_ok");
     if (masterOk && selfOk && userOk) return env->NewStringUTF("Verified");
     if (masterOk && selfOk) return env->NewStringUTF("Self-verified");
     if (masterOk) return env->NewStringUTF("Not verified");
@@ -2222,25 +2252,12 @@ JNI_FUNC(jstring, nativeResolveUrl)(JNIEnv* env, jclass, jstring jBase, jstring 
 JNI_FUNC(jstring, nativeUrlPreviewToJson)(JNIEnv* env, jclass, jstring jPreviewJson) {
     auto json = jStr(env, jPreviewJson);
     progressive::UrlPreview p;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    auto ei = [&](const std::string& k) -> int64_t {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return 0;
-        pp = json.find(':', pp); if (pp == std::string::npos) return 0;
-        pp++; while (pp < json.size() && (json[pp] == ' ' || json[pp] == '\t')) pp++;
-        int64_t v = 0; while (pp < json.size() && json[pp] >= '0' && json[pp] <= '9') { v=v*10+(json[pp]-'0'); pp++; }
-        return v;
-    };
-    p.url = es("url"); p.title = es("title"); p.description = es("description");
-    p.imageUrl = es("image_url"); p.siteName = es("site_name"); p.type = es("type");
-    p.imageWidth = ei("image_width"); p.imageHeight = ei("image_height");
-    p.hasImage = json.find("\"has_image\":true") != std::string::npos;
-    p.hasTitle = json.find("\"has_title\":true") != std::string::npos;
-    p.valid = json.find("\"valid\":true") != std::string::npos;
+    p.url = jExtractStr(json, "url"); p.title = jExtractStr(json, "title"); p.description = jExtractStr(json, "description");
+    p.imageUrl = jExtractStr(json, "image_url"); p.siteName = jExtractStr(json, "site_name"); p.type = jExtractStr(json, "type");
+    p.imageWidth = jExtractInt(json, "image_width"); p.imageHeight = jExtractInt(json, "image_height");
+    p.hasImage = jExtractBool(json, "has_image");
+    p.hasTitle = jExtractBool(json, "has_title");
+    p.valid = jExtractBool(json, "valid");
     auto result = progressive::urlPreviewToJson(p);
     return env->NewStringUTF(result.c_str());
 }
@@ -2543,7 +2560,7 @@ JNI_FUNC(jstring, nativeFormatCallNotification)(JNIEnv* env, jclass, jstring jCa
     };
     call.callId = extractStr("call_id");
     call.callerName = extractStr("caller_name");
-    call.isVideo = json.find("\"is_video\":true") != std::string::npos;
+    call.isVideo = jExtractBool(json, "is_video");
     auto result = progressive::formatCallNotification(call);
     return env->NewStringUTF(result.c_str());
 }
@@ -3731,14 +3748,8 @@ JNI_FUNC(jstring, nativeSearchRoomList)(JNIEnv* env, jclass, jstring jRoomsJson,
         }
         std::string rj = json.substr(s, p - s);
         progressive::RoomListItem room;
-        auto es = [&](const std::string& key) -> std::string {
-            auto pp = rj.find("\"" + key + "\""); if (pp == std::string::npos) return "";
-            pp = rj.find('"', pp + key.size() + 2); if (pp == std::string::npos) return "";
-            pp++; size_t e = pp; while (e < rj.size() && rj[e] != '"') e++;
-            return rj.substr(pp, e - pp);
-        };
-        room.roomId = es("roomId");
-        room.name = es("name");
+        room.roomId = jExtractStr(json, "roomId");
+        room.name = jExtractStr(json, "name");
         rooms.push_back(room);
     }
     auto results = progressive::searchRoomList(rooms, jStr(env, jQuery));
@@ -3799,7 +3810,7 @@ JNI_FUNC(jstring, nativeComputePollResults)(JNIEnv* env, jclass, jstring jPollJs
             result.question = json.substr(qPos, e - qPos);
         }
     }
-    result.isEnded = json.find("\"closed\":true") != std::string::npos;
+    result.isEnded = jExtractBool(json, "closed");
     auto optsPos = json.find("\"options\"");
     if (optsPos != std::string::npos) {
         optsPos = json.find('[', optsPos);
@@ -3953,7 +3964,7 @@ JNI_FUNC(jstring, nativeValidateAndFormatRecoveryKey)(JNIEnv* env, jclass, jstri
     return env->NewStringUTF(result.c_str());
 }
     }
-    result.isEnded = json.find("\"closed\":true") != std::string::npos;
+    result.isEnded = jExtractBool(json, "closed");
 
     // Parse options and count votes
     auto optsPos = json.find("\"options\"");
@@ -4436,14 +4447,8 @@ JNI_FUNC(jstring, nativePresenceEnumToString)(JNIEnv* env, jclass, jint jPresenc
 JNI_FUNC(jstring, nativeCredentialsToJson)(JNIEnv* env, jclass, jstring jCredsJson) {
     auto json = jStr(env, jCredsJson);
     progressive::Credentials c;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    c.userId = es("user_id"); c.accessToken = es("access_token"); c.refreshToken = es("refresh_token");
-    c.homeServer = es("home_server"); c.deviceId = es("device_id");
+    c.userId = jExtractStr(json, "user_id"); c.accessToken = jExtractStr(json, "access_token"); c.refreshToken = jExtractStr(json, "refresh_token");
+    c.homeServer = jExtractStr(json, "home_server"); c.deviceId = jExtractStr(json, "device_id");
     auto r = progressive::credentialsToJson(c);
     return env->NewStringUTF(r.c_str());
 }
@@ -4465,18 +4470,9 @@ JNI_FUNC(jstring, nativeEndCallReasonToString)(JNIEnv* env, jclass, jint jReason
 JNI_FUNC(jstring, nativeMessageTextToJson)(JNIEnv* env, jclass, jstring jContentJson) {
     auto json = jStr(env, jContentJson);
     progressive::MessageTextContent m;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    auto eb = [&](const std::string& k) -> bool {
-        return json.find("\"" + k + "\":true") != std::string::npos;
-    };
-    m.msgtype = es("msgtype"); m.body = es("body"); m.formattedBody = es("formatted_body");
-    m.format = es("format"); m.relatesTo = es("m.relates_to");
-    m.isFallback = eb("is_fallback");
+    m.msgtype = jExtractStr(json, "msgtype"); m.body = jExtractStr(json, "body"); m.formattedBody = jExtractStr(json, "formatted_body");
+    m.format = jExtractStr(json, "format"); m.relatesTo = jExtractStr(json, "m.relates_to");
+    m.isFallback = jExtractBool(json, "is_fallback");
     auto r = progressive::messageTextToJson(m);
     return env->NewStringUTF(r.c_str());
 }
@@ -4484,13 +4480,7 @@ JNI_FUNC(jstring, nativeMessageTextToJson)(JNIEnv* env, jclass, jstring jContent
 JNI_FUNC(jstring, nativeMessageNoticeToJson)(JNIEnv* env, jclass, jstring jContentJson) {
     auto json = jStr(env, jContentJson);
     progressive::MessageNoticeContent m;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    m.body = es("body"); m.msgtype = es("msgtype");
+    m.body = jExtractStr(json, "body"); m.msgtype = jExtractStr(json, "msgtype");
     auto r = progressive::messageNoticeToJson(m);
     return env->NewStringUTF(r.c_str());
 }
@@ -4498,14 +4488,8 @@ JNI_FUNC(jstring, nativeMessageNoticeToJson)(JNIEnv* env, jclass, jstring jConte
 JNI_FUNC(jstring, nativeMessageEmoteToJson)(JNIEnv* env, jclass, jstring jContentJson) {
     auto json = jStr(env, jContentJson);
     progressive::MessageEmoteContent m;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    m.body = es("body"); m.msgtype = es("msgtype");
-    m.formattedBody = es("formatted_body"); m.format = es("format");
+    m.body = jExtractStr(json, "body"); m.msgtype = jExtractStr(json, "msgtype");
+    m.formattedBody = jExtractStr(json, "formatted_body"); m.format = jExtractStr(json, "format");
     auto r = progressive::messageEmoteToJson(m);
     return env->NewStringUTF(r.c_str());
 }
@@ -4513,23 +4497,10 @@ JNI_FUNC(jstring, nativeMessageEmoteToJson)(JNIEnv* env, jclass, jstring jConten
 JNI_FUNC(jstring, nativeMessageImageToJson)(JNIEnv* env, jclass, jstring jContentJson) {
     auto json = jStr(env, jContentJson);
     progressive::MessageImageContent m;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    auto ei = [&](const std::string& k) -> int64_t {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return 0;
-        pp = json.find(':', pp); if (pp == std::string::npos) return 0;
-        pp++; while (pp < json.size() && (json[pp] == ' ' || json[pp] == '\t')) pp++;
-        int64_t v = 0; while (pp < json.size() && json[pp] >= '0' && json[pp] <= '9') { v=v*10+(json[pp]-'0'); pp++; }
-        return v;
-    };
-    m.url = es("url"); m.thumbnailUrl = es("thumbnail_url"); m.thumbnailInfo = es("thumbnail_info");
-    m.mimetype = es("mimetype"); m.filename = es("filename"); m.body = es("body");
-    m.width = static_cast<int>(ei("w")); m.height = static_cast<int>(ei("h"));
-    m.size = static_cast<int>(ei("size"));
+    m.url = jExtractStr(json, "url"); m.thumbnailUrl = jExtractStr(json, "thumbnail_url"); m.thumbnailInfo = jExtractStr(json, "thumbnail_info");
+    m.mimetype = jExtractStr(json, "mimetype"); m.filename = jExtractStr(json, "filename"); m.body = jExtractStr(json, "body");
+    m.width = static_cast<int>(jExtractInt(json, "w")); m.height = static_cast<int>(jExtractInt(json, "h"));
+    m.size = static_cast<int>(jExtractInt(json, "size"));
     auto r = progressive::messageImageToJson(m);
     return env->NewStringUTF(r.c_str());
 }
@@ -4537,23 +4508,10 @@ JNI_FUNC(jstring, nativeMessageImageToJson)(JNIEnv* env, jclass, jstring jConten
 JNI_FUNC(jstring, nativeMessageVideoToJson)(JNIEnv* env, jclass, jstring jContentJson) {
     auto json = jStr(env, jContentJson);
     progressive::MessageVideoContent m;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    auto ei = [&](const std::string& k) -> int64_t {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return 0;
-        pp = json.find(':', pp); if (pp == std::string::npos) return 0;
-        pp++; while (pp < json.size() && (json[pp] == ' ' || json[pp] == '\t')) pp++;
-        int64_t v = 0; while (pp < json.size() && json[pp] >= '0' && json[pp] <= '9') { v=v*10+(json[pp]-'0'); pp++; }
-        return v;
-    };
-    m.url = es("url"); m.thumbnailUrl = es("thumbnail_url"); m.mimetype = es("mimetype");
-    m.filename = es("filename"); m.body = es("body"); m.duration = ei("duration");
-    m.width = static_cast<int>(ei("w")); m.height = static_cast<int>(ei("h"));
-    m.size = static_cast<int>(ei("size"));
+    m.url = jExtractStr(json, "url"); m.thumbnailUrl = jExtractStr(json, "thumbnail_url"); m.mimetype = jExtractStr(json, "mimetype");
+    m.filename = jExtractStr(json, "filename"); m.body = jExtractStr(json, "body"); m.duration = jExtractInt(json, "duration");
+    m.width = static_cast<int>(jExtractInt(json, "w")); m.height = static_cast<int>(jExtractInt(json, "h"));
+    m.size = static_cast<int>(jExtractInt(json, "size"));
     auto r = progressive::messageVideoToJson(m);
     return env->NewStringUTF(r.c_str());
 }
@@ -4561,21 +4519,8 @@ JNI_FUNC(jstring, nativeMessageVideoToJson)(JNIEnv* env, jclass, jstring jConten
 JNI_FUNC(jstring, nativeMessageAudioToJson)(JNIEnv* env, jclass, jstring jContentJson) {
     auto json = jStr(env, jContentJson);
     progressive::MessageAudioContent m;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    auto ei = [&](const std::string& k) -> int64_t {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return 0;
-        pp = json.find(':', pp); if (pp == std::string::npos) return 0;
-        pp++; while (pp < json.size() && (json[pp] == ' ' || json[pp] == '\t')) pp++;
-        int64_t v = 0; while (pp < json.size() && json[pp] >= '0' && json[pp] <= '9') { v=v*10+(json[pp]-'0'); pp++; }
-        return v;
-    };
-    m.url = es("url"); m.mimetype = es("mimetype"); m.filename = es("filename");
-    m.body = es("body"); m.duration = ei("duration"); m.size = static_cast<int>(ei("size"));
+    m.url = jExtractStr(json, "url"); m.mimetype = jExtractStr(json, "mimetype"); m.filename = jExtractStr(json, "filename");
+    m.body = jExtractStr(json, "body"); m.duration = jExtractInt(json, "duration"); m.size = static_cast<int>(jExtractInt(json, "size"));
     auto r = progressive::messageAudioToJson(m);
     return env->NewStringUTF(r.c_str());
 }
@@ -4583,21 +4528,8 @@ JNI_FUNC(jstring, nativeMessageAudioToJson)(JNIEnv* env, jclass, jstring jConten
 JNI_FUNC(jstring, nativeMessageFileToJson)(JNIEnv* env, jclass, jstring jContentJson) {
     auto json = jStr(env, jContentJson);
     progressive::MessageFileContent m;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    auto ei = [&](const std::string& k) -> int64_t {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return 0;
-        pp = json.find(':', pp); if (pp == std::string::npos) return 0;
-        pp++; while (pp < json.size() && (json[pp] == ' ' || json[pp] == '\t')) pp++;
-        int64_t v = 0; while (pp < json.size() && json[pp] >= '0' && json[pp] <= '9') { v=v*10+(json[pp]-'0'); pp++; }
-        return v;
-    };
-    m.url = es("url"); m.mimetype = es("mimetype"); m.filename = es("filename");
-    m.body = es("body"); m.size = static_cast<int>(ei("size"));
+    m.url = jExtractStr(json, "url"); m.mimetype = jExtractStr(json, "mimetype"); m.filename = jExtractStr(json, "filename");
+    m.body = jExtractStr(json, "body"); m.size = static_cast<int>(jExtractInt(json, "size"));
     auto r = progressive::messageFileToJson(m);
     return env->NewStringUTF(r.c_str());
 }
@@ -4607,22 +4539,9 @@ JNI_FUNC(jstring, nativeMessageFileToJson)(JNIEnv* env, jclass, jstring jContent
 JNI_FUNC(jstring, nativeDeviceInfoToJson)(JNIEnv* env, jclass, jstring jDeviceJson) {
     auto json = jStr(env, jDeviceJson);
     progressive::DeviceInfo d;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    auto ei = [&](const std::string& k) -> int64_t {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return 0;
-        pp = json.find(':', pp); if (pp == std::string::npos) return 0;
-        pp++; while (pp < json.size() && (json[pp] == ' ' || json[pp] == '\t')) pp++;
-        int64_t v = 0; while (pp < json.size() && json[pp] >= '0' && json[pp] <= '9') { v=v*10+(json[pp]-'0'); pp++; }
-        return v;
-    };
-    d.userId = es("user_id"); d.deviceId = es("device_id"); d.displayName = es("display_name");
-    d.lastSeenIp = es("last_seen_ip"); d.lastSeenUserAgent = es("last_seen_user_agent");
-    d.lastSeenTs = ei("last_seen_ts");
+    d.userId = jExtractStr(json, "user_id"); d.deviceId = jExtractStr(json, "device_id"); d.displayName = jExtractStr(json, "display_name");
+    d.lastSeenIp = jExtractStr(json, "last_seen_ip"); d.lastSeenUserAgent = jExtractStr(json, "last_seen_user_agent");
+    d.lastSeenTs = jExtractInt(json, "last_seen_ts");
     auto r = progressive::deviceInfoToJson(d);
     return env->NewStringUTF(r.c_str());
 }
@@ -4646,14 +4565,8 @@ JNI_FUNC(jboolean, nativeShouldIgnoreSignOutError)(JNIEnv* env, jclass, jstring 
 JNI_FUNC(jstring, nativeSignInAgainBodyToJson)(JNIEnv* env, jclass, jstring jParamsJson) {
     auto json = jStr(env, jParamsJson);
     progressive::SignInAgainParams p;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    p.password = es("password"); p.userId = es("user_id");
-    p.deviceId = es("device_id"); p.homeServerUrl = es("home_server_url");
+    p.password = jExtractStr(json, "password"); p.userId = jExtractStr(json, "user_id");
+    p.deviceId = jExtractStr(json, "device_id"); p.homeServerUrl = jExtractStr(json, "home_server_url");
     auto r = progressive::signInAgainBodyToJson(p);
     return env->NewStringUTF(r.c_str());
 }
@@ -4695,24 +4608,11 @@ JNI_FUNC(jstring, nativeAcceptTermsBodyToJson)(JNIEnv* env, jclass, jstring jBod
 JNI_FUNC(jstring, nativeLiveDraftConfigToJson)(JNIEnv* env, jclass, jstring jConfigJson) {
     auto json = jStr(env, jConfigJson);
     progressive::LiveDraftConfig c;
-    auto es = [&](const std::string& k) -> std::string {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + k.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    auto ei = [&](const std::string& k) -> int64_t {
-        auto pp = json.find("\"" + k + "\""); if (pp == std::string::npos) return 0;
-        pp = json.find(':', pp); if (pp == std::string::npos) return 0;
-        pp++; while (pp < json.size() && (json[pp] == ' ' || json[pp] == '\t')) pp++;
-        int64_t v = 0; while (pp < json.size() && json[pp] >= '0' && json[pp] <= '9') { v=v*10+(json[pp]-'0'); pp++; }
-        return v;
-    };
-    c.enabled = json.find("\"enabled\":true") != std::string::npos;
-    c.characterThreshold = static_cast<int>(ei("character_threshold"));
-    c.updateIntervalMs = static_cast<int>(ei("update_interval_ms"));
-    c.draftPrefix = es("draft_prefix");
-    c.finalEditRemovesPrefix = json.find("\"final_edit_removes_prefix\":true") != std::string::npos;
+    c.enabled = jExtractBool(json, "enabled");
+    c.characterThreshold = static_cast<int>(jExtractInt(json, "character_threshold"));
+    c.updateIntervalMs = static_cast<int>(jExtractInt(json, "update_interval_ms"));
+    c.draftPrefix = jExtractStr(json, "draft_prefix");
+    c.finalEditRemovesPrefix = jExtractBool(json, "final_edit_removes_prefix");
     auto r = progressive::liveDraftConfigToJson(c);
     return env->NewStringUTF(r.c_str());
 }
@@ -4722,14 +4622,8 @@ JNI_FUNC(jstring, nativeLiveDraftConfigToJson)(JNIEnv* env, jclass, jstring jCon
 JNI_FUNC(jstring, nativeEncryptedFileKeyToJson)(JNIEnv* env, jclass, jstring jKeyJson) {
     auto json = jStr(env, jKeyJson);
     progressive::EncryptedFileKey k;
-    auto es = [&](const std::string& key) -> std::string {
-        auto pp = json.find("\"" + key + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + key.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    k.alg = es("alg"); k.kty = es("kty"); k.k = es("k");
-    k.ext = json.find("\"ext\":true") != std::string::npos;
+    k.alg = jExtractStr(json, "alg"); k.kty = jExtractStr(json, "kty"); k.k = jExtractStr(json, "k");
+    k.ext = jExtractBool(json, "ext");
     // Parse key_ops array
     size_t p = json.find("\"key_ops\""); if (p != std::string::npos) {
         p = json.find('[', p); if (p != std::string::npos) {
@@ -4748,28 +4642,16 @@ JNI_FUNC(jstring, nativeEncryptedFileKeyToJson)(JNIEnv* env, jclass, jstring jKe
 JNI_FUNC(jboolean, nativeIsValidJwkKey)(JNIEnv* env, jclass, jstring jKeyJson) {
     auto json = jStr(env, jKeyJson);
     progressive::EncryptedFileKey k;
-    auto es = [&](const std::string& key) -> std::string {
-        auto pp = json.find("\"" + key + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + key.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    k.alg = es("alg"); k.kty = es("kty"); k.k = es("k");
-    k.ext = json.find("\"ext\":true") != std::string::npos;
+    k.alg = jExtractStr(json, "alg"); k.kty = jExtractStr(json, "kty"); k.k = jExtractStr(json, "k");
+    k.ext = jExtractBool(json, "ext");
     return progressive::isValidJwkKey(k) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNI_FUNC(jstring, nativeExtractFileKey)(JNIEnv* env, jclass, jstring jKeyJson) {
     auto json = jStr(env, jKeyJson);
     progressive::EncryptedFileKey k;
-    auto es = [&](const std::string& key) -> std::string {
-        auto pp = json.find("\"" + key + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + key.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    k.alg = es("alg"); k.kty = es("kty"); k.k = es("k");
-    k.ext = json.find("\"ext\":true") != std::string::npos;
+    k.alg = jExtractStr(json, "alg"); k.kty = jExtractStr(json, "kty"); k.k = jExtractStr(json, "k");
+    k.ext = jExtractBool(json, "ext");
     auto r = progressive::extractFileKey(k);
     return env->NewStringUTF(r.c_str());
 }
@@ -4777,15 +4659,9 @@ JNI_FUNC(jstring, nativeExtractFileKey)(JNIEnv* env, jclass, jstring jKeyJson) {
 JNI_FUNC(jstring, nativeEncryptedFileInfoToJson)(JNIEnv* env, jclass, jstring jInfoJson) {
     auto json = jStr(env, jInfoJson);
     progressive::EncryptedFileInfo i;
-    auto es = [&](const std::string& key) -> std::string {
-        auto pp = json.find("\"" + key + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + key.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    i.url = es("url"); i.iv = es("iv"); i.version = es("version");
-    i.key.alg = es("alg"); i.key.kty = es("kty"); i.key.k = es("k");
-    i.key.ext = json.find("\"ext\":true") != std::string::npos;
+    i.url = jExtractStr(json, "url"); i.iv = jExtractStr(json, "iv"); i.version = jExtractStr(json, "version");
+    i.key.alg = jExtractStr(json, "alg"); i.key.kty = jExtractStr(json, "kty"); i.key.k = jExtractStr(json, "k");
+    i.key.ext = jExtractBool(json, "ext");
     auto r = progressive::encryptedFileInfoToJson(i);
     return env->NewStringUTF(r.c_str());
 }
@@ -4793,30 +4669,18 @@ JNI_FUNC(jstring, nativeEncryptedFileInfoToJson)(JNIEnv* env, jclass, jstring jI
 JNI_FUNC(jboolean, nativeIsValidEncryptedFile)(JNIEnv* env, jclass, jstring jInfoJson) {
     auto json = jStr(env, jInfoJson);
     progressive::EncryptedFileInfo i;
-    auto es = [&](const std::string& key) -> std::string {
-        auto pp = json.find("\"" + key + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + key.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    i.url = es("url"); i.iv = es("iv"); i.version = es("version");
-    i.key.alg = es("alg"); i.key.kty = es("kty"); i.key.k = es("k");
-    i.key.ext = json.find("\"ext\":true") != std::string::npos;
+    i.url = jExtractStr(json, "url"); i.iv = jExtractStr(json, "iv"); i.version = jExtractStr(json, "version");
+    i.key.alg = jExtractStr(json, "alg"); i.key.kty = jExtractStr(json, "kty"); i.key.k = jExtractStr(json, "k");
+    i.key.ext = jExtractBool(json, "ext");
     return progressive::isValidEncryptedFile(i) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNI_FUNC(jstring, nativeExtractFileIv)(JNIEnv* env, jclass, jstring jInfoJson) {
     auto json = jStr(env, jInfoJson);
     progressive::EncryptedFileInfo i;
-    auto es = [&](const std::string& key) -> std::string {
-        auto pp = json.find("\"" + key + "\""); if (pp == std::string::npos) return "";
-        pp = json.find('"', pp + key.size() + 2); if (pp == std::string::npos) return "";
-        pp++; size_t e = pp; while (e < json.size() && json[e] != '"') e++;
-        return json.substr(pp, e - pp);
-    };
-    i.url = es("url"); i.iv = es("iv"); i.version = es("version");
-    i.key.alg = es("alg"); i.key.kty = es("kty"); i.key.k = es("k");
-    i.key.ext = json.find("\"ext\":true") != std::string::npos;
+    i.url = jExtractStr(json, "url"); i.iv = jExtractStr(json, "iv"); i.version = jExtractStr(json, "version");
+    i.key.alg = jExtractStr(json, "alg"); i.key.kty = jExtractStr(json, "kty"); i.key.k = jExtractStr(json, "k");
+    i.key.ext = jExtractBool(json, "ext");
     auto r = progressive::extractFileIv(i);
     return env->NewStringUTF(r.c_str());
 }
