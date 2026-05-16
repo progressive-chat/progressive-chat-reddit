@@ -2328,4 +2328,22 @@ JNI_FUNC(jstring, nativeParseWidgetStateContent)(JNIEnv* env, jclass, jstring jJ
     return env->NewStringUTF(os.str().c_str());
 }
 
+// --- Key Share Requests ---
+
+JNI_FUNC(jboolean, nativeShouldShareKey)(JNIEnv* env, jclass, jstring jAlgo, jboolean jHasSession, jboolean jSessionVerified, jboolean jUserTrusted) {
+    return progressive::shouldShareKey(jStr(env, jAlgo), jHasSession, jSessionVerified, jUserTrusted) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Recovery Key ---
+
+JNI_FUNC(jstring, nativeComputeRecoveryKey)(JNIEnv* env, jclass, jstring jCurve25519Key) {
+    auto result = progressive::computeRecoveryKey(jStr(env, jCurve25519Key));
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeExtractCurveKeyFromRecoveryKey)(JNIEnv* env, jclass, jstring jRecoveryKey) {
+    auto result = progressive::extractCurveKeyFromRecoveryKey(jStr(env, jRecoveryKey));
+    return env->NewStringUTF(result.c_str());
+}
+
 } // extern "C"

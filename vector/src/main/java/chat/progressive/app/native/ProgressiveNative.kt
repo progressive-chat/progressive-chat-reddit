@@ -1447,6 +1447,15 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeParseWidgetStateContent(stateContentJson: String, widgetId: String, roomId: String): String
 
+    // --- Key Share Requests ---
+
+    @JvmStatic external fun nativeShouldShareKey(algorithm: String, hasSession: Boolean, sessionVerified: Boolean, userTrusted: Boolean): Boolean
+
+    // --- Recovery Key ---
+
+    @JvmStatic external fun nativeComputeRecoveryKey(curve25519Key: String): String
+    @JvmStatic external fun nativeExtractCurveKeyFromRecoveryKey(recoveryKey: String): String
+
     // --- URL Preview ---
 
     @JvmStatic external fun nativeIsPreviewableUrl(url: String): Boolean
@@ -2572,6 +2581,14 @@ object ProgressiveNative {
     // --- Widget fallback ---
     @JvmStatic fun nativeParseWidgetStateContentFallback(stateContentJson: String, widgetId: String, roomId: String): String =
         """{"widget_id":"$widgetId","type":"","name":"","url":""}"""
+
+    // --- Key Share fallback ---
+    @JvmStatic fun nativeShouldShareKeyFallback(algorithm: String, hasSession: Boolean, sessionVerified: Boolean, userTrusted: Boolean): Boolean =
+        hasSession && sessionVerified
+
+    // --- Recovery Key fallbacks ---
+    @JvmStatic fun nativeComputeRecoveryKeyFallback(curve25519Key: String): String = curve25519Key
+    @JvmStatic fun nativeExtractCurveKeyFromRecoveryKeyFallback(recoveryKey: String): String = recoveryKey.replace(" ", "")
 
     // --- URL Preview fallbacks ---
     @JvmStatic fun nativeIsPreviewableUrlFallback(url: String): Boolean = url.startsWith("http")
