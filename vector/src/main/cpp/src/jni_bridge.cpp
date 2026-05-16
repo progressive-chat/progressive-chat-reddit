@@ -2304,4 +2304,28 @@ JNI_FUNC(jstring, nativeFormatStatusMessage)(JNIEnv* env, jclass, jstring jMsg, 
     return env->NewStringUTF(result.c_str());
 }
 
+// --- Space Utilities ---
+
+JNI_FUNC(jstring, nativeBuildSpaceChildContent)(JNIEnv* env, jclass, jboolean jSuggested, jstring jOrder, jboolean jAutoJoin, jboolean jCanonical) {
+    auto result = progressive::buildSpaceChildContent(jSuggested, jStr(env, jOrder), jAutoJoin, jCanonical);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeBuildSpaceParentContent)(JNIEnv* env, jclass, jstring jParentSpaceId, jboolean jCanonical) {
+    auto result = progressive::buildSpaceParentContent(jStr(env, jParentSpaceId), jCanonical);
+    return env->NewStringUTF(result.c_str());
+}
+
+// --- Widget Utilities ---
+
+JNI_FUNC(jstring, nativeParseWidgetStateContent)(JNIEnv* env, jclass, jstring jJson, jstring jWidgetId, jstring jRoomId) {
+    auto widget = progressive::parseWidgetStateContent(jStr(env, jJson), jStr(env, jWidgetId), jStr(env, jRoomId));
+    std::ostringstream os;
+    os << R"({"widget_id":")" << widget.widgetId
+       << R"(","type":")" << widget.type
+       << R"(","name":")" << widget.name
+       << R"(","url":")" << widget.url << "\"}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
 } // extern "C"

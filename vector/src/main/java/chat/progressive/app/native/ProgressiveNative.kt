@@ -1438,6 +1438,15 @@ object ProgressiveNative {
     @JvmStatic external fun nativeIsPresenceStale(lastUpdatedMs: Long): Boolean
     @JvmStatic external fun nativeFormatStatusMessage(message: String, maxLen: Int): String
 
+    // --- Space Utilities ---
+
+    @JvmStatic external fun nativeBuildSpaceChildContent(suggested: Boolean, order: String, autoJoin: Boolean, canonical: Boolean): String
+    @JvmStatic external fun nativeBuildSpaceParentContent(parentSpaceId: String, canonical: Boolean): String
+
+    // --- Widget Utilities ---
+
+    @JvmStatic external fun nativeParseWidgetStateContent(stateContentJson: String, widgetId: String, roomId: String): String
+
     // --- URL Preview ---
 
     @JvmStatic external fun nativeIsPreviewableUrl(url: String): Boolean
@@ -2553,6 +2562,16 @@ object ProgressiveNative {
         (System.currentTimeMillis() - lastUpdatedMs) > 300_000
     @JvmStatic fun nativeFormatStatusMessageFallback(message: String, maxLen: Int): String =
         if (message.length <= maxLen) message else message.take(maxLen) + "…"
+
+    // --- Space fallbacks ---
+    @JvmStatic fun nativeBuildSpaceChildContentFallback(suggested: Boolean, order: String, autoJoin: Boolean, canonical: Boolean): String =
+        """{"suggested":$suggested,"order":"$order","auto_join":$autoJoin}"""
+    @JvmStatic fun nativeBuildSpaceParentContentFallback(parentSpaceId: String, canonical: Boolean): String =
+        """{"via":[""],"canonical":$canonical}"""
+
+    // --- Widget fallback ---
+    @JvmStatic fun nativeParseWidgetStateContentFallback(stateContentJson: String, widgetId: String, roomId: String): String =
+        """{"widget_id":"$widgetId","type":"","name":"","url":""}"""
 
     // --- URL Preview fallbacks ---
     @JvmStatic fun nativeIsPreviewableUrlFallback(url: String): Boolean = url.startsWith("http")
