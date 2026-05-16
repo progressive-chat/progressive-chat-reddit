@@ -133,6 +133,7 @@
 #include "progressive/account_data_utils.hpp"
 #include "progressive/room_tombstone.hpp"
 #include "progressive/openid_token.hpp"
+#include "progressive/megolm_decryptor.hpp"
 #include "progressive/event_utils.hpp"
 #include "progressive/content_builder.hpp"
 #include "progressive/displayname_utils.hpp"
@@ -2584,6 +2585,31 @@ JNI_FUNC(jstring, nativeExtractDefaultSecretKey)(JNIEnv* env, jclass, jstring jA
 
 JNI_FUNC(jboolean, nativeHasCrossSigningSecrets)(JNIEnv* env, jclass, jstring jAccountDataJson) {
     return progressive::hasCrossSigningSecrets(jStr(env, jAccountDataJson)) ? JNI_TRUE : JNI_FALSE;
+}
+
+// --- Megolm Decryptor ---
+// Controlled by Labs: SETTINGS_LABS_NATIVE_CRYPTO
+
+static progressive::MegolmSessionManager g_megolmManager;
+
+JNI_FUNC(jboolean, nativeMegolmAddSession)(JNIEnv* env, jclass, jstring jRoom, jstring jSenderKey, jstring jSessionId, jstring jSessionKey) {
+    return g_megolmManager.addSession(jStr(env, jRoom), jStr(env, jSenderKey),
+        jStr(env, jSessionId), jStr(env, jSessionKey)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeMegolmDecrypt)(JNIEnv* env, jclass, jstring jRoom, jstring jSenderKey, jstring jSessionId, jstring jCiphertext) {
+    auto* session = g_megolmManager.findSession(jStr(env, jRoom), jStr(env, jSenderKey), jStr(env, jSessionId));
+    if (!session) return env->NewStringUTF("");
+    auto result = progressive::megolmDecrypt(*session, jStr(env, jCiphertext));
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jint, nativeMegolmSessionCount)(JNIEnv*, jclass) {
+    return g_megolmManager.sessionCount();
+}
+
+JNI_FUNC(void, nativeMegolmClearRoom)(JNIEnv* env, jclass, jstring jRoom) {
+    g_megolmManager.clearRoom(jStr(env, jRoom));
 }
 
 } // extern "C"

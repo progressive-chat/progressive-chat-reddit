@@ -25,6 +25,7 @@ add_library(
     src/content_filter.cpp
     src/network_stats.cpp
     src/masquerade.cpp
+    src/megolm_decryptor.cpp
     src/user_mask.cpp
     src/chunked_upload.cpp
     src/chat_features.cpp

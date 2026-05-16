@@ -855,6 +855,13 @@ object ProgressiveNative {
     @JvmStatic external fun nativeExtractDefaultSecretKey(accountDataJson: String): String
     @JvmStatic external fun nativeHasCrossSigningSecrets(accountDataJson: String): Boolean
 
+    // --- Megolm Decryptor ---
+
+    @JvmStatic external fun nativeMegolmAddSession(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean
+    @JvmStatic external fun nativeMegolmDecrypt(roomId: String, senderKey: String, sessionId: String, ciphertext: String): String
+    @JvmStatic external fun nativeMegolmSessionCount(): Int
+    @JvmStatic external fun nativeMegolmClearRoom(roomId: String)
+
     // --- WebRTC Utils ---
 
     @JvmStatic external fun nativeFormatCallDuration(seconds: Int): String
@@ -2740,6 +2747,12 @@ object ProgressiveNative {
     @JvmStatic fun nativeExtractDefaultSecretKeyFallback(accountDataJson: String): String = ""
     @JvmStatic fun nativeHasCrossSigningSecretsFallback(accountDataJson: String): Boolean =
         accountDataJson.contains("\"m.cross_signing")
+
+    // --- Megolm fallbacks ---
+    @JvmStatic fun nativeMegolmAddSessionFallback(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean = false
+    @JvmStatic fun nativeMegolmDecryptFallback(roomId: String, senderKey: String, sessionId: String, ciphertext: String): String = ""
+    @JvmStatic fun nativeMegolmSessionCountFallback(): Int = 0
+    @JvmStatic fun nativeMegolmClearRoomFallback(roomId: String) {}
 
     // --- URL Preview fallbacks ---
     @JvmStatic fun nativeIsPreviewableUrlFallback(url: String): Boolean = url.startsWith("http")
