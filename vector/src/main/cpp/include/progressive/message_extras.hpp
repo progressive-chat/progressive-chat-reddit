@@ -34,9 +34,9 @@ struct MessageStickerContent : MessageImageContent {
 //       @Json(name="msgtype") msgType, @Json(name="body") body,
 //       @Json(name="m.relates_to") relatesTo,
 //       @Json(name="m.new_content") newContent
-//   ) : MessageContent
+//   ) : EventMessageContent
 
-struct MessageDefaultContent : MessageContent {
+struct MessageDefaultContent : EventMessageContent {
     // Same as base MessageContent — generic fallback
 };
 
@@ -64,7 +64,7 @@ struct LocationInfo {
 // Original Kotlin (MessageLocationContent.kt:25-90):
 //   Adds MSC3488 fields: locationInfo, timestampMillis, text, asset
 
-struct MessageEnhancedLocationContent : MessageContent {
+struct MessageEnhancedLocationContent : EventMessageContent {
     std::string geoUri;                    // "geo_uri" key
     LocationInfo locationInfo;             // "m.location" / "org.matrix.msc3488.location"
     int64_t timestampMillis = 0;           // "m.ts" / "org.matrix.msc3488.ts"
@@ -88,7 +88,7 @@ struct MessageEnhancedLocationContent : MessageContent {
 // Original Kotlin (MessageBeaconInfoContent.kt:28-67):
 //   State event content for starting a live location share session
 
-struct MessageBeaconInfoContent : MessageContent {
+struct MessageBeaconInfoContent : EventMessageContent {
     std::string description;               // "description" key
     int64_t timeout = 0;                   // "timeout" key — milliseconds until inactive
     bool isLive = false;                   // "live" key
@@ -105,7 +105,7 @@ struct MessageBeaconInfoContent : MessageContent {
 // Original Kotlin (MessageBeaconLocationDataContent.kt:28-53):
 //   Event content for each location update in a live share
 
-struct MessageBeaconLocationDataContent : MessageContent {
+struct MessageBeaconLocationDataContent : EventMessageContent {
     LocationInfo locationInfo;             // "m.location" / "org.matrix.msc3488.location"
     int64_t timestampMillis = 0;           // "m.ts" / "org.matrix.msc3488.ts"
 };
@@ -196,9 +196,9 @@ struct PollResponse {
 //       @Transient override msgType = MSGTYPE_POLL_START,
 //       body, relatesTo, newContent,
 //       unstablePollCreationInfo, pollCreationInfo
-//   ) : MessageContent
+//   ) : EventMessageContent
 
-struct MessagePollContent : MessageContent {
+struct MessagePollContent : EventMessageContent {
     PollCreationInfo pollCreationInfo;        // "m.poll.start" key
     PollCreationInfo unstablePollCreationInfo; // "org.matrix.msc3381.poll.start" key
 
@@ -215,9 +215,9 @@ struct MessagePollContent : MessageContent {
 //       @Transient override msgType = MSGTYPE_POLL_RESPONSE,
 //       body, relatesTo, newContent,
 //       unstableResponse, response
-//   ) : MessageContent
+//   ) : EventMessageContent
 
-struct MessagePollResponseContent : MessageContent {
+struct MessagePollResponseContent : EventMessageContent {
     PollResponse response;             // "m.response" key
     PollResponse unstableResponse;     // "org.matrix.msc3381.poll.response" key
 
@@ -233,9 +233,9 @@ struct MessagePollResponseContent : MessageContent {
 //       @Transient override msgType = MSGTYPE_POLL_END,
 //       body, newContent, relatesTo,
 //       unstableText, text
-//   ) : MessageContent
+//   ) : EventMessageContent
 
-struct MessageEndPollContent : MessageContent {
+struct MessageEndPollContent : EventMessageContent {
     std::string text;                  // "m.text" key
     std::string unstableText;          // "org.matrix.msc1767.text" key
 
@@ -279,9 +279,9 @@ std::string endPollContentToJson(const MessageEndPollContent& endPoll);
 //       @Json(name="msgtype") msgType = MSGTYPE_VERIFICATION_REQUEST,
 //       body, fromDevice, methods, toUserId, timestamp,
 //       format, formattedBody, relatesTo, newContent, transactionId
-//   ) : MessageContent
+//   ) : EventMessageContent
 
-struct MessageVerificationRequestContent : MessageContent {
+struct MessageVerificationRequestContent : EventMessageContent {
     std::string fromDevice;              // "from_device" key
     std::vector<std::string> methods;    // "methods" key — e.g. ["m.sas.v1"]
     std::string toUserId;                // "to" key
