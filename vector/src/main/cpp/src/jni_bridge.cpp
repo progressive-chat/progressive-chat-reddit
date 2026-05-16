@@ -3309,12 +3309,10 @@ JNI_FUNC(jstring, nativeParsePublicRoomsResponse)(JNIEnv* env, jclass, jstring j
 // --- Thread Summary ---
 
 JNI_FUNC(jstring, nativeComputeThreadSummary)(JNIEnv* env, jclass, jstring jRootEventId, jstring jEventsJson) {
-    // Parse events JSON array, compute thread summary
     auto rootId = jStr(env, jRootEventId);
     progressive::ThreadSummary summary;
     summary.rootEventId = rootId;
     summary.replyCount = 0;
-    // Count replies by scanning for m.thread or m.in_reply_to relations
     auto json = jStr(env, jEventsJson);
     size_t pos = 0;
     while ((pos = json.find("\"m.thread\"", pos)) != std::string::npos ||
@@ -3322,6 +3320,20 @@ JNI_FUNC(jstring, nativeComputeThreadSummary)(JNIEnv* env, jclass, jstring jRoot
         summary.replyCount++;
         pos++;
     }
+    auto result = progressive::threadSummaryToJson(summary);
+    return env->NewStringUTF(result.c_str());
+}
+
+// --- Relation Description ---
+
+JNI_FUNC(jstring, nativeFormatRelationDescription)(JNIEnv* env, jclass, jstring jRelType, jstring jEventId, jstring jKey) {
+    progressive::EventRelationInfo rel;
+    rel.relType = jStr(env, jRelType);
+    rel.eventId = jStr(env, jEventId);
+    rel.key = jStr(env, jKey);
+    auto result = progressive::formatRelationDescription(rel);
+    return env->NewStringUTF(result.c_str());
+}
     auto result = progressive::threadSummaryToJson(summary);
     return env->NewStringUTF(result.c_str());
 }
