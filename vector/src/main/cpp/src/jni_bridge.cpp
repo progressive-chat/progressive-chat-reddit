@@ -3366,6 +3366,19 @@ JNI_FUNC(jstring, nativeBuildScanRequestBody)(JNIEnv* env, jclass, jstring jMxcU
     auto result = progressive::buildScanRequestBody(jStr(env, jMxcUri));
     return env->NewStringUTF(result.c_str());
 }
+
+// --- Event Content Parser ---
+
+JNI_FUNC(jstring, nativeParseEventContent)(JNIEnv* env, jclass, jstring jEventType, jstring jContentJson) {
+    auto content = progressive::parseEventContent(jStr(env, jEventType), jStr(env, jContentJson));
+    std::ostringstream os;
+    os << R"({"event_type":")" << content.eventType
+       << R"(","msg_type":")" << content.msgType
+       << R"(","body":")" << content.body
+       << R"(","file_size":)" << content.fileSize
+       << R"(,"duration_ms":)" << content.durationMs << "}";
+    return env->NewStringUTF(os.str().c_str());
+}
     auto result = progressive::threadSummaryToJson(summary);
     return env->NewStringUTF(result.c_str());
 }

@@ -336,6 +336,10 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeBuildScanRequestBody(mxcUri: String): String
 
+    // --- Event Content ---
+
+    @JvmStatic external fun nativeParseEventContent(eventType: String, contentJson: String): String
+
     // --- Poll Validation ---
 
     @JvmStatic external fun nativeIsValidPollQuestion(question: String): Boolean
@@ -3299,6 +3303,12 @@ object ProgressiveNative {
     // --- Content Scanner fallback ---
     @JvmStatic fun nativeBuildScanRequestBodyFallback(mxcUri: String): String =
         """{"mxc_uri":"$mxcUri"}"""
+
+    // --- Event Content fallback ---
+    @JvmStatic fun nativeParseEventContentFallback(eventType: String, contentJson: String): String {
+        val msgType = Regex("\"msgtype\":\"(\\w+)\"").find(contentJson)?.groupValues?.get(1) ?: ""
+        return """{"event_type":"$eventType","msg_type":"$msgType","body":"","file_size":0,"duration_ms":0}"""
+    }
 
     // --- Poll fallback ---
     @JvmStatic fun nativeIsValidPollQuestionFallback(question: String): Boolean =
