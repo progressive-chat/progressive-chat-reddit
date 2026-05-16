@@ -163,7 +163,7 @@ HomeserverUrl validateHomeserverUrl(const std::string& input) {
         url = "https://" + url;
     }
 
-    auto parsed = parseUrl(url);
+    auto parsed = parseUrlParts(url);
     if (!parsed.valid) {
         result.errorMessage = "Invalid URL format.";
         return result;

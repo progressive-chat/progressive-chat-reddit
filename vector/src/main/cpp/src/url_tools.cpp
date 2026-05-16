@@ -80,7 +80,7 @@ std::vector<std::string> extractAllUrls(const std::string& text) {
 }
 
 std::string getDomain(const std::string& url) {
-    auto parsed = parseUrl(url);
+    auto parsed = parseUrlParts(url);
     return parsed.host;
 }
 
