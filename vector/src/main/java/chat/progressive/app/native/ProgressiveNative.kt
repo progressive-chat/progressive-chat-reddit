@@ -855,6 +855,15 @@ object ProgressiveNative {
     @JvmStatic external fun nativeExtractDefaultSecretKey(accountDataJson: String): String
     @JvmStatic external fun nativeHasCrossSigningSecrets(accountDataJson: String): Boolean
 
+    // --- Report / Rageshake ---
+
+    @JvmStatic external fun nativeIsOffensive(score: Int): Boolean
+    @JvmStatic external fun nativeTruncateReportDescription(description: String, maxLen: Int): String
+
+    // --- Content Scanner ---
+
+    @JvmStatic external fun nativeIsContentScannerAvailable(serverCapabilitiesJson: String): Boolean
+
     // --- Megolm Decryptor ---
 
     @JvmStatic external fun nativeMegolmAddSession(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean
@@ -2747,6 +2756,14 @@ object ProgressiveNative {
     @JvmStatic fun nativeExtractDefaultSecretKeyFallback(accountDataJson: String): String = ""
     @JvmStatic fun nativeHasCrossSigningSecretsFallback(accountDataJson: String): Boolean =
         accountDataJson.contains("\"m.cross_signing")
+
+    // --- Report fallbacks ---
+    @JvmStatic fun nativeIsOffensiveFallback(score: Int): Boolean = score < -50
+    @JvmStatic fun nativeTruncateReportDescriptionFallback(description: String, maxLen: Int): String =
+        if (description.length <= maxLen) description else description.take(maxLen) + "..."
+
+    // --- Content Scanner fallback ---
+    @JvmStatic fun nativeIsContentScannerAvailableFallback(serverCapabilitiesJson: String): Boolean = false
 
     // --- Megolm fallbacks ---
     @JvmStatic fun nativeMegolmAddSessionFallback(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean = false

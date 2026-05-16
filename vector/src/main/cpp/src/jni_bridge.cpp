@@ -2587,6 +2587,23 @@ JNI_FUNC(jboolean, nativeHasCrossSigningSecrets)(JNIEnv* env, jclass, jstring jA
     return progressive::hasCrossSigningSecrets(jStr(env, jAccountDataJson)) ? JNI_TRUE : JNI_FALSE;
 }
 
+// --- Report / Rageshake ---
+
+JNI_FUNC(jboolean, nativeIsOffensive)(JNIEnv* env, jclass, jint jScore) {
+    return progressive::isOffensive(jScore) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeTruncateReportDescription)(JNIEnv* env, jclass, jstring jDesc, jint jMax) {
+    auto result = progressive::truncateReportDescription(jStr(env, jDesc), jMax);
+    return env->NewStringUTF(result.c_str());
+}
+
+// --- Content Scanner ---
+
+JNI_FUNC(jboolean, nativeIsContentScannerAvailable)(JNIEnv* env, jclass, jstring jCapabilitiesJson) {
+    return progressive::isContentScannerAvailable(jStr(env, jCapabilitiesJson)) ? JNI_TRUE : JNI_FALSE;
+}
+
 // --- Megolm Decryptor ---
 // Controlled by Labs: SETTINGS_LABS_NATIVE_CRYPTO
 
