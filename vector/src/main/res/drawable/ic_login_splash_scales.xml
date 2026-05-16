@@ -4,7 +4,7 @@
     android:height="48dp"
     android:viewportWidth="48"
     android:viewportHeight="48">
-    <!-- Scales of Justice (балансирующие весы — отсылка к суду) -->
+    <!-- Scales of Justice -->
     <!-- Center pillar -->
     <path
         android:fillColor="#FF5722"
@@ -39,11 +39,8 @@
         android:strokeColor="#FF5722"
         android:strokeWidth="2"
         android:pathData="M32,20 Q40,28 44,20" />
-    <!-- Left pan filled weight -->
-    <circle
+    <!-- Left pan filled weight (path circle) -->
+    <path
         android:fillColor="#FF5722"
-        android:cx="10"
-        android:cy="23"
-        android:radius="2" />
-    <!-- Right pan empty (imbalance — justice pending) -->
+        android:pathData="M10,21 A2,2 0 1,0 10,25 A2,2 0 1,0 10,21 Z" />
 </vector>
