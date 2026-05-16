@@ -340,6 +340,12 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeParseEventContent(eventType: String, contentJson: String): String
 
+    // --- Member / Call Notices ---
+
+    @JvmStatic external fun nativeFormatMemberNotice(membership: String, prevMembership: String, senderId: String, senderName: String, targetId: String, targetName: String, reason: String, isDirect: Boolean, sentBySelf: Boolean): String
+    @JvmStatic external fun nativeFormatCallNotice(eventType: String, isVideo: Boolean, senderName: String, sentBySelf: Boolean): String
+    @JvmStatic external fun nativeAnnotateEdited(body: String, isEdited: Boolean): String
+
     // --- Poll Validation ---
 
     @JvmStatic external fun nativeIsValidPollQuestion(question: String): Boolean
@@ -3309,6 +3315,32 @@ object ProgressiveNative {
         val msgType = Regex("\"msgtype\":\"(\\w+)\"").find(contentJson)?.groupValues?.get(1) ?: ""
         return """{"event_type":"$eventType","msg_type":"$msgType","body":"","file_size":0,"duration_ms":0}"""
     }
+
+    // --- Member/Call/Edit fallbacks ---
+    @JvmStatic fun nativeFormatMemberNoticeFallback(membership: String, prevMembership: String, senderId: String, senderName: String, targetId: String, targetName: String, reason: String, isDirect: Boolean, sentBySelf: Boolean): String {
+        val target = if (sentBySelf && senderId == targetId) "You" else targetName
+        val room = if (isDirect) "chat" else "room"
+        return when(membership) {
+            "join" -> "$target joined the $room"
+            "invite" -> "$senderName invited $target" + if (reason.isNotEmpty()) ": $reason" else ""
+            "ban" -> "$senderName banned $target" + if (reason.isNotEmpty()) ": $reason" else ""
+            "leave" -> if (senderId == targetId) "$target left the $room" else "$senderName kicked $target" + if (reason.isNotEmpty()) ": $reason" else ""
+            "knock" -> "$target requested to join" + if (reason.isNotEmpty()) ": $reason" else ""
+            else -> "$target $membership"
+        }
+    }
+    @JvmStatic fun nativeFormatCallNoticeFallback(eventType: String, isVideo: Boolean, senderName: String, sentBySelf: Boolean): String {
+        val who = if (sentBySelf) "You" else senderName
+        return when(eventType) {
+            "m.call.invite" -> "$who placed a ${if (isVideo) "video" else "voice"} call"
+            "m.call.answer" -> "$who answered the call"
+            "m.call.hangup" -> "$who ended the call"
+            "m.call.reject" -> "$who declined the call"
+            else -> "$who $eventType"
+        }
+    }
+    @JvmStatic fun nativeAnnotateEditedFallback(body: String, isEdited: Boolean): String =
+        if (isEdited) "$body (edited)" else body
 
     // --- Poll fallback ---
     @JvmStatic fun nativeIsValidPollQuestionFallback(question: String): Boolean =

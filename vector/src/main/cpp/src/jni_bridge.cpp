@@ -3375,9 +3375,26 @@ JNI_FUNC(jstring, nativeParseEventContent)(JNIEnv* env, jclass, jstring jEventTy
     os << R"({"event_type":")" << content.eventType
        << R"(","msg_type":")" << content.msgType
        << R"(","body":")" << content.body
-       << R"(","file_size":)" << content.fileSize
+       << R"(,"file_size":)" << content.fileSize
        << R"(,"duration_ms":)" << content.durationMs << "}";
     return env->NewStringUTF(os.str().c_str());
+}
+
+// --- Member Notice / Call Notice / Edit Annotation ---
+
+JNI_FUNC(jstring, nativeFormatMemberNotice)(JNIEnv* env, jclass, jstring jMembership, jstring jPrevMembership, jstring jSenderId, jstring jSenderName, jstring jTargetId, jstring jTargetName, jstring jReason, jboolean jDirect, jboolean jSelf) {
+    auto result = progressive::formatMemberNotice(jStr(env, jMembership), jStr(env, jPrevMembership), jStr(env, jSenderId), jStr(env, jSenderName), jStr(env, jTargetId), jStr(env, jTargetName), jStr(env, jReason), jDirect, jSelf);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeFormatCallNotice)(JNIEnv* env, jclass, jstring jEventType, jboolean jVideo, jstring jSender, jboolean jSelf) {
+    auto result = progressive::formatCallNotice(jStr(env, jEventType), jVideo, jStr(env, jSender), jSelf);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeAnnotateEdited)(JNIEnv* env, jclass, jstring jBody, jboolean jEdited) {
+    auto result = progressive::annotateEdited(jStr(env, jBody), jEdited);
+    return env->NewStringUTF(result.c_str());
 }
     auto result = progressive::threadSummaryToJson(summary);
     return env->NewStringUTF(result.c_str());

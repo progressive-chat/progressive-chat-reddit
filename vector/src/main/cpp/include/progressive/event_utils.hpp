@@ -107,4 +107,38 @@ PowerLevelCapabilities calculateCapabilities(
     const std::unordered_map<std::string, int>& eventTypeLevels = {}
 );
 
+// ==== Member Event Notice Formatter ====
+//
+// Formats membership change events for the timeline:
+//   "Alice joined the room"
+//   "Bob was invited by Charlie"
+//   "You were kicked by Alice: inappropriate behavior"
+//   "Alice changed their display name to Al"
+// etc. Handles all Matrix membership transitions + profile changes.
+
+std::string formatMemberNotice(
+    const std::string& membership,         // new membership: "join", "invite", "leave", "ban", "knock"
+    const std::string& prevMembership,     // previous membership (empty when first join)
+    const std::string& senderId,           // who performed the action
+    const std::string& senderName,         // display name of sender
+    const std::string& targetUserId,       // who this happened to (state_key)
+    const std::string& targetDisplayName,  // display name of target
+    const std::string& reason,             // optional reason for kick/ban/invite
+    bool isDirectMessage,                  // true for DM rooms
+    bool sentByCurrentUser                 // true if the logged-in user performed the action
+);
+
+// ==== Call Event Notice Formatter ====
+
+std::string formatCallNotice(
+    const std::string& eventType,          // "m.call.invite", "m.call.answer", "m.call.hangup", "m.call.reject"
+    bool isVideo,                          // true for video, false for voice
+    const std::string& senderName,
+    bool sentByCurrentUser
+);
+
+// ==== Edit Annotation ====
+
+std::string annotateEdited(const std::string& body, bool isEdited);
+
 } // namespace progressive

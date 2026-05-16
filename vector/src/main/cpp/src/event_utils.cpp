@@ -261,4 +261,71 @@ PowerLevelCapabilities calculateCapabilities(
     return c;
 }
 
+// ==== Member Event Notice Formatter ====
+
+std::string formatMemberNotice(
+    const std::string& membership,
+    const std::string& prevMembership,
+    const std::string& senderId,
+    const std::string& senderName,
+    const std::string& targetUserId,
+    const std::string& targetDisplayName,
+    const std::string& reason,
+    bool isDirectMessage,
+    bool sentByCurrentUser)
+{
+    bool sameUser = (senderId == targetUserId);
+    std::string target = (sentByCurrentUser && sameUser) ? "You" : targetDisplayName;
+    std::string sender = sentByCurrentUser ? "You" : senderName;
+    std::string room = isDirectMessage ? "chat" : "room";
+
+    if (membership == "join") {
+        if (prevMembership == "invite" && !sameUser) {
+            return target + " accepted the invitation" + (reason.empty() ? "" : ": " + reason);
+        }
+        return target + " joined the " + room;
+    }
+    if (membership == "invite") {
+        if (sameUser) return target + " joined the " + room;
+        return sender + " invited " + target + (reason.empty() ? "" : ": " + reason);
+    }
+    if (membership == "ban") {
+        return sender + " banned " + target + (reason.empty() ? "" : ": " + reason);
+    }
+    if (membership == "leave") {
+        if (sameUser) return target + " left the " + room;
+        return sender + " kicked " + target + (reason.empty() ? "" : ": " + reason);
+    }
+    if (membership == "knock") {
+        return target + " requested to join" + (reason.empty() ? "" : ": " + reason);
+    }
+    if (membership == "displayname") {
+        return target + " changed their display name to " + senderName;
+    }
+    return target + " (" + membership + ")";
+}
+
+// ==== Call Event Notice Formatter ====
+
+std::string formatCallNotice(
+    const std::string& eventType, bool isVideo,
+    const std::string& senderName, bool sentByCurrentUser)
+{
+    std::string who = sentByCurrentUser ? "You" : senderName;
+    std::string callType = isVideo ? "video call" : "voice call";
+
+    if (eventType == "m.call.invite") return who + " placed a " + callType;
+    if (eventType == "m.call.answer") return who + " answered the call";
+    if (eventType == "m.call.hangup") return who + " ended the call";
+    if (eventType == "m.call.reject") return who + " declined the call";
+    return who + " (" + eventType + ")";
+}
+
+// ==== Edit Annotation ====
+
+std::string annotateEdited(const std::string& body, bool isEdited) {
+    if (!isEdited) return body;
+    return body + " (edited)";
+}
+
 } // namespace progressive
