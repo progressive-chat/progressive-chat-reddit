@@ -532,7 +532,6 @@ object ProgressiveNative {
     // --- Audio ---
 
     @JvmStatic external fun nativeFormatDuration(ms: Long): String
-    @JvmStatic external fun nativeFormatPositionInfo(posMs: Long, durMs: Long): String
     @JvmStatic external fun nativeComputeProgress(posMs: Long, durMs: Long): Float
     @JvmStatic external fun nativeIsSupportedAudio(mimeType: String): Boolean
 
@@ -583,15 +582,9 @@ object ProgressiveNative {
 
     // --- Chunked Upload ---
 
-    @JvmStatic external fun nativeUploaderSetChunkSizeMb(mb: Int)
-    @JvmStatic external fun nativeUploaderComputeChunks(fileSize: Long): Int
     @JvmStatic external fun nativeUploaderGetChunkJson(index: Int): String
-    @JvmStatic external fun nativeUploaderAdvance()
-    @JvmStatic external fun nativeUploaderCancel()
     @JvmStatic external fun nativeUploaderFail(error: String)
-    @JvmStatic external fun nativeUploaderReset()
     @JvmStatic external fun nativeUploaderProgressJson(): String
-    @JvmStatic external fun nativeUploaderContentRange(chunkIndex: Int): String
 
     // --- Chat Features (Timezone + EXIF) ---
 
@@ -735,7 +728,6 @@ object ProgressiveNative {
     // --- Read Receipts ---
 
     @JvmStatic external fun nativeComputeReceiptDisplay(receiptsJson: String, maxVisible: Int): String
-    @JvmStatic external fun nativeFormatReceiptAccessibility(visibleJson: String, overflow: Int): String
 
     // --- Room Analytics ---
 
@@ -870,7 +862,6 @@ object ProgressiveNative {
 
     // --- URL Tools ---
 
-    @JvmStatic external fun nativeParseUrl(url: String): String
     @JvmStatic external fun nativeExtractFirstUrl(text: String): String
     @JvmStatic external fun nativeUrlEncode(input: String): String
     @JvmStatic external fun nativeUrlDecode(input: String): String
@@ -907,9 +898,6 @@ object ProgressiveNative {
 
     // --- Location Sharing ---
 
-    @JvmStatic external fun nativeLocationStartSession(roomId: String, userId: String, intervalSec: Int, autoStop: Boolean, autoStopMin: Int): String
-    @JvmStatic external fun nativeLocationStopSession(sessionId: String)
-    @JvmStatic external fun nativeLocationIsDue(sessionId: String): Boolean
     @JvmStatic external fun nativeLocationFormatMessage(lat: Double, lon: Double, acc: Double, label: String): String
     @JvmStatic external fun nativeLocationFormatGeoJson(lat: Double, lon: Double, acc: Double): String
     @JvmStatic external fun nativeLocationDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double
@@ -967,7 +955,6 @@ object ProgressiveNative {
 
     // --- Poll Utils ---
 
-    @JvmStatic external fun nativeIsValidPollQuestion(question: String): Boolean
 
     // --- Reaction Utils ---
 
@@ -1002,7 +989,6 @@ object ProgressiveNative {
 
     // --- Emoji Analyzer ---
 
-    @JvmStatic external fun nativeCountEmojis(text: String): Int
     @JvmStatic external fun nativeIsEmojiOnlyMessage(text: String): Boolean
 
     // --- Identity Utils ---
@@ -1154,8 +1140,6 @@ object ProgressiveNative {
 
     // --- Matrix Error ---
 
-    @JvmStatic external fun nativeIsPasswordError(errorCode: String): Boolean
-    @JvmStatic external fun nativeGetAllErrorCodes(): String
 
     // --- Call Content Builders ---
 
@@ -1175,13 +1159,8 @@ object ProgressiveNative {
 
     // --- Matrix Pattern Validators ---
 
-    @JvmStatic external fun nativeIsUserId(input: String): Boolean
-    @JvmStatic external fun nativeIsRoomId(input: String): Boolean
-    @JvmStatic external fun nativeIsRoomAlias(input: String): Boolean
-    @JvmStatic external fun nativeIsEventId(input: String): Boolean
     @JvmStatic external fun nativeIsMxcUrl(url: String): Boolean
     @JvmStatic external fun nativeIsPhoneNumber(input: String): Boolean
-    @JvmStatic external fun nativeIsValidEmail(input: String): Boolean
     @JvmStatic external fun nativeExtractServerNameFromId(mxid: String): String
     @JvmStatic external fun nativeExtractUserNameFromId(mxid: String): String
     @JvmStatic external fun nativeCandidateAliasFromRoomName(roomName: String, domain: String, maxLength: Int): String
@@ -1208,7 +1187,6 @@ object ProgressiveNative {
     // --- Matrix ID Extraction ---
 
     @JvmStatic external fun nativeExtractMatrixIds(text: String): String
-    @JvmStatic external fun nativeParseMatrixToPermalink(url: String): String
 
     // --- Login Flows ---
 
@@ -1233,7 +1211,6 @@ object ProgressiveNative {
 
     // --- Trust Label ---
 
-    @JvmStatic external fun nativeGetTrustLabel(level: String): String
 
     // --- MXC URL Utilities ---
 
@@ -1264,7 +1241,6 @@ object ProgressiveNative {
 
     // --- Markdown Renderer ---
 
-    @JvmStatic external fun nativeMarkdownToHtml(markdown: String, enableTables: Boolean, enableLinks: Boolean, enableCode: Boolean, enableScroll: Boolean): String
 
     // --- Megolm Decryptor ---
 
@@ -1393,7 +1369,6 @@ object ProgressiveNative {
 
     // --- Sync Utils ---
 
-    @JvmStatic external fun nativeBuildSyncFilter(includeThreads: Boolean, includePresence: Boolean, timelineLimit: Int): String
 
     // --- Event Display ---
 
@@ -1430,12 +1405,10 @@ object ProgressiveNative {
 
     // --- Cross Signing ---
 
-    @JvmStatic external fun nativeParseCrossSigningStatus(accountDataJson: String, userId: String): String
 
     // --- Edit History ---
 
     @JvmStatic external fun nativeGetEditBadgeText(editCount: Int): String
-    @JvmStatic external fun nativeGetEditCountBadge(editCount: Int): String
 
     // --- Read Marker / Unread Count ---
     // Ported from: TimelineViewModel.kt (read marker index math)
@@ -1577,7 +1550,6 @@ object ProgressiveNative {
     @JvmStatic external fun nativeIsValidPassphrase(passphrase: String): Boolean
     @JvmStatic external fun nativeComputeRecoveryKey(curve25519Key: String): String
     @JvmStatic external fun nativeParseMatrixError(json: String): String
-    @JvmStatic external fun nativeGetErrorDescription(errorCode: String): String
     @JvmStatic external fun nativeGetBackupAlgorithmDescription(algorithm: String): String
     @JvmStatic external fun nativeIsSupportedBackupAlgorithm(algorithm: String): Boolean
     @JvmStatic external fun nativeGetRecoveryKeyExample(): String
@@ -1637,7 +1609,6 @@ object ProgressiveNative {
     // --- User Status (like Element Web) ---
 
     @JvmStatic external fun nativeParseUserStatus(accountDataJson: String): String
-    @JvmStatic external fun nativeBuildUserStatusJson(status: String, emoji: String): String
 
     // --- Jump to Unread Time Label ---
     // Optional: shows \"Jump to unread (3 hours ago)\" instead of just \"Jump to unread\"
@@ -1646,18 +1617,11 @@ object ProgressiveNative {
 
     // --- Content Utils (MXC URLs, Message Types) ---
     // Ported from: ContentUrlResolver.kt, MessageContent.kt
-
-    @JvmStatic external fun nativeResolveMxcDownloadUrl(mxcUrl: String, homeServerUrl: String): String
     @JvmStatic external fun nativeParseMessageContent(contentJson: String): String
-    @JvmStatic external fun nativeIsMxcUri(url: String): Boolean
 
     // --- Room State Parsers ---
     // Ported from: RoomJoinRules.kt, RoomHistoryVisibility.kt, RoomGuestAccess.kt, RoomCreate.kt
-
-    @JvmStatic external fun nativeParseJoinRules(contentJson: String): String
-    @JvmStatic external fun nativeParseHistoryVisibility(contentJson: String): String
     @JvmStatic external fun nativeParseRoomCreate(contentJson: String): String
-    @JvmStatic external fun nativeParseTombstone(contentJson: String): String
 
     // --- Login Flow Parser ---
     // Ported from: LoginWizard.kt, LoginFlow.kt, LoginFlowTypes.kt
@@ -1684,8 +1648,6 @@ object ProgressiveNative {
 
     // --- Room Display Name ---
     // Ported from: RoomDisplayNameResolver.kt
-
-    @JvmStatic external fun nativeParseRoomNameContent(contentJson: String): String
     @JvmStatic external fun nativeNormalizeRoomName(name: String): String
 
     // --- Notification Count Formatter ---
@@ -1946,7 +1908,6 @@ object ProgressiveNative {
 
     // --- Matrix Error ---
 
-    @JvmStatic external fun nativeGetRetryAfterMs(errorJson: String): Long
 
     // --- OpenID Token ---
 
@@ -2018,7 +1979,6 @@ object ProgressiveNative {
     // --- Device Manager ---
 
     @JvmStatic external fun nativeFormatFingerprint(fingerprint: String): String
-    @JvmStatic external fun nativeIsDeviceInactive(lastSeenMs: Long): Boolean
 
     // --- Version Compatibility ---
 
@@ -2066,9 +2026,7 @@ object ProgressiveNative {
     // --- URL Preview ---
 
     @JvmStatic external fun nativeTruncateDescription(text: String, maxLen: Int): String
-    @JvmStatic external fun nativeExtractHtmlTitle(html: String): String
     @JvmStatic external fun nativeExtractMetaDescription(html: String): String
-    @JvmStatic external fun nativeResolveUrl(baseUrl: String, relative: String): String
     @JvmStatic external fun nativeUrlPreviewToJson(previewJson: String): String
 
     // --- Device Type ---
@@ -2760,7 +2718,6 @@ object ProgressiveNative {
     @JvmStatic fun timelineEventsAvailableFallback(roomId: String, direction: Int): Int = 0
     @JvmStatic fun timelineAttachDbFallback(roomId: String, dbKey: String): Boolean = false
     @JvmStatic fun timelineAddSyncEventFallback(roomId: String, eventId: String, type: String, senderId: String, contentJson: String, originTs: Long, displayIndex: Int, stateKey: String, redacts: String, relType: String, relatesToId: String): Int = -1
-    @JvmStatic fun timelineGetThreadEventsFallback(rootEventId: String): String = "[]"
 
     // --- Event Utils fallbacks ---
     @JvmStatic fun formatEventSummaryFallback(eventType: String, msgType: String, senderName: String, body: String, membership: String, displayName: String, isRedacted: Boolean, isEncrypted: Boolean): String {
@@ -3755,9 +3712,7 @@ object ProgressiveNative {
     // --- Matrix Error fallbacks ---
     @JvmStatic fun nativeGetErrorDescriptionFallback(errorCode: String): String =
         errorCode.replace("M_", "").replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
-    @JvmStatic fun nativeIsPasswordErrorFallback(errorCode: String): Boolean =
         errorCode == "M_FORBIDDEN" || errorCode == "M_USER_DEACTIVATED"
-    @JvmStatic fun nativeGetAllErrorCodesFallback(): String =
         """["M_FORBIDDEN","M_UNKNOWN_TOKEN","M_MISSING_TOKEN","M_BAD_JSON","M_NOT_JSON","M_NOT_FOUND",
         |"M_LIMIT_EXCEEDED","M_UNKNOWN","M_UNRECOGNISED","M_UNAUTHORIZED","M_USER_DEACTIVATED",
         |"M_USER_IN_USE","M_INVALID_USERNAME","M_ROOM_IN_USE","M_INVALID_ROOM_STATE","M_THREEPID_IN_USE",
@@ -3765,7 +3720,6 @@ object ProgressiveNative {
         |"M_WEAK_PASSWORD","M_RESOURCE_LIMIT_EXCEEDED","M_ORG_MATRIX_EXPIRED_ACCOUNT"]""".trimMargin()
     @JvmStatic fun nativeIsRateLimitErrorFallback(errorJson: String): Boolean =
         """"errcode":"M_LIMIT_EXCEEDED"""" in errorJson
-    @JvmStatic fun nativeGetRetryAfterMsFallback(errorJson: String): Long {
         val m = Regex(""""retry_after_ms":(\d+)""").find(errorJson)
         return m?.groupValues?.getOrNull(1)?.toLongOrNull() ?: 0L
     }
