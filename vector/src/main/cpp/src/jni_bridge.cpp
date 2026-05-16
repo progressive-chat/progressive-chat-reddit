@@ -157,6 +157,7 @@
 #include "progressive/device_manager_full.hpp"
 #include "progressive/room_directory_manager.hpp"
 #include "progressive/session_manager_full.hpp"
+#include "progressive/server_notice_manager.hpp"
 #include "progressive/cross_signing.hpp"
 #include "progressive/edit_history.hpp"
 #include "progressive/read_marker.hpp"
@@ -6027,6 +6028,52 @@ JNI_FUNC(jstring, nativeSessionGetAll)(JNIEnv* env, jclass) {
 
 JNI_FUNC(jint, nativeSessionCount)(JNIEnv*, jclass) {
     return getSessionMgrFull()->sessionCount();
+}
+
+// ============================================================
+// Server Notice Handler
+// ============================================================
+
+static std::unique_ptr<progressive::ServerNoticeManager> g_serverNotice;
+
+static progressive::ServerNoticeManager* getServerNotice() {
+    if (!g_serverNotice) g_serverNotice.reset(new progressive::ServerNoticeManager());
+    return g_serverNotice.get();
+}
+
+JNI_FUNC(jstring, nativeServerNoticeParse)(JNIEnv* env, jclass, jstring jErrorJson) {
+    auto info = getServerNotice()->parseMatrixError(jStr(env, jErrorJson));
+    return env->NewStringUTF(getServerNotice()->serverNoticeToJson(info).c_str());
+}
+
+JNI_FUNC(jstring, nativeServerNoticeFormatLimit)(JNIEnv* env, jclass, jstring jErrorJson, jint jMode) {
+    auto info = getServerNotice()->parseMatrixError(jStr(env, jErrorJson));
+    return env->NewStringUTF(getServerNotice()->formatResourceLimitError(info, static_cast<progressive::ResourceLimitMode>(jMode)).c_str());
+}
+
+JNI_FUNC(jstring, nativeServerNoticeGetDescription)(JNIEnv* env, jclass, jstring jCode) {
+    return env->NewStringUTF(getServerNotice()->getErrorCodeDescription(jStr(env, jCode)).c_str());
+}
+
+JNI_FUNC(jboolean, nativeServerNoticeIsResourceLimit)(JNIEnv* env, jclass, jstring jCode) {
+    return getServerNotice()->isResourceLimitError(jStr(env, jCode)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeServerNoticeIsRateLimit)(JNIEnv* env, jclass, jstring jCode) {
+    return getServerNotice()->isRateLimitError(jStr(env, jCode)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeServerNoticeIsConsent)(JNIEnv* env, jclass, jstring jCode) {
+    return getServerNotice()->isConsentError(jStr(env, jCode)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeServerNoticeFormatDowntime)(JNIEnv*, jclass, jlong jMs) {
+    return env->NewStringUTF(getServerNotice()->formatDowntime(jMs).c_str());
+}
+
+JNI_FUNC(jstring, nativeServerNoticeGetBanner)(JNIEnv* env, jclass, jstring jErrorJson) {
+    auto info = getServerNotice()->parseMatrixError(jStr(env, jErrorJson));
+    return env->NewStringUTF(getServerNotice()->getBannerColor(info).c_str());
 }
 
 } // extern "C"

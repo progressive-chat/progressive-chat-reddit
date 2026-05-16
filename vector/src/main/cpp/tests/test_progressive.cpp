@@ -1805,6 +1805,51 @@ static void test_session_login_types() {
     ASSERT_TRUE(progressive::sessionLoginTypeFromString("sso") == progressive::SessionLoginType::SSO);
 }
 
+// ==== Server Notice (Element Android sources) ====
+
+#include "progressive/server_notice_manager.hpp"
+
+static void test_server_notice_parse_resource_limit() {
+    progressive::ServerNoticeManager mgr;
+    auto info = mgr.parseMatrixError(R"({"errcode":"M_RESOURCE_LIMIT_EXCEEDED","error":"Monthly active user limit exceeded","limit_type":"monthly_active_user","admin_contact":"https://admin.example.org"})");
+    ASSERT_TRUE(info.isResourceLimit);
+    ASSERT_TRUE(info.limitType == progressive::ResourceLimitType::MAU);
+    ASSERT_STREQ(info.adminContact.c_str(), "https://admin.example.org");
+}
+
+static void test_server_notice_parse_consent() {
+    progressive::ServerNoticeManager mgr;
+    auto info = mgr.parseMatrixError(R"({"errcode":"M_CONSENT_NOT_GIVEN","error":"Consent required","consent_uri":"https://example.org/consent"})");
+    ASSERT_TRUE(info.isConsentRequired);
+    ASSERT_STREQ(info.consentUri.c_str(), "https://example.org/consent");
+}
+
+static void test_server_notice_rate_limit() {
+    progressive::ServerNoticeManager mgr;
+    auto info = mgr.parseMatrixError(R"({"errcode":"M_LIMIT_EXCEEDED","retry_after_ms":30000})");
+    ASSERT_TRUE(info.isRateLimited);
+    ASSERT_EQ(info.retryAfterMs, 30000);
+}
+
+static void test_server_notice_downtime() {
+    progressive::ServerNoticeManager mgr;
+    ASSERT_STREQ(mgr.formatDowntime(65000).c_str(), "1 minute");
+    ASSERT_STREQ(mgr.formatDowntime(3600000).c_str(), "1 hour");
+}
+
+static void test_server_notice_error_descriptions() {
+    progressive::ServerNoticeManager mgr;
+    ASSERT_STREQ(mgr.getErrorCodeDescription("M_FORBIDDEN").c_str(), "Access forbidden");
+    ASSERT_STREQ(mgr.getErrorCodeDescription("M_USER_DEACTIVATED").c_str(), "User account deactivated");
+    ASSERT_STREQ(mgr.getErrorCodeDescription("M_WEAK_PASSWORD").c_str(), "Password too weak");
+}
+
+static void test_server_notice_banner_color() {
+    progressive::ServerNoticeManager mgr;
+    auto info = mgr.parseMatrixError(R"({"errcode":"M_RESOURCE_LIMIT_EXCEEDED","error":"test","limit_type":"monthly_active_user"})");
+    ASSERT_STREQ(mgr.getBannerColor(info).c_str(), "#FF4444");
+}
+
 // ==== Run all tests ====
 int main() {
     printf("=== Progressive Chat C++ Unit Tests ===\n");
@@ -2120,6 +2165,14 @@ int main() {
     ADD_TEST(runner, test_session_active);
     ADD_TEST(runner, test_session_open_close);
     ADD_TEST(runner, test_session_login_types);
+    
+    printf("\n-- Server Notice (Element Android) --\n");
+    ADD_TEST(runner, test_server_notice_parse_resource_limit);
+    ADD_TEST(runner, test_server_notice_parse_consent);
+    ADD_TEST(runner, test_server_notice_rate_limit);
+    ADD_TEST(runner, test_server_notice_downtime);
+    ADD_TEST(runner, test_server_notice_error_descriptions);
+    ADD_TEST(runner, test_server_notice_banner_color);
     
     return runner.summary();
 }

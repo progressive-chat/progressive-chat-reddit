@@ -1569,6 +1569,17 @@ object ProgressiveNative {
     @JvmStatic external fun nativeSessionGetAll(): String
     @JvmStatic external fun nativeSessionCount(): Int
 
+    // --- Server Notice Handler ---
+
+    @JvmStatic external fun nativeServerNoticeParse(errorJson: String): String
+    @JvmStatic external fun nativeServerNoticeFormatLimit(errorJson: String, mode: Int): String
+    @JvmStatic external fun nativeServerNoticeGetDescription(errorCode: String): String
+    @JvmStatic external fun nativeServerNoticeIsResourceLimit(errorCode: String): Boolean
+    @JvmStatic external fun nativeServerNoticeIsRateLimit(errorCode: String): Boolean
+    @JvmStatic external fun nativeServerNoticeIsConsent(errorCode: String): Boolean
+    @JvmStatic external fun nativeServerNoticeFormatDowntime(retryAfterMs: Long): String
+    @JvmStatic external fun nativeServerNoticeGetBanner(errorJson: String): String
+
     // --- WebRTC Utils ---
 
     @JvmStatic external fun nativeFormatCallDuration(seconds: Int): String
@@ -4482,6 +4493,32 @@ object ProgressiveNative {
     @JvmStatic fun nativeSessionGetActiveFallback(): String = "{}"
     @JvmStatic fun nativeSessionHasActiveFallback(): Boolean = false
     @JvmStatic fun nativeSessionGetAllFallback(): String = "[]"
+    // --- Server Notice Handler fallbacks ---
+    @JvmStatic fun nativeServerNoticeParseFallback(errorJson: String): String {
+        val code = Regex(""""errcode":"([^"]+)"""").find(errorJson)?.groupValues?.getOrNull(1) ?: ""
+        val msg = Regex(""""error":"([^"]+)"""").find(errorJson)?.groupValues?.getOrNull(1) ?: ""
+        val admin = Regex(""""admin_contact":"([^"]+)"""").find(errorJson)?.groupValues?.getOrNull(1) ?: ""
+        return """{"type":"$code","body":"$msg","is_resource_limit":$code=="M_RESOURCE_LIMIT_EXCEEDED","is_consent":$code=="M_CONSENT_NOT_GIVEN","is_rate_limit":$code=="M_LIMIT_EXCEEDED","limit_type":"unknown","admin_contact":"$admin","consent_uri":"","retry_after_ms":0,"banner_color":"#2196F3"}"""
+    }
+    @JvmStatic fun nativeServerNoticeFormatLimitFallback(errorJson: String, mode: Int): String =
+        if (mode == 1) "This homeserver has exceeded a resource limit. Please contact your service administrator."
+        else "This homeserver is approaching a resource limit."
+    @JvmStatic fun nativeServerNoticeGetDescriptionFallback(errorCode: String): String = when(errorCode) {
+        "M_FORBIDDEN" -> "Access forbidden"; "M_UNKNOWN_TOKEN" -> "Unknown access token"
+        "M_LIMIT_EXCEEDED" -> "Rate limit exceeded"; "M_RESOURCE_LIMIT_EXCEEDED" -> "Server resource limit exceeded"
+        "M_CONSENT_NOT_GIVEN" -> "Consent not given"; "M_USER_DEACTIVATED" -> "User account deactivated"
+        "M_NOT_FOUND" -> "Not found"; "M_BAD_JSON" -> "Bad JSON format"; "M_UNAUTHORIZED" -> "Not authorized"
+        else -> "Error: $errorCode" }
+    @JvmStatic fun nativeServerNoticeIsResourceLimitFallback(errorCode: String): Boolean = errorCode == "M_RESOURCE_LIMIT_EXCEEDED"
+    @JvmStatic fun nativeServerNoticeIsRateLimitFallback(errorCode: String): Boolean = errorCode == "M_LIMIT_EXCEEDED"
+    @JvmStatic fun nativeServerNoticeIsConsentFallback(errorCode: String): Boolean = errorCode == "M_CONSENT_NOT_GIVEN"
+    @JvmStatic fun nativeServerNoticeFormatDowntimeFallback(retryAfterMs: Long): String {
+        val s = retryAfterMs / 1000
+        return when { s < 60 -> "${s}s"; s < 3600 -> "${s/60}m"; s < 86400 -> "${s/3600}h"; else -> "${s/86400}d" }
+    }
+    @JvmStatic fun nativeServerNoticeGetBannerFallback(errorJson: String): String =
+        if ("M_RESOURCE_LIMIT_EXCEEDED" in errorJson) "#FF4444" else "#2196F3"
+
     @JvmStatic fun nativeSessionCountFallback(): Int = 0
 
     // --- URL Preview fallbacks ---
