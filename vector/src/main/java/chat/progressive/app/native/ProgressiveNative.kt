@@ -1455,6 +1455,14 @@ object ProgressiveNative {
     @JvmStatic external fun nativeThreadGetNotifications(): String
     @JvmStatic external fun nativeThreadReset()
 
+    // --- Poll Manager ---
+
+    @JvmStatic external fun nativePollBuildStart(question: String, optionsJson: String, kind: Int, maxSelections: Int, unstable: Boolean): String
+    @JvmStatic external fun nativePollBuildResponse(pollId: String, selectionsJson: String, unstable: Boolean): String
+    @JvmStatic external fun nativePollBuildEnd(pollId: String, reason: String, unstable: Boolean): String
+    @JvmStatic external fun nativePollTally(pollJson: String, votesJson: String): String
+    @JvmStatic external fun nativePollIsValidQuestion(question: String): Boolean
+
     // --- WebRTC Utils ---
 
     @JvmStatic external fun nativeFormatCallDuration(seconds: Int): String
@@ -4169,6 +4177,23 @@ object ProgressiveNative {
     @JvmStatic fun nativeThreadFormatCountFallback(count: Int): String = if (count > 99) "99+" else count.toString()
     @JvmStatic fun nativeThreadGetNotificationsFallback(): String = "[]"
     @JvmStatic fun nativeThreadResetFallback() {}
+
+    // --- Poll Manager fallbacks ---
+    @JvmStatic fun nativePollBuildStartFallback(question: String, optionsJson: String, kind: Int, maxSelections: Int, unstable: Boolean): String {
+        val prefix = if (unstable) "org.matrix.msc3381.poll" else "m.poll"
+        val opts = optionsJson.removeSurrounding("[", "]").split("\",\"").map { it.trim('"') }.mapIndexed { i, t ->
+            """{"id":"${('A'+i).toChar()}","$prefix.org_text":"$t"}"""
+        }.joinToString(",")
+        return """{"$prefix.start":{},"$prefix.kind":"${if (kind==0) "disclosed" else "undisclosed"}", "$prefix.max_selections":$maxSelections, "$prefix.question":{"body":"$question","msgtype":"m.text"}, "$prefix.answers":[$opts]}"""
+    }
+    @JvmStatic fun nativePollBuildResponseFallback(pollId: String, selectionsJson: String, unstable: Boolean): String {
+        val prefix = if (unstable) "org.matrix.msc3381.poll" else "m.poll"
+        return """{"$prefix.response":{},"$prefix.org_selections":$selectionsJson}"""
+    }
+    @JvmStatic fun nativePollBuildEndFallback(pollId: String, reason: String, unstable: Boolean): String = """{"m.poll.end":{}}"""
+    @JvmStatic fun nativePollTallyFallback(pollJson: String, votesJson: String): String =
+        """{"question":"","total_votes":0,"is_closed":false,"winner_idx":-1,"plain_text":"","html":"","winner":""}"""
+    @JvmStatic fun nativePollIsValidQuestionFallback(question: String): Boolean = question.isNotEmpty() && question.length <= 340
 
     // --- URL Preview fallbacks ---
     @JvmStatic fun nativeIsPreviewableUrlFallback(url: String): Boolean = url.startsWith("http")

@@ -1308,6 +1308,73 @@ static void test_thread_format_count() {
     ASSERT_STREQ(mgr.formatThreadNotificationCount(0).c_str(), "");
 }
 
+// ==== Poll Manager ====
+
+#include "progressive/poll_manager.hpp"
+
+static void test_poll_build_start() {
+    progressive::PollManager mgr;
+    std::string error;
+    auto json = mgr.buildPollStartContent("Favorite color?", {"Red", "Blue", "Green"},
+        progressive::PollKind::DISCLOSED, 1, true, error);
+    ASSERT_TRUE(!json.empty());
+    ASSERT_STREQ(error.c_str(), "");
+    ASSERT_TRUE(json.find("Favorite color?") != std::string::npos);
+    ASSERT_TRUE(json.find("Red") != std::string::npos);
+}
+
+static void test_poll_parse_start() {
+    progressive::PollManager mgr;
+    std::string content = R"({"org.matrix.msc3381.poll.start":{},"org.matrix.msc3381.poll.kind":"disclosed","org.matrix.msc3381.poll.max_selections":1,"org.matrix.msc3381.poll.question":{"body":"Yes or No?","msgtype":"m.text"},"org.matrix.msc3381.poll.answers":[{"id":"A","org.matrix.msc3381.poll.org_text":"Yes"},{"id":"B","org.matrix.msc3381.poll.org_text":"No"}]})";
+    auto poll = mgr.parsePollStartContent(content, true);
+    ASSERT_TRUE(poll.valid);
+    ASSERT_STREQ(poll.question.c_str(), "Yes or No?");
+    ASSERT_EQ(static_cast<int>(poll.options.size()), 2);
+}
+
+static void test_poll_validation() {
+    progressive::PollManager mgr;
+    ASSERT_TRUE(mgr.isValidPollQuestion("Good question?"));
+    ASSERT_FALSE(mgr.isValidPollQuestion(""));
+    ASSERT_TRUE(mgr.isValidPollOption("Option A"));
+    ASSERT_FALSE(mgr.isValidPollOption(""));
+    ASSERT_TRUE(mgr.isValidMaxSelections(1, 3));
+    ASSERT_FALSE(mgr.isValidMaxSelections(5, 3));
+}
+
+static void test_poll_build_too_few_options() {
+    progressive::PollManager mgr;
+    std::string error;
+    auto json = mgr.buildPollStartContent("Q?", {"Only one"}, progressive::PollKind::DISCLOSED, 1, true, error);
+    ASSERT_TRUE(json.empty());
+    ASSERT_TRUE(!error.empty());
+}
+
+static void test_poll_tally() {
+    progressive::PollManager mgr;
+    std::string content = R"({"org.matrix.msc3381.poll.start":{},"org.matrix.msc3381.poll.kind":"disclosed","org.matrix.msc3381.poll.max_selections":1,"org.matrix.msc3381.poll.question":{"body":"Yes or No?","msgtype":"m.text"},"org.matrix.msc3381.poll.answers":[{"id":"A","org.matrix.msc3381.poll.org_text":"Yes"},{"id":"B","org.matrix.msc3381.poll.org_text":"No"}]})";
+    auto poll = mgr.parsePollStartContent(content, true);
+
+    progressive::PollVote v1, v2, v3;
+    v1.selectedOptionIds = {"A"}; v1.voterId = "@alice:org";
+    v2.selectedOptionIds = {"B"}; v2.voterId = "@bob:org";
+    v3.selectedOptionIds = {"A"}; v3.voterId = "@charlie:org";
+
+    auto result = mgr.tallyVotes(poll, {v1, v2, v3});
+    ASSERT_EQ(result.totalVotes, 3);
+    ASSERT_EQ(result.results[0].voteCount, 2); // Yes = 2
+    ASSERT_EQ(result.results[1].voteCount, 1); // No = 1
+}
+
+static void test_poll_winners() {
+    progressive::PollManager mgr;
+    std::string content = R"({"org.matrix.msc3381.poll.start":{},"org.matrix.msc3381.poll.kind":"disclosed","org.matrix.msc3381.poll.max_selections":1,"org.matrix.msc3381.poll.question":{"body":"Pick one","msgtype":"m.text"},"org.matrix.msc3381.poll.answers":[{"id":"A","org.matrix.msc3381.poll.org_text":"A"},{"id":"B","org.matrix.msc3381.poll.org_text":"B"}]})";
+    auto poll = mgr.parsePollStartContent(content, true);
+    progressive::PollVote v; v.selectedOptionIds = {"A"}; v.voterId = "@u:org";
+    auto result = mgr.tallyVotes(poll, {v});
+    ASSERT_STREQ(mgr.getWinnerText(result).c_str(), "A — 1 vote");
+}
+
 // ==== Run all tests ====
 int main() {
     printf("=== Progressive Chat C++ Unit Tests ===\n");
@@ -1553,6 +1620,14 @@ int main() {
     ADD_TEST(runner, test_thread_upsert_and_list);
     ADD_TEST(runner, test_thread_unread);
     ADD_TEST(runner, test_thread_format_count);
+    
+    printf("\n-- Poll Manager --\n");
+    ADD_TEST(runner, test_poll_build_start);
+    ADD_TEST(runner, test_poll_parse_start);
+    ADD_TEST(runner, test_poll_validation);
+    ADD_TEST(runner, test_poll_build_too_few_options);
+    ADD_TEST(runner, test_poll_tally);
+    ADD_TEST(runner, test_poll_winners);
     
     return runner.summary();
 }

@@ -147,6 +147,7 @@
 #include "progressive/live_location.hpp"
 #include "progressive/call_manager.hpp"
 #include "progressive/thread_manager.hpp"
+#include "progressive/poll_manager.hpp"
 #include "progressive/cross_signing.hpp"
 #include "progressive/edit_history.hpp"
 #include "progressive/read_marker.hpp"
@@ -5311,6 +5312,104 @@ JNI_FUNC(jstring, nativeThreadGetNotifications)(JNIEnv* env, jclass) {
 
 JNI_FUNC(void, nativeThreadReset)(JNIEnv*, jclass) {
     g_threadMgr.reset(new progressive::ThreadManager());
+}
+
+// ============================================================
+// Poll Manager
+// ============================================================
+
+static std::unique_ptr<progressive::PollManager> g_pollMgr;
+
+static progressive::PollManager* getPollMgr() {
+    if (!g_pollMgr) g_pollMgr.reset(new progressive::PollManager());
+    return g_pollMgr.get();
+}
+
+JNI_FUNC(jstring, nativePollBuildStart)(JNIEnv* env, jclass, jstring jQuestion, jstring jOptionsJson,
+                                         jint jKind, jint jMaxSel, jboolean jUnstable) {
+    auto json = jStr(env, jOptionsJson);
+    std::vector<std::string> opts;
+    size_t p = 0;
+    while ((p = json.find("\"", p)) != std::string::npos) {
+        p++; size_t e = p;
+        while (e < json.size() && json[e] != '"') e++;
+        std::string s = json.substr(p, e - p);
+        if (!s.empty() && s != "[" && s != "]" && s != ",") opts.push_back(s);
+        p = e + 1;
+    }
+    std::string error;
+    auto r = getPollMgr()->buildPollStartContent(jStr(env, jQuestion), opts,
+        static_cast<progressive::PollKind>(jKind), jMaxSel, jUnstable, error);
+    if (r.empty()) return env->NewStringUTF(("{\"error\":\"" + error + "\"}").c_str());
+    return env->NewStringUTF(r.c_str());
+}
+
+JNI_FUNC(jstring, nativePollBuildResponse)(JNIEnv* env, jclass, jstring jPollId, jstring jSelectionsJson, jboolean jUnstable) {
+    auto json = jStr(env, jSelectionsJson);
+    std::vector<std::string> sels;
+    size_t p = 0;
+    while ((p = json.find("\"", p)) != std::string::npos) {
+        p++; size_t e = p;
+        while (e < json.size() && json[e] != '"') e++;
+        std::string s = json.substr(p, e - p);
+        if (!s.empty() && s != "[" && s != "]" && s != ",") sels.push_back(s);
+        p = e + 1;
+    }
+    auto r = getPollMgr()->buildPollResponseContent(jStr(env, jPollId), sels, jUnstable);
+    return env->NewStringUTF(r.c_str());
+}
+
+JNI_FUNC(jstring, nativePollBuildEnd)(JNIEnv* env, jclass, jstring jPollId, jstring jReason, jboolean jUnstable) {
+    auto r = getPollMgr()->buildPollEndContent(jStr(env, jPollId), jStr(env, jReason), jUnstable);
+    return env->NewStringUTF(r.c_str());
+}
+
+JNI_FUNC(jstring, nativePollTally)(JNIEnv* env, jclass, jstring jPollJson, jstring jVotesJson) {
+    auto poll = getPollMgr()->parsePollStartContent(jStr(env, jPollJson), true);
+    auto vjson = jStr(env, jVotesJson);
+    // Parse votes array: [{"voter":"@a:org","name":"Alice","opts":["A","B"]}, ...]
+    std::vector<progressive::PollVote> votes;
+    size_t p = 0;
+    while ((p = vjson.find("\"voter\"", p)) != std::string::npos) {
+        progressive::PollVote v;
+        v.voterId = jExtractStr(vjson.substr(p), "voter");
+        v.voterName = jExtractStr(vjson.substr(p), "name");
+        // Parse opts
+        auto optsPos = vjson.find("\"opts\"", p);
+        if (optsPos != std::string::npos) {
+            optsPos = vjson.find('[', optsPos);
+            if (optsPos != std::string::npos) {
+                optsPos++;
+                while (optsPos < vjson.size() && vjson[optsPos] != ']') {
+                    if (vjson[optsPos] == '"') {
+                        optsPos++; size_t e = optsPos;
+                        while (e < vjson.size() && vjson[e] != '"') e++;
+                        v.selectedOptionIds.push_back(vjson.substr(optsPos, e - optsPos));
+                        optsPos = e;
+                    }
+                    optsPos++;
+                }
+            }
+        }
+        votes.push_back(v);
+        p += 10;
+    }
+    auto result = getPollMgr()->tallyVotes(poll, votes);
+    auto display = getPollMgr()->formatPollEvent(result);
+    std::ostringstream os;
+    os << R"({"question":")" << display.question
+       << R"(","total_votes":)" << display.totalVotes
+       << R"(,"is_closed":)" << (display.isClosed ? "true" : "false")
+       << R"(,"winner_idx":)" << display.winnerOption
+       << R"(,"plain_text":")" << display.plainText << R"(")"
+       << R"(,"html":")" << display.htmlBody << R"(")"
+       << R"(,"winner":")" << getPollMgr()->getWinnerText(result) << R"(")"
+       << "}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
+JNI_FUNC(jboolean, nativePollIsValidQuestion)(JNIEnv* env, jclass, jstring jQ) {
+    return getPollMgr()->isValidPollQuestion(jStr(env, jQ)) ? JNI_TRUE : JNI_FALSE;
 }
 
 } // extern "C"
