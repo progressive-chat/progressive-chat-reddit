@@ -23,9 +23,25 @@ import javax.inject.Inject
 
 internal class EventDecryptor @Inject constructor(val decryptRoomEventUseCase: DecryptRoomEventUseCase) {
 
+    /**
+     * Optional native C++ Megolm decryptor for Progressive Chat.
+     * Set by the app layer when SETTINGS_LABS_NATIVE_CRYPTO is enabled.
+     * Returns null if native decryption is unavailable/fails, falling through to Rust SDK.
+     */
+    companion object {
+        @JvmStatic
+        var nativeDecryptAttempt: ((Event) -> MXEventDecryptionResult?)? = null
+    }
+
     @Throws(MXCryptoError::class)
     @Suppress("UNUSED_PARAMETER")
     suspend fun decryptEvent(event: Event, timeline: String): MXEventDecryptionResult {
+        // Progressive Chat: attempt native C++ MegolmDecryptor first (Labs-gated)
+        val nativeDecryptor = nativeDecryptAttempt
+        if (nativeDecryptor != null) {
+            val result = nativeDecryptor(event)
+            if (result != null) return result
+        }
         return decryptRoomEventUseCase.invoke(event)
     }
 

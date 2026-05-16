@@ -13,27 +13,44 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import im.vector.app.core.services.VectorSyncAndroidService
 import chat.progressive.app.native.ProgressiveNative
+import chat.progressive.app.native.ProgressiveNative
 import im.vector.app.features.session.VectorSessionStore
 import org.matrix.android.sdk.api.session.Session
 import org.matrix.android.sdk.api.session.crypto.keysbackup.KeysBackupState
-import org.matrix.android.sdk.internal.session.sync.parsing.InitialSyncResponseParser
+import org.matrix.android.sdk.api.session.crypto.model.MXEventDecryptionResult
+import org.matrix.android.sdk.api.session.events.model.Event
+import org.matrix.android.sdk.internal.crypto.EventDecryptor
 import timber.log.Timber
 
 fun Session.startSyncing(context: Context) {
     val applicationContext = context.applicationContext
 
-    // Progressive Chat: lightweight native sync header validator
-    // Reads only first 64KB, extracts next_batch via C++ string search
-    // Skipped for files <1KB or >50MB. Moshi remains primary parser.
-    InitialSyncResponseParser.nativeHeaderValidator = { header ->
+    // Progressive Chat: native C++ Megolm decryptor (Labs-gated via nativeDecryptAttempt)
+    EventDecryptor.nativeDecryptAttempt = { event ->
         try {
             ProgressiveNative.ensureLoaded()
-            val nextBatch = ProgressiveNative.nativeExtractNextBatchLight(header)
-            if (nextBatch.isNotEmpty()) {
-                Timber.i("PROGRESSIVE native sync: next_batch=$nextBatch")
+            val content = event.content
+            if (content == null) return@nativeDecryptAttempt null
+            val ciphertext = content["ciphertext"] as? String ?: return@nativeDecryptAttempt null
+            val senderKey = content["sender_key"] as? String ?: return@nativeDecryptAttempt null
+            val sessionId = content["session_id"] as? String ?: return@nativeDecryptAttempt null
+            val roomId = event.roomId ?: return@nativeDecryptAttempt null
+
+            val plaintext = ProgressiveNative.nativeMegolmDecrypt(roomId, senderKey, sessionId, ciphertext)
+            if (plaintext.isNullOrEmpty()) return@nativeDecryptAttempt null
+
+            // Build MXEventDecryptionResult from plaintext
+            val result = MXEventDecryptionResult()
+            result.clearEvent = org.matrix.android.sdk.api.util.JsonDict().apply {
+                putAll(org.matrix.android.sdk.api.util.fromJsonString(plaintext) ?: emptyMap())
             }
+            result.senderCurve25519Key = senderKey
+            result.claimedEd25519Key = content["device_id"] as? String
+            Timber.d("PROGRESSIVE native Megolm decrypt: success for $roomId/$sessionId")
+            result
         } catch (e: Exception) {
-            Timber.w(e, "PROGRESSIVE native header validation skipped")
+            Timber.w(e, "PROGRESSIVE native decrypt failed, falling back to Rust SDK")
+            null
         }
     }
 
