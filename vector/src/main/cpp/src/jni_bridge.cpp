@@ -156,6 +156,7 @@
 #include "progressive/profiler.hpp"
 #include "progressive/device_manager_full.hpp"
 #include "progressive/room_directory_manager.hpp"
+#include "progressive/session_manager_full.hpp"
 #include "progressive/cross_signing.hpp"
 #include "progressive/edit_history.hpp"
 #include "progressive/read_marker.hpp"
@@ -5950,6 +5951,82 @@ JNI_FUNC(jstring, nativeRoomDirFormatPreview)(JNIEnv* env, jclass, jstring jRoom
     r.topic = jExtractStr(json, "topic");
     r.numJoinedMembers = static_cast<int>(jExtractInt(json, "num_members"));
     return env->NewStringUTF(getRoomDir()->formatRoomPreview(r).c_str());
+}
+
+// ============================================================
+// Session Manager (multi-account)
+// ============================================================
+
+static std::unique_ptr<progressive::SessionManager> g_sessionMgrFull;
+
+static progressive::SessionManager* getSessionMgrFull() {
+    if (!g_sessionMgrFull) g_sessionMgrFull.reset(new progressive::SessionManager());
+    return g_sessionMgrFull.get();
+}
+
+JNI_FUNC(jstring, nativeSessionComputeId)(JNIEnv* env, jclass, jstring jUserId, jstring jDeviceId) {
+    return env->NewStringUTF(progressive::SessionManager::computeSessionId(jStr(env, jUserId), jStr(env, jDeviceId)).c_str());
+}
+
+JNI_FUNC(jstring, nativeSessionCreate)(JNIEnv* env, jclass, jstring jCredsJson, jstring jConfigJson, jint jLoginType) {
+    auto cjson = jStr(env, jCredsJson);
+    progressive::SessionCredentials creds;
+    creds.userId = jExtractStr(cjson, "user_id");
+    creds.accessToken = jExtractStr(cjson, "access_token");
+    creds.refreshToken = jExtractStr(cjson, "refresh_token");
+    creds.homeServer = jExtractStr(cjson, "home_server");
+    creds.deviceId = jExtractStr(cjson, "device_id");
+    creds.valid = true;
+
+    auto hjson = jStr(env, jConfigJson);
+    progressive::HomeServerConfig config;
+    config.homeServerUrl = jExtractStr(hjson, "home_server_url");
+    config.homeServerUrlBase = jExtractStr(hjson, "home_server_url_base");
+    config.homeServerHost = jExtractStr(hjson, "home_server_host");
+    config.identityServerUrl = jExtractStr(hjson, "identity_server_url");
+    config.valid = true;
+
+    std::string error;
+    auto sid = getSessionMgrFull()->createSession(creds, config, static_cast<progressive::SessionLoginType>(jLoginType), error);
+    if (sid.empty()) return env->NewStringUTF(("{\"error\":\"" + error + "\"}").c_str());
+    progressive::SessionInfo info; getSessionMgrFull()->getSession(sid, info);
+    return env->NewStringUTF(getSessionMgrFull()->sessionToJson(info).c_str());
+}
+
+JNI_FUNC(jboolean, nativeSessionOpen)(JNIEnv* env, jclass, jstring jSid) {
+    std::string error;
+    return getSessionMgrFull()->openSession(jStr(env, jSid), error) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeSessionClose)(JNIEnv* env, jclass, jstring jSid) {
+    return getSessionMgrFull()->closeSession(jStr(env, jSid)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeSessionRemove)(JNIEnv* env, jclass, jstring jSid) {
+    return getSessionMgrFull()->removeSession(jStr(env, jSid)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jboolean, nativeSessionSetActive)(JNIEnv* env, jclass, jstring jSid) {
+    return getSessionMgrFull()->setActiveSession(jStr(env, jSid)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeSessionGetActive)(JNIEnv* env, jclass) {
+    progressive::SessionInfo info;
+    if (getSessionMgrFull()->getActiveSession(info))
+        return env->NewStringUTF(getSessionMgrFull()->sessionToJson(info).c_str());
+    return env->NewStringUTF("{}");
+}
+
+JNI_FUNC(jboolean, nativeSessionHasActive)(JNIEnv*, jclass) {
+    return getSessionMgrFull()->hasActiveSession() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNI_FUNC(jstring, nativeSessionGetAll)(JNIEnv* env, jclass) {
+    return env->NewStringUTF(getSessionMgrFull()->allSessionsToJson().c_str());
+}
+
+JNI_FUNC(jint, nativeSessionCount)(JNIEnv*, jclass) {
+    return getSessionMgrFull()->sessionCount();
 }
 
 } // extern "C"

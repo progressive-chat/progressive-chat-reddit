@@ -1749,6 +1749,62 @@ static void test_roomdir_preview() {
     ASSERT_TRUE(preview.find("5000 members") != std::string::npos);
 }
 
+// ==== Session Manager (Element Android sources) ====
+
+#include "progressive/session_manager_full.hpp"
+
+static void test_session_compute_id() {
+    auto id = progressive::SessionManager::computeSessionId("@alice:org", "DEV123");
+    ASSERT_TRUE(!id.empty());
+    ASSERT_EQ(id.size(), 8u); // 8 hex chars from DJB2 hash
+}
+
+static void test_session_create() {
+    progressive::SessionManager mgr;
+    progressive::SessionCredentials creds;
+    creds.userId = "@alice:example.org"; creds.accessToken = "syt_token"; creds.deviceId = "DEV1"; creds.valid = true;
+    progressive::HomeServerConfig cfg;
+    cfg.homeServerUrl = "https://matrix.org"; cfg.homeServerUrlBase = "https://matrix-client.matrix.org";
+    std::string error;
+    auto sid = mgr.createSession(creds, cfg, progressive::SessionLoginType::PASSWORD, error);
+    ASSERT_TRUE(!sid.empty());
+    ASSERT_STREQ(error.c_str(), "");
+    ASSERT_EQ(mgr.sessionCount(), 1);
+}
+
+static void test_session_active() {
+    progressive::SessionManager mgr;
+    progressive::SessionCredentials creds;
+    creds.userId = "@alice:org"; creds.accessToken = "tok"; creds.deviceId = "D1"; creds.valid = true;
+    mgr.createSession(creds, {}, progressive::SessionLoginType::PASSWORD, std::string());
+
+    auto sid = creds.computeSessionId();
+    ASSERT_FALSE(mgr.hasActiveSession());
+    ASSERT_TRUE(mgr.setActiveSession(sid));
+    ASSERT_TRUE(mgr.hasActiveSession());
+
+    progressive::SessionInfo info;
+    ASSERT_TRUE(mgr.getActiveSession(info));
+    ASSERT_STREQ(info.userId.c_str(), "@alice:org");
+}
+
+static void test_session_open_close() {
+    progressive::SessionManager mgr;
+    progressive::SessionCredentials creds;
+    creds.userId = "@bob:org"; creds.accessToken = "tok"; creds.deviceId = "D2"; creds.valid = true;
+    std::string error;
+    mgr.createSession(creds, {}, progressive::SessionLoginType::SSO, error);
+    auto sid = creds.computeSessionId();
+    ASSERT_TRUE(mgr.openSession(sid, error));
+    ASSERT_TRUE(mgr.closeSession(sid));
+}
+
+static void test_session_login_types() {
+    ASSERT_STREQ(progressive::sessionLoginTypeToString(progressive::SessionLoginType::PASSWORD), "password");
+    ASSERT_STREQ(progressive::sessionLoginTypeToString(progressive::SessionLoginType::OIDC), "oidc");
+    ASSERT_TRUE(progressive::sessionLoginTypeFromString("sso") == progressive::SessionLoginType::SSO);
+}
+
 // ==== Run all tests ====
 int main() {
     printf("=== Progressive Chat C++ Unit Tests ===\n");
@@ -2057,6 +2113,13 @@ int main() {
     ADD_TEST(runner, test_roomdir_visibility);
     ADD_TEST(runner, test_roomdir_sort_popularity);
     ADD_TEST(runner, test_roomdir_preview);
+    
+    printf("\n-- Session Manager (Element Android) --\n");
+    ADD_TEST(runner, test_session_compute_id);
+    ADD_TEST(runner, test_session_create);
+    ADD_TEST(runner, test_session_active);
+    ADD_TEST(runner, test_session_open_close);
+    ADD_TEST(runner, test_session_login_types);
     
     return runner.summary();
 }

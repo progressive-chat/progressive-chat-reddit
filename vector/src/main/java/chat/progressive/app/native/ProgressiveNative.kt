@@ -1556,6 +1556,19 @@ object ProgressiveNative {
     @JvmStatic external fun nativeRoomDirCheckAlias(aliasLocalPart: String, json: String): String
     @JvmStatic external fun nativeRoomDirFormatPreview(roomJson: String): String
 
+    // --- Session Manager (multi-account) ---
+
+    @JvmStatic external fun nativeSessionComputeId(userId: String, deviceId: String): String
+    @JvmStatic external fun nativeSessionCreate(credentialsJson: String, configJson: String, loginType: Int): String
+    @JvmStatic external fun nativeSessionOpen(sessionId: String): Boolean
+    @JvmStatic external fun nativeSessionClose(sessionId: String): Boolean
+    @JvmStatic external fun nativeSessionRemove(sessionId: String): Boolean
+    @JvmStatic external fun nativeSessionSetActive(sessionId: String): Boolean
+    @JvmStatic external fun nativeSessionGetActive(): String
+    @JvmStatic external fun nativeSessionHasActive(): Boolean
+    @JvmStatic external fun nativeSessionGetAll(): String
+    @JvmStatic external fun nativeSessionCount(): Int
+
     // --- WebRTC Utils ---
 
     @JvmStatic external fun nativeFormatCallDuration(seconds: Int): String
@@ -4454,6 +4467,22 @@ object ProgressiveNative {
         val members = Regex(""""num_members":(\d+)""").find(roomJson)?.groupValues?.getOrNull(1) ?: "0"
         return "$name — $topic ($members members)"
     }
+
+    // --- Session Manager fallbacks ---
+    @JvmStatic fun nativeSessionComputeIdFallback(userId: String, deviceId: String): String =
+        java.security.MessageDigest.getInstance("MD5").digest("$userId|$deviceId".toByteArray()).joinToString("") { "%02x".format(it) }
+    @JvmStatic fun nativeSessionCreateFallback(credentialsJson: String, configJson: String, loginType: Int): String {
+        val userId = Regex(""""user_id":"([^"]+)"""").find(credentialsJson)?.groupValues?.getOrNull(1) ?: ""
+        return """{"session_id":"session_1","user_id":"$userId","device_id":"","display_name":"","avatar_url":"","home_server":"","state":"created","is_active":false,"is_syncing":false,"is_openable":true,"login_type":"password","created_at":${System.currentTimeMillis()},"last_sync":0,"push_rule":""}"""
+    }
+    @JvmStatic fun nativeSessionOpenFallback(sessionId: String): Boolean = true
+    @JvmStatic fun nativeSessionCloseFallback(sessionId: String): Boolean = true
+    @JvmStatic fun nativeSessionRemoveFallback(sessionId: String): Boolean = true
+    @JvmStatic fun nativeSessionSetActiveFallback(sessionId: String): Boolean = true
+    @JvmStatic fun nativeSessionGetActiveFallback(): String = "{}"
+    @JvmStatic fun nativeSessionHasActiveFallback(): Boolean = false
+    @JvmStatic fun nativeSessionGetAllFallback(): String = "[]"
+    @JvmStatic fun nativeSessionCountFallback(): Int = 0
 
     // --- URL Preview fallbacks ---
     @JvmStatic fun nativeIsPreviewableUrlFallback(url: String): Boolean = url.startsWith("http")
