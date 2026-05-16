@@ -36,6 +36,7 @@
 #include "progressive/event_utils.hpp"
 #include "progressive/megolm_decryptor.hpp"
 #include "progressive/canonical_json.hpp"
+#include "progressive/event_encryption.hpp"
 #include <cstring>
 
 // ==== SHA-256 verification (E2EE foundation) ====
@@ -595,6 +596,41 @@ static void test_canonical_json_no_spaces() {
     ASSERT_TRUE(result.find(" ") == std::string::npos);
 }
 
+// ==== E2EE End-to-End: account → OTK → SAS → MAC ====
+static void test_e2ee_full_pipeline() {
+    // 1. Create Olm account (device identity)
+    auto alice = progressive::createOlmAccount("@alice:matrix.org", "DEV_A");
+    ASSERT_TRUE(alice.valid);
+
+    // 2. Get identity keys
+    auto keys = progressive::getAccountIdentityKeys(alice);
+    ASSERT_TRUE(!keys.empty());
+
+    // 3. Generate one-time keys
+    auto otks = progressive::generateOneTimeKeys(alice, 10);
+    ASSERT_TRUE(!otks.empty());
+
+    // 4. Create SAS verification
+    auto sas = progressive::sasCreate();
+    ASSERT_TRUE(sas.valid);
+    ASSERT_TRUE(!sas.ourPubkey.empty());
+
+    // 5. Sign a message
+    auto sig = progressive::accountSign(alice, "test message");
+    ASSERT_TRUE(!sig.empty());
+
+    // 6. Clean up
+    progressive::sasDestroy(sas);
+    progressive::destroyOlmAccount(alice);
+}
+
+// ==== Event encryption metadata ====
+static void test_encryption_algorithm_parse() {
+    auto alg = progressive::parseEncryptionAlgorithm("m.megolm.v1.aes-sha2");
+    ASSERT_TRUE(alg.isMegolm);
+    ASSERT_TRUE(alg.isDefault);
+}
+
 // ==== Run all tests ====
 int main() {
     printf("=== Progressive Chat C++ Unit Tests ===\n");
@@ -730,6 +766,10 @@ int main() {
     printf("\n-- Canonical JSON --\n");
     ADD_TEST(runner, test_canonical_json_simple);
     ADD_TEST(runner, test_canonical_json_no_spaces);
+    
+    printf("\n-- E2EE End-to-End --\n");
+    ADD_TEST(runner, test_e2ee_full_pipeline);
+    ADD_TEST(runner, test_encryption_algorithm_parse);
     
     return runner.summary();
 }
