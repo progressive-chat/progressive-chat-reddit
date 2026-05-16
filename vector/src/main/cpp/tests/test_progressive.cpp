@@ -33,6 +33,7 @@
 #include "progressive/content_guard.hpp"
 #include "progressive/invite_utils.hpp"
 #include "progressive/file_validator.hpp"
+#include "progressive/event_utils.hpp"
 #include <cstring>
 
 // ==== SHA-256 verification (E2EE foundation) ====
@@ -536,6 +537,36 @@ static void test_format_file_size_bytes() {
     ASSERT_TRUE(result.find("B") != std::string::npos);
 }
 
+// ==== Member notice formatter ====
+static void test_member_notice_join() {
+    auto result = progressive::formatMemberNotice("join", "", "@alice:matrix.org", "Alice", "@alice:matrix.org", "Alice", "", false, false);
+    ASSERT_TRUE(result.find("Alice") != std::string::npos);
+    ASSERT_TRUE(result.find("joined") != std::string::npos);
+}
+
+static void test_member_notice_invite() {
+    auto result = progressive::formatMemberNotice("invite", "", "@bob:matrix.org", "Bob", "@carol:matrix.org", "Carol", "welcome!", false, false);
+    ASSERT_TRUE(result.find("Bob") != std::string::npos);
+    ASSERT_TRUE(result.find("invited") != std::string::npos);
+    ASSERT_TRUE(result.find("Carol") != std::string::npos);
+}
+
+static void test_call_notice_invite() {
+    auto result = progressive::formatCallNotice("m.call.invite", true, "Alice", false);
+    ASSERT_TRUE(result.find("Alice") != std::string::npos);
+    ASSERT_TRUE(result.find("video call") != std::string::npos);
+}
+
+static void test_call_notice_reject() {
+    auto result = progressive::formatCallNotice("m.call.reject", false, "Alice", false);
+    ASSERT_TRUE(result.find("declined") != std::string::npos);
+}
+
+static void test_annotate_edited() {
+    ASSERT_TRUE(progressive::annotateEdited("hello", true).find("(edited)") != std::string::npos);
+    ASSERT_STREQ(progressive::annotateEdited("hello", false), "hello");
+}
+
 // ==== Run all tests ====
 int main() {
     printf("=== Progressive Chat C++ Unit Tests ===\n");
@@ -656,6 +687,13 @@ int main() {
     ADD_TEST(runner, test_build_knock_body);
     ADD_TEST(runner, test_format_file_size);
     ADD_TEST(runner, test_format_file_size_bytes);
+    
+    printf("\n-- Member & Call Notices --\n");
+    ADD_TEST(runner, test_member_notice_join);
+    ADD_TEST(runner, test_member_notice_invite);
+    ADD_TEST(runner, test_call_notice_invite);
+    ADD_TEST(runner, test_call_notice_reject);
+    ADD_TEST(runner, test_annotate_edited);
     
     return runner.summary();
 }

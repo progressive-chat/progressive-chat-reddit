@@ -60,10 +60,20 @@ import javax.inject.Inject
 
 internal class RoomSummaryDataSource @Inject constructor(
         @SessionDatabase private val monarchy: Monarchy,
-        private val roomSummaryMapper: RoomSummaryMapper,
-        private val localRoomSummaryMapper: LocalRoomSummaryMapper,
-        private val queryStringValueProcessor: QueryStringValueProcessor,
+        private val roomLastEvent: RoomLastEvent,
+        private val clock: Clock,
+        private val buildTaskValue: BuildRoomSummariesTaskValue,
 ) {
+
+    companion object {
+        /**
+         * Optional native C++ room list mirror callback for Progressive Chat.
+         * Called with a JSON array of all room summaries so native SQLite can mirror.
+         * Set by the app layer when SETTINGS_LABS_NATIVE_DB is enabled.
+         */
+        @JvmStatic
+        var nativeRoomListCallback: ((roomListJson: String) -> Unit)? = null
+    }
 
     fun getRoomSummary(roomIdOrAlias: String): RoomSummary? {
         return monarchy
