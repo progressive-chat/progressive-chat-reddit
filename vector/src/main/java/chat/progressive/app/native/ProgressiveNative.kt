@@ -319,6 +319,10 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeParsePublicRoom(json: String): String
 
+    // --- Event Relation Info ---
+
+    @JvmStatic external fun nativeParseEventRelation(contentJson: String): String
+
     // --- Poll Validation ---
 
     @JvmStatic external fun nativeIsValidPollQuestion(question: String): Boolean
@@ -3260,6 +3264,10 @@ object ProgressiveNative {
         """{"room_id":"$roomId","total":0,"joined":0,"invited":0,"banned":0,"truncated":false,"members":[]}"""
     @JvmStatic fun nativeParsePublicRoomFallback(json: String): String =
         """{"room_id":"","name":"","topic":"","members":0,"world_readable":false,"guest_can_join":false}"""
+
+    // --- Event Relation fallback ---
+    @JvmStatic fun nativeParseEventRelationFallback(contentJson: String): String =
+        """{"rel_type":"","event_id":"","key":""}"""
 
     // --- Poll fallback ---
     @JvmStatic fun nativeIsValidPollQuestionFallback(question: String): Boolean =

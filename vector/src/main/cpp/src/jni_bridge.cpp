@@ -3278,6 +3278,17 @@ JNI_FUNC(jstring, nativeParsePublicRoom)(JNIEnv* env, jclass, jstring jJson) {
     return env->NewStringUTF(os.str().c_str());
 }
 
+// --- Event Relation Info (JSON round-trip) ---
+
+JNI_FUNC(jstring, nativeParseEventRelation)(JNIEnv* env, jclass, jstring jContentJson) {
+    auto rel = progressive::parseEventRelation(jStr(env, jContentJson));
+    std::ostringstream os;
+    os << R"({"rel_type":")" << rel.relType
+       << R"(","event_id":")" << rel.eventId
+       << R"(","key":")" << rel.key << "\"}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
 // --- Poll Validation ---
 
 JNI_FUNC(jboolean, nativeIsValidPollQuestion)(JNIEnv* env, jclass, jstring jQuestion) {
