@@ -158,6 +158,7 @@ class VectorPreferences @Inject constructor(
         const val SETTINGS_LABS_NATIVE_DB_KEY = "SETTINGS_LABS_NATIVE_DB_KEY"
         const val SETTINGS_LABS_NATIVE_SYNC_PARSER_KEY = "SETTINGS_LABS_NATIVE_SYNC_PARSER_KEY"
         const val SETTINGS_LABS_NATIVE_CRYPTO_KEY = "SETTINGS_LABS_NATIVE_CRYPTO_KEY"
+        const val SETTINGS_LABS_NATIVE_MARKDOWN_KEY = "SETTINGS_LABS_NATIVE_MARKDOWN_KEY"
         const val SETTINGS_LABS_FULL_AVATAR_KEY = "SETTINGS_LABS_FULL_AVATAR_KEY"
         const val SETTINGS_LABS_AVATAR_ORIGINAL_RATIO = "SETTINGS_LABS_AVATAR_ORIGINAL_RATIO"
         const val SETTINGS_LABS_WEB_SEARCH_KEY = "SETTINGS_LABS_WEB_SEARCH_KEY"
@@ -1739,6 +1740,10 @@ class VectorPreferences @Inject constructor(
 
     fun isNativeCryptoEnabled(): Boolean {
         return defaultPrefs.getBoolean(SETTINGS_LABS_NATIVE_CRYPTO_KEY, false)
+    }
+
+    fun isNativeMarkdownEnabled(): Boolean {
+        return defaultPrefs.getBoolean(SETTINGS_LABS_NATIVE_MARKDOWN_KEY, false)
     }
 
     fun isFullAvatarEnabled(): Boolean {

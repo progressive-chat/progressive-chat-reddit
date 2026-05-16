@@ -136,6 +136,7 @@
 #include "progressive/megolm_decryptor.hpp"
 #include "progressive/olm_session.hpp"
 #include "progressive/sas_verification.hpp"
+#include "progressive/markdown.hpp"
 #include "progressive/event_utils.hpp"
 #include "progressive/content_builder.hpp"
 #include "progressive/displayname_utils.hpp"
@@ -2973,6 +2974,25 @@ JNI_FUNC(jstring, nativeGetStatusSuggestions)(JNIEnv* env, jclass) {
     }
     os << "]";
     return env->NewStringUTF(os.str().c_str());
+}
+
+// --- Markdown Renderer ---
+// Critical: called for every message body display. Opt-in via SETTINGS_LABS_NATIVE_MARKDOWN
+
+JNI_FUNC(jstring, nativeMarkdownToHtml)(JNIEnv* env, jclass, jstring jMarkdown, jboolean jTables, jboolean jLinks, jboolean jCode, jboolean jScroll) {
+    progressive::MdConfig config;
+    config.enableTables = jTables;
+    config.enableLinks = jLinks;
+    config.enableCodeBlocks = jCode;
+    config.enableHorizontalScroll = jScroll;
+    config.enableImages = false;  // Matrix handles images separately
+    auto result = progressive::markdownToHtml(jStr(env, jMarkdown), config);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jstring, nativeParseMarkdownTable)(JNIEnv* env, jclass, jstring jTableBlock, jboolean jWithScroll) {
+    auto result = progressive::parseMarkdownTable(jStr(env, jTableBlock), jWithScroll);
+    return env->NewStringUTF(result.c_str());
 }
 
 // --- Megolm Decryptor ---

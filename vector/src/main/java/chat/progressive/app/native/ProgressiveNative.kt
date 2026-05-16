@@ -974,6 +974,11 @@ object ProgressiveNative {
     @JvmStatic external fun nativeGetPresenceStatusText(isOnline: Boolean, lastActiveMs: Long): String
     @JvmStatic external fun nativeGetStatusSuggestions(): String
 
+    // --- Markdown Renderer ---
+
+    @JvmStatic external fun nativeMarkdownToHtml(markdown: String, enableTables: Boolean, enableLinks: Boolean, enableCode: Boolean, enableScroll: Boolean): String
+    @JvmStatic external fun nativeParseMarkdownTable(tableBlock: String, withScroll: Boolean): String
+
     // --- Megolm Decryptor ---
 
     @JvmStatic external fun nativeMegolmAddSession(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean
@@ -3037,6 +3042,11 @@ object ProgressiveNative {
         if (isOnline) "Online" else "Offline"
     @JvmStatic fun nativeGetStatusSuggestionsFallback(): String =
         """["In a meeting","On vacation","Working remotely","Available","Busy","Be right back"]"""
+
+    // --- Markdown fallbacks ---
+    @JvmStatic fun nativeMarkdownToHtmlFallback(markdown: String, enableTables: Boolean, enableLinks: Boolean, enableCode: Boolean, enableScroll: Boolean): String =
+        markdown // Fallback: return raw markdown (real rendering via WebView/Android)
+    @JvmStatic fun nativeParseMarkdownTableFallback(tableBlock: String, withScroll: Boolean): String = tableBlock
 
     // --- Megolm fallbacks ---
     @JvmStatic fun nativeMegolmAddSessionFallback(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean = false
