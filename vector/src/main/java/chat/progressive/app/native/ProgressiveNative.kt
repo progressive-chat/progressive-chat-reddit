@@ -364,6 +364,10 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeIsStateEvent(eventType: String): Boolean
 
+    // --- Poll Results ---
+
+    @JvmStatic external fun nativeComputePollResults(pollJson: String): String
+
     // --- Member / Call Notices ---
 
     @JvmStatic external fun nativeFormatMemberNotice(membership: String, prevMembership: String, senderId: String, senderName: String, targetId: String, targetName: String, reason: String, isDirect: Boolean, sentBySelf: Boolean): String
@@ -3369,6 +3373,10 @@ object ProgressiveNative {
     // --- Event Classifier fallback ---
     @JvmStatic fun nativeIsStateEventFallback(eventType: String): Boolean =
         eventType.startsWith("m.room.") && eventType != "m.room.message" && eventType != "m.room.encrypted"
+
+    // --- Poll Results fallback ---
+    @JvmStatic fun nativeComputePollResultsFallback(pollJson: String): String =
+        """{"question":"","total_votes":0,"is_ended":false,"winner":"","options":[]}"""
 
     // --- Member/Call/Edit fallbacks ---
     @JvmStatic fun nativeFormatMemberNoticeFallback(membership: String, prevMembership: String, senderId: String, senderName: String, targetId: String, targetName: String, reason: String, isDirect: Boolean, sentBySelf: Boolean): String {

@@ -3449,6 +3449,99 @@ JNI_FUNC(jboolean, nativeIsStateEvent)(JNIEnv* env, jclass, jstring jEventType) 
     return progressive::isStateEvent(jStr(env, jEventType)) ? JNI_TRUE : JNI_FALSE;
 }
 
+// --- Poll Results ---
+
+JNI_FUNC(jstring, nativeComputePollResults)(JNIEnv* env, jclass, jstring jPollJson) {
+    auto json = jStr(env, jPollJson);
+    progressive::PollResult result;
+
+    // Parse question
+    auto qPos = json.find("\"question\"");
+    if (qPos != std::string::npos) {
+        qPos = json.find('"', qPos + 10);
+        if (qPos != std::string::npos) {
+            qPos++; size_t e = qPos;
+            while (e < json.size() && json[e] != '"') e++;
+            result.question = json.substr(qPos, e - qPos);
+        }
+    }
+    result.isEnded = json.find("\"closed\":true") != std::string::npos;
+
+    // Parse options and count votes
+    auto optsPos = json.find("\"options\"");
+    if (optsPos != std::string::npos) {
+        optsPos = json.find('[', optsPos);
+        if (optsPos != std::string::npos) {
+            optsPos++;
+            while (optsPos < json.size()) {
+                while (optsPos < json.size() && json[optsPos] != '{') { optsPos++; if (json[optsPos] == ']') break; }
+                if (optsPos >= json.size() || json[optsPos] == ']') break;
+                int depth = 1; size_t start = optsPos; optsPos++;
+                while (optsPos < json.size() && depth > 0) {
+                    if (json[optsPos] == '{') depth++;
+                    else if (json[optsPos] == '}') depth--;
+                    optsPos++;
+                }
+                std::string optJson = json.substr(start, optsPos - start);
+                progressive::PollOption opt;
+                // Extract id
+                auto idP = optJson.find("\"id\"");
+                if (idP != std::string::npos) {
+                    idP = optJson.find('"', idP + 4);
+                    if (idP != std::string::npos) { idP++; size_t e=idP; while(e<optJson.size()&&optJson[e]!='"')e++; opt.id=optJson.substr(idP,e-idP); }
+                }
+                // Extract text
+                auto txP = optJson.find("\"text\"");
+                if (txP != std::string::npos) {
+                    txP = optJson.find('"', txP + 6);
+                    if (txP != std::string::npos) { txP++; size_t e=txP; while(e<optJson.size()&&optJson[e]!='"')e++; opt.text=optJson.substr(txP,e-txP); }
+                }
+                // Count votes (responses referencing this option ID)
+                if (!opt.id.empty()) {
+                    size_t vp = 0;
+                    while ((vp = json.find(opt.id, vp)) != std::string::npos) { opt.voteCount++; vp++; }
+                    opt.voteCount--; // Remove self-reference
+                    if (opt.voteCount < 0) opt.voteCount = 0;
+                }
+                result.totalVotes += opt.voteCount;
+                result.options.push_back(opt);
+            }
+        }
+    }
+
+    // Find winner
+    int maxVotes = 0;
+    for (auto& opt : result.options) {
+        if (opt.voteCount > maxVotes) maxVotes = opt.voteCount;
+        opt.percentage = result.totalVotes > 0 ? (opt.voteCount * 100.0 / result.totalVotes) : 0.0;
+    }
+    for (auto& opt : result.options) {
+        if (opt.voteCount == maxVotes && maxVotes > 0) {
+            opt.isWinner = true;
+            result.winnerId = opt.id;
+            result.winnerText = opt.text;
+        }
+    }
+
+    // Serialize
+    std::ostringstream os;
+    os << R"({"question":")" << result.question
+       << R"(","total_votes":)" << result.totalVotes
+       << R"(,"is_ended":)" << (result.isEnded ? "true" : "false")
+       << R"(,"winner":")" << result.winnerText
+       << R"(","options":[)";
+    for (size_t i = 0; i < result.options.size(); i++) {
+        if (i > 0) os << ",";
+        os << R"({"id":")" << result.options[i].id
+           << R"(","text":")" << result.options[i].text
+           << R"(","votes":)" << result.options[i].voteCount
+           << R"(,"percent":)" << result.options[i].percentage
+           << R"(,"winner":)" << (result.options[i].isWinner ? "true" : "false") << "}";
+    }
+    os << "]}";
+    return env->NewStringUTF(os.str().c_str());
+}
+
 // --- Member Notice / Call Notice / Edit Annotation ---
 
 JNI_FUNC(jstring, nativeFormatMemberNotice)(JNIEnv* env, jclass, jstring jMembership, jstring jPrevMembership, jstring jSenderId, jstring jSenderName, jstring jTargetId, jstring jTargetName, jstring jReason, jboolean jDirect, jboolean jSelf) {
