@@ -464,22 +464,7 @@ std::vector<std::string> TimelineChunkManager::getThreadEvents(const std::string
                         thread.push_back(id);
                         next.push_back(id);
                         break;
-// ==== Mode-Based Initialization ====
-
-void TimelineChunkManager::setMode(TimelineMode mode, const std::string& anchorEventId) {
-    mode_ = mode;
-    anchorEventId_ = anchorEventId;
-
-    if (mode == TimelineMode::LIVE) {
-        // In live mode, find the isLastForward chunk
-        for (auto& c : chunks_) {
-            if (c.isLastForward) break; // Found it
-        }
-    }
-    // PERMALINK mode requires querying for the chunk containing anchorEventId
-    // THREAD mode requires a dedicated thread chunk with rootThreadEventId
-    // Both are handled by the caller before adding chunks
-}
+                    }
                 }
             }
         }
@@ -487,6 +472,19 @@ void TimelineChunkManager::setMode(TimelineMode mode, const std::string& anchorE
     }
 
     return thread;
+}
+
+// ==== Mode-Based Initialization ====
+
+void TimelineChunkManager::setMode(TimelineMode mode, const std::string& anchorEventId) {
+    mode_ = mode;
+    anchorEventId_ = anchorEventId;
+
+    if (mode == TimelineMode::LIVE) {
+        for (auto& c : chunks_) {
+            if (c.isLastForward) break;
+        }
+    }
 }
 
 // ==== Internal Helpers ====
