@@ -34,6 +34,7 @@
 #include "progressive/invite_utils.hpp"
 #include "progressive/file_validator.hpp"
 #include "progressive/event_utils.hpp"
+#include "progressive/megolm_decryptor.hpp"
 #include <cstring>
 
 // ==== SHA-256 verification (E2EE foundation) ====
@@ -567,6 +568,19 @@ static void test_annotate_edited() {
     ASSERT_STREQ(progressive::annotateEdited("hello", false), "hello");
 }
 
+// ==== Megolm session manager ====
+static void test_megolm_manager_empty() {
+    progressive::MegolmSessionManager mgr;
+    ASSERT_EQ(mgr.sessionCount(), 0);
+    ASSERT_TRUE(mgr.findSession("!room", "sender", "sid") == nullptr);
+}
+
+static void test_megolm_clear_room() {
+    progressive::MegolmSessionManager mgr;
+    mgr.clearRoom("!test");
+    ASSERT_EQ(mgr.sessionCount(), 0);
+}
+
 // ==== Run all tests ====
 int main() {
     printf("=== Progressive Chat C++ Unit Tests ===\n");
@@ -694,6 +708,10 @@ int main() {
     ADD_TEST(runner, test_call_notice_invite);
     ADD_TEST(runner, test_call_notice_reject);
     ADD_TEST(runner, test_annotate_edited);
+    
+    printf("\n-- Megolm --\n");
+    ADD_TEST(runner, test_megolm_manager_empty);
+    ADD_TEST(runner, test_megolm_clear_room);
     
     return runner.summary();
 }
