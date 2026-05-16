@@ -1699,6 +1699,15 @@ object ProgressiveNative {
     @JvmStatic external fun nativeUndoRedo(): String
     @JvmStatic external fun nativeUndoGetState(): String
 
+    // --- Room Permissions ---
+
+    @JvmStatic external fun nativePermParse(powerLevelsJson: String): String
+    @JvmStatic external fun nativePermGetRole(userId: String, powerLevel: Int): String
+    @JvmStatic external fun nativePermBuildContent(powerLevelsJson: String): String
+    @JvmStatic external fun nativePermBuildKick(userId: String, reason: String): String
+    @JvmStatic external fun nativePermBuildBan(userId: String, reason: String): String
+    @JvmStatic external fun nativePermFormatChange(userId: String, oldPower: Int, newPower: Int): String
+
     // --- WebRTC Utils ---
 
     @JvmStatic external fun nativeFormatCallDuration(seconds: Int): String
@@ -4806,6 +4815,25 @@ object ProgressiveNative {
         """{"text":"","cursor":0,"can_undo":false,"can_redo":false,"description":""}"""
     @JvmStatic fun nativeUndoGetStateFallback(): String =
         """{"can_undo":false,"can_redo":false,"undo_count":0,"redo_count":0,"next_undo":"","next_redo":"","enabled":false}"""
+
+    // --- Room Permissions fallbacks ---
+    @JvmStatic fun nativePermParseFallback(powerLevelsJson: String): String =
+        """{"ban":50,"kick":50,"invite":0,"redact":50,"events_default":0,"state_default":50,"users_default":0,"user_count":0,"event_count":0,"room_notification_level":50}"""
+    @JvmStatic fun nativePermGetRoleFallback(userId: String, powerLevel: Int): String {
+        val role = when { powerLevel >= 150 -> "Super Admin"; powerLevel >= 100 -> "Admin"; powerLevel >= 50 -> "Moderator"; else -> "User" }
+        return """{"user_id":"$userId","power":$powerLevel,"role":"$role","can_ban":${powerLevel>=50},"can_kick":${powerLevel>=50},"can_invite":${powerLevel>=0},"can_redact":${powerLevel>=50},"can_send_msg":${powerLevel>=0},"can_send_state":${powerLevel>=50},"can_notify_room":${powerLevel>=50},"can_change_pl":${powerLevel>=100},"description":"Power $powerLevel ($role)"}"""
+    }
+    @JvmStatic fun nativePermBuildContentFallback(powerLevelsJson: String): String =
+        """{"ban":50,"kick":50,"invite":0,"redact":50,"events_default":0,"users_default":0,"state_default":50,"users":{}}"""
+    @JvmStatic fun nativePermBuildKickFallback(userId: String, reason: String): String =
+        """{"user_id":"$userId","reason":"$reason"}"""
+    @JvmStatic fun nativePermBuildBanFallback(userId: String, reason: String): String =
+        """{"user_id":"$userId","reason":"$reason"}"""
+    @JvmStatic fun nativePermFormatChangeFallback(userId: String, oldPower: Int, newPower: Int): String {
+        val oldRole = when { oldPower >= 100 -> "Admin"; oldPower >= 50 -> "Moderator"; else -> "User" }
+        val newRole = when { newPower >= 100 -> "Admin"; newPower >= 50 -> "Moderator"; else -> "User" }
+        return "$userId changed from $oldRole ($oldPower) to $newRole ($newPower)"
+    }
 
     @JvmStatic fun nativeSessionCountFallback(): Int = 0
 

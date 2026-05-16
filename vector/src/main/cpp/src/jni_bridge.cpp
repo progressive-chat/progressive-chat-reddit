@@ -168,6 +168,7 @@
 #include "progressive/transparent_overlay.hpp"
 #include "progressive/composer_manager.hpp"
 #include "progressive/text_undo_manager.hpp"
+#include "progressive/room_permissions_manager.hpp"
 #include "progressive/cross_signing.hpp"
 #include "progressive/edit_history.hpp"
 #include "progressive/read_marker.hpp"
@@ -6667,6 +6668,52 @@ JNI_FUNC(jstring, nativeUndoRedo)(JNIEnv* env, jclass) {
 
 JNI_FUNC(jstring, nativeUndoGetState)(JNIEnv* env, jclass) {
     return env->NewStringUTF(getUndoMgr()->stateToJson().c_str());
+}
+
+// ============================================================
+// Room Permissions Manager
+// ============================================================
+
+static std::unique_ptr<progressive::RoomPermissionsManager> g_permMgr;
+
+static progressive::RoomPermissionsManager* getPermMgr() {
+    if (!g_permMgr) g_permMgr.reset(new progressive::RoomPermissionsManager());
+    return g_permMgr.get();
+}
+
+JNI_FUNC(jstring, nativePermParse)(JNIEnv* env, jclass, jstring jJson) {
+    auto pl = getPermMgr()->parsePowerLevels(jStr(env, jJson));
+    return env->NewStringUTF(getPermMgr()->powerLevelsToJson(pl).c_str());
+}
+
+JNI_FUNC(jstring, nativePermGetRole)(JNIEnv* env, jclass, jstring jUserId, jint jPower) {
+    return env->NewStringUTF(getPermMgr()->roleToJson(jStr(env, jUserId), jPower).c_str());
+}
+
+JNI_FUNC(jstring, nativePermBuildContent)(JNIEnv* env, jclass, jstring jPlJson) {
+    auto json = jStr(env, jPlJson);
+    progressive::PowerLevelsContent pl;
+    pl.ban = static_cast<int>(jExtractInt(json, "ban")); if (pl.ban == 0) pl.ban = 50;
+    pl.kick = static_cast<int>(jExtractInt(json, "kick")); if (pl.kick == 0) pl.kick = 50;
+    pl.invite = static_cast<int>(jExtractInt(json, "invite"));
+    pl.redact = static_cast<int>(jExtractInt(json, "redact")); if (pl.redact == 0) pl.redact = 50;
+    pl.eventsDefault = static_cast<int>(jExtractInt(json, "events_default"));
+    pl.usersDefault = static_cast<int>(jExtractInt(json, "users_default"));
+    pl.stateDefault = static_cast<int>(jExtractInt(json, "state_default")); if (pl.stateDefault == 0) pl.stateDefault = 50;
+    pl.valid = true;
+    return env->NewStringUTF(getPermMgr()->buildPowerLevelsContent(pl).c_str());
+}
+
+JNI_FUNC(jstring, nativePermBuildKick)(JNIEnv* env, jclass, jstring jUserId, jstring jReason) {
+    return env->NewStringUTF(getPermMgr()->buildKickRequest(jStr(env, jUserId), jStr(env, jReason)).c_str());
+}
+
+JNI_FUNC(jstring, nativePermBuildBan)(JNIEnv* env, jclass, jstring jUserId, jstring jReason) {
+    return env->NewStringUTF(getPermMgr()->buildBanRequest(jStr(env, jUserId), jStr(env, jReason)).c_str());
+}
+
+JNI_FUNC(jstring, nativePermFormatChange)(JNIEnv* env, jclass, jstring jUserId, jint jOld, jint jNew) {
+    return env->NewStringUTF(getPermMgr()->formatPowerLevelChange(jStr(env, jUserId), jOld, jNew).c_str());
 }
 
 } // extern "C"
