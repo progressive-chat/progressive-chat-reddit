@@ -2,6 +2,7 @@
 #include "progressive/json_parser.hpp"
 #include <sstream>
 #include <unordered_set>
+#include <unordered_map>
 
 namespace progressive {
 
@@ -161,27 +162,16 @@ std::string threadSummaryToJson(const ThreadSummary& summary) {
     return json.str();
 }
 
-    os << R"("})";
-    return os.str();
-}
-
 // ==== Build Thread List from Events JSON ====
 
 std::string buildThreadListJson(const std::string& eventsJson) {
-    // Parse events array, group by thread root, compute summaries
     struct ThreadData {
         std::string rootId;
         std::string latestEventId;
-        std::string rootBody;
-        std::string rootSender;
         int64_t latestTs = 0;
         int replyCount = 0;
     };
-
     std::unordered_map<std::string, ThreadData> threads;
-    std::string latestNonThreadEvent;
-
-    // Simplified parsing: find m.thread relations
     size_t pos = 0;
     while (pos < eventsJson.size()) {
         pos = eventsJson.find("\"m.thread\"", pos);
