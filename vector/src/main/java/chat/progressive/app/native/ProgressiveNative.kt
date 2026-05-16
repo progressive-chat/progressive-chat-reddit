@@ -248,6 +248,13 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeGetBannerColor(downtimeMs: Long): String
 
+    // --- Content Guard ---
+
+    @JvmStatic external fun nativeCountEmojis(text: String): Int
+    @JvmStatic external fun nativeCountUniqueEmojis(text: String): Int
+    @JvmStatic external fun nativeFormatMediaCollapseLabel(count: Int): String
+    @JvmStatic external fun nativeIsEmojiCodePoint(codepoint: Int): Boolean
+
     // --- Account Export ---
 
     @JvmStatic external fun nativeEncryptAccount(
@@ -3102,10 +3109,14 @@ object ProgressiveNative {
 
     // --- Connection Monitor fallback ---
     @JvmStatic fun nativeGetBannerColorFallback(downtimeMs: Long): String = when {
-        downtimeMs > 300_000 -> "#F44336"  // red after 5 min
-        downtimeMs > 60_000 -> "#FF9800"   // orange after 1 min
-        else -> "#4CAF50"                    // green
+        downtimeMs > 300_000 -> "#F44336"; downtimeMs > 60_000 -> "#FF9800"; else -> "#4CAF50"
     }
+
+    // --- Content Guard fallbacks ---
+    @JvmStatic fun nativeCountEmojisFallback(text: String): Int = 0 // requires Unicode analysis
+    @JvmStatic fun nativeCountUniqueEmojisFallback(text: String): Int = 0
+    @JvmStatic fun nativeFormatMediaCollapseLabelFallback(count: Int): String = "$count media items"
+    @JvmStatic fun nativeIsEmojiCodePointFallback(codepoint: Int): Boolean = codepoint >= 0x1F300
 
     // --- Megolm fallbacks ---
     @JvmStatic fun nativeMegolmAddSessionFallback(roomId: String, senderKey: String, sessionId: String, sessionKeyBase64: String): Boolean = false

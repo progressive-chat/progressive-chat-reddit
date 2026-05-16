@@ -3064,6 +3064,25 @@ JNI_FUNC(jstring, nativeGetBannerColor)(JNIEnv* env, jclass, jlong jDowntimeMs) 
     return env->NewStringUTF(result.c_str());
 }
 
+// --- Content Guard (emoji/DoS protection) ---
+
+JNI_FUNC(jint, nativeCountEmojis)(JNIEnv* env, jclass, jstring jText) {
+    return progressive::countEmojis(jStr(env, jText));
+}
+
+JNI_FUNC(jint, nativeCountUniqueEmojis)(JNIEnv* env, jclass, jstring jText) {
+    return progressive::countUniqueEmojis(jStr(env, jText));
+}
+
+JNI_FUNC(jstring, nativeFormatMediaCollapseLabel)(JNIEnv* env, jclass, jint jCount) {
+    auto result = progressive::formatMediaCollapseLabel(jCount);
+    return env->NewStringUTF(result.c_str());
+}
+
+JNI_FUNC(jboolean, nativeIsEmojiCodePoint)(JNIEnv* env, jclass, jint jCodepoint) {
+    return progressive::isEmojiCodePoint(jCodepoint) ? JNI_TRUE : JNI_FALSE;
+}
+
 JNI_FUNC(jstring, nativeParseMarkdownTable)(JNIEnv* env, jclass, jstring jTableBlock, jboolean jWithScroll) {
     auto result = progressive::parseMarkdownTable(jStr(env, jTableBlock), jWithScroll);
     return env->NewStringUTF(result.c_str());
