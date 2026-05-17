@@ -192,8 +192,8 @@ std::string IdentityServerManager::buildSubmitTokenRequest(const IS_ThreePid& th
     return os.str();
 }
 
-ThreePidBindingStatus IdentityServerManager::parseBindResponse(const std::string& json, const IS_ThreePid& threePid) const {
-    ThreePidBindingStatus status;
+IS_ThreePidBindingStatus IdentityServerManager::parseBindResponse(const std::string& json, const IS_ThreePid& threePid) const {
+    IS_ThreePidBindingStatus status;
     status.threePid = threePid;
 
     auto sid = extractStr(json, "sid");
@@ -212,7 +212,7 @@ ThreePidBindingStatus IdentityServerManager::parseBindResponse(const std::string
 }
 
 void IdentityServerManager::registerBinding(const std::string& sid, const IS_ThreePid& threePid) {
-    ThreePidBindingStatus status;
+    IS_ThreePidBindingStatus status;
     status.threePid = threePid;
     status.sid = sid;
     status.shareState = IS_SharedState::BINDING_IN_PROGRESS;
@@ -220,10 +220,10 @@ void IdentityServerManager::registerBinding(const std::string& sid, const IS_Thr
     bindings_[sid] = status;
 }
 
-ThreePidBindingStatus IdentityServerManager::getBinding(const std::string& sid) const {
+IS_ThreePidBindingStatus IdentityServerManager::getBinding(const std::string& sid) const {
     auto it = bindings_.find(sid);
     if (it != bindings_.end()) return it->second;
-    ThreePidBindingStatus empty;
+    IS_ThreePidBindingStatus empty;
     empty.sid = sid;
     return empty;
 }
@@ -373,7 +373,7 @@ std::string IdentityServerManager::threePidToJson(const IS_ThreePid& threePid) c
     return os.str();
 }
 
-std::string IdentityServerManager::bindingToJson(const ThreePidBindingStatus& status) const {
+std::string IdentityServerManager::bindingToJson(const IS_ThreePidBindingStatus& status) const {
     auto esc = [](const std::string& s) -> std::string {
         std::string out;
         for (char c : s) { if (c == '"') out += "\\\""; else out += c; }

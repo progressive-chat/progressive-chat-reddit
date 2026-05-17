@@ -169,13 +169,13 @@ public:
                                          const std::string& clientSecret, int token) const;
 
     // Parse bind response.
-    ThreePidBindingStatus parseBindResponse(const std::string& json, const IS_ThreePid& threePid) const;
+    IS_ThreePidBindingStatus parseBindResponse(const std::string& json, const IS_ThreePid& threePid) const;
 
     // Register a binding session.
     void registerBinding(const std::string& sid, const IS_ThreePid& threePid);
 
     // Get binding by session ID.
-    ThreePidBindingStatus getBinding(const std::string& sid) const;
+    IS_ThreePidBindingStatus getBinding(const std::string& sid) const;
 
     // Cancel a pending binding.
     void cancelBinding(const std::string& sid);
@@ -228,14 +228,14 @@ public:
     std::string threePidToJson(const IS_ThreePid& threePid) const;
 
     // Export binding status as JSON.
-    std::string bindingToJson(const ThreePidBindingStatus& status) const;
+    std::string bindingToJson(const IS_ThreePidBindingStatus& status) const;
 
     // Export found 3PID as JSON.
     std::string foundPidToJson(const IS_FoundThreePid& found) const;
 
 private:
     IdentityServerConfig config_;
-    std::unordered_map<std::string, ThreePidBindingStatus> bindings_; // sid → binding
+    std::unordered_map<std::string, IS_ThreePidBindingStatus> bindings_; // sid → binding
 
     static std::string extractStr(const std::string& json, const std::string& key);
     static int64_t extractInt(const std::string& json, const std::string& key);

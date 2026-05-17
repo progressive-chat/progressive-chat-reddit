@@ -10,7 +10,7 @@ namespace progressive {
 // Event Relations Manager — full event relation handling
 //
 // Faithful port from Element Android original sources:
-//   RelationType.kt — ANNOTATION, REPLACE, REFERENCE, THREAD, RESPONSE
+//   EventRelationType.kt — ANNOTATION, REPLACE, REFERENCE, THREAD, RESPONSE
 //   RelationContent.kt — type, eventId, inReplyTo, option, isFallingBack
 //   ReplyToContent.kt — eventId
 //   RelationDefaultContent.kt — all fields, shouldRenderInThread(),
@@ -31,9 +31,9 @@ namespace progressive {
 // ================================================================
 
 // ---- Relation Type ----
-// Original: RelationType.kt (ANNOTATION, REPLACE, REFERENCE, THREAD, RESPONSE)
+// Original: EventRelationType.kt (ANNOTATION, REPLACE, REFERENCE, THREAD, RESPONSE)
 
-enum class RelationType {
+enum class EventRelationType {
     UNKNOWN = 0,
     ANNOTATION = 1,       // m.annotation — reactions, etc.
     REPLACE = 2,          // m.replace — edit events
@@ -42,8 +42,8 @@ enum class RelationType {
     RESPONSE = 5,         // org.matrix.response
 };
 
-const char* relationTypeToString(RelationType type);
-RelationType relationTypeFromString(const std::string& s);
+const char* relationTypeToString(EventRelationType type);
+EventRelationType relationTypeFromString(const std::string& s);
 
 // ---- Reply-To Content ----
 // Original: ReplyToContent.kt (event_id)
@@ -58,7 +58,7 @@ struct ReplyToContent {
 // Original: RelationDefaultContent.kt (all fields, shouldRenderInThread, isReply)
 
 struct RelationContent {
-    RelationType type = RelationType::UNKNOWN;
+    EventRelationType type = EventRelationType::UNKNOWN;
     std::string typeString;          // Raw type string
     std::string eventId;             // Target event ID
     ReplyToContent inReplyTo;        // Reply target
@@ -73,16 +73,16 @@ struct RelationContent {
     bool isReply() const { return !inReplyTo.eventId.empty(); }
 
     // Check if this is an edit (m.replace).
-    bool isEdit() const { return type == RelationType::REPLACE; }
+    bool isEdit() const { return type == EventRelationType::REPLACE; }
 
     // Check if this is a thread relation.
-    bool isThread() const { return type == RelationType::THREAD; }
+    bool isThread() const { return type == EventRelationType::THREAD; }
 
     // Check if this is an annotation (reaction).
-    bool isAnnotation() const { return type == RelationType::ANNOTATION; }
+    bool isAnnotation() const { return type == EventRelationType::ANNOTATION; }
 
     // Check if this is a reference.
-    bool isReference() const { return type == RelationType::REFERENCE; }
+    bool isReference() const { return type == EventRelationType::REFERENCE; }
 };
 
 // ---- Event Relations Manager ----
@@ -101,7 +101,7 @@ public:
     ReplyToContent parseReplyTo(const std::string& eventContentJson);
 
     // ====== Relation Detection ======
-    // Original: RelationType constants
+    // Original: EventRelationType constants
 
     // Check if an event has a relation of any type.
     bool hasRelation(const std::string& eventContentJson);

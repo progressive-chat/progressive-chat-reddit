@@ -5,24 +5,24 @@ namespace progressive {
 
 // ====== Enum conversions ======
 
-const char* relationTypeToString(RelationType type) {
+const char* relationTypeToString(EventRelationType type) {
     switch (type) {
-        case RelationType::ANNOTATION: return "m.annotation";
-        case RelationType::REPLACE: return "m.replace";
-        case RelationType::REFERENCE: return "m.reference";
-        case RelationType::THREAD: return "m.thread";
-        case RelationType::RESPONSE: return "org.matrix.response";
+        case EventRelationType::ANNOTATION: return "m.annotation";
+        case EventRelationType::REPLACE: return "m.replace";
+        case EventRelationType::REFERENCE: return "m.reference";
+        case EventRelationType::THREAD: return "m.thread";
+        case EventRelationType::RESPONSE: return "org.matrix.response";
         default: return "unknown";
     }
 }
 
-RelationType relationTypeFromString(const std::string& s) {
-    if (s == "m.annotation") return RelationType::ANNOTATION;
-    if (s == "m.replace") return RelationType::REPLACE;
-    if (s == "m.reference") return RelationType::REFERENCE;
-    if (s == "m.thread") return RelationType::THREAD;
-    if (s == "org.matrix.response") return RelationType::RESPONSE;
-    return RelationType::UNKNOWN;
+EventRelationType relationTypeFromString(const std::string& s) {
+    if (s == "m.annotation") return EventRelationType::ANNOTATION;
+    if (s == "m.replace") return EventRelationType::REPLACE;
+    if (s == "m.reference") return EventRelationType::REFERENCE;
+    if (s == "m.thread") return EventRelationType::THREAD;
+    if (s == "org.matrix.response") return EventRelationType::RESPONSE;
+    return EventRelationType::UNKNOWN;
 }
 
 // ====== JSON helpers ======
@@ -136,34 +136,34 @@ bool EventRelationsManager::isEventReply(const std::string& eventContentJson) {
 
 bool EventRelationsManager::isEventEdit(const std::string& eventContentJson) {
     auto rel = parseRelation(eventContentJson);
-    return rel.valid && rel.type == RelationType::REPLACE;
+    return rel.valid && rel.type == EventRelationType::REPLACE;
 }
 
 bool EventRelationsManager::isEventReaction(const std::string& eventContentJson) {
     auto rel = parseRelation(eventContentJson);
-    return rel.valid && rel.type == RelationType::ANNOTATION;
+    return rel.valid && rel.type == EventRelationType::ANNOTATION;
 }
 
 bool EventRelationsManager::isThreadRoot(const std::string& eventContentJson, const std::string& eventId) {
     auto rel = parseRelation(eventContentJson);
-    return rel.valid && rel.type == RelationType::THREAD && rel.eventId == eventId;
+    return rel.valid && rel.type == EventRelationType::THREAD && rel.eventId == eventId;
 }
 
 bool EventRelationsManager::isThreadReply(const std::string& eventContentJson) {
     auto rel = parseRelation(eventContentJson);
-    return rel.valid && rel.type == RelationType::THREAD &&
+    return rel.valid && rel.type == EventRelationType::THREAD &&
            rel.eventId != extractStr(eventContentJson, "event_id"); // Not pointing to self
 }
 
 std::string EventRelationsManager::extractThreadRoot(const std::string& eventContentJson) {
     auto rel = parseRelation(eventContentJson);
-    if (rel.valid && rel.type == RelationType::THREAD) return rel.eventId;
+    if (rel.valid && rel.type == EventRelationType::THREAD) return rel.eventId;
     return "";
 }
 
 std::string EventRelationsManager::extractEditSource(const std::string& eventContentJson) {
     auto rel = parseRelation(eventContentJson);
-    if (rel.valid && rel.type == RelationType::REPLACE) return rel.eventId;
+    if (rel.valid && rel.type == EventRelationType::REPLACE) return rel.eventId;
     return "";
 }
 

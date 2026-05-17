@@ -52,6 +52,15 @@ RoomDirectoryVisibility visibilityFromString(const std::string& s);
 // Original: AliasAvailabilityResult (checkAliasAvailability)
 
 
+// ---- Alias Availability ----
+// Original: AliasAvailabilityResult (checkAliasAvailability)
+
+struct AliasAvailabilityResult {
+    bool available = false;
+    std::string alias;
+    std::string error;
+};
+
 // ---- Room Directory Manager ----
 
 class RoomDirectoryManager {
