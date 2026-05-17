@@ -4083,8 +4083,6 @@ object ProgressiveNative {
     @JvmStatic fun nativeGetErrorDescriptionFallback(errorCode: String): String =
         errorCode.replace("M_", "").replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
         errorJson.contains("M_CONSENT_NOT_GIVEN")
-        errorJson.contains("M_USER_DEACTIVATED")
-
     // --- Notification Formatter fallbacks ---
     @JvmStatic fun nativeFormatImageNotificationFallback(sender: String): String =
         "$sender sent an image"
