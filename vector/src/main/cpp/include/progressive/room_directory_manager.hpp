@@ -13,8 +13,8 @@ namespace progressive {
 // Faithful port from Element Android original sources:
 //   PublicRoom.kt — room data model (9 fields + getPrimaryAlias)
 //   PublicRoomsFilter.kt — generic_search_term
-//   PublicRoomsParamsEntry.kt — limit, since, filter, include_all_networks
-//   PublicRoomsResponseEntry.kt — chunk, next_batch, prev_batch, total_estimate
+//   PublicRoomsParams.kt — limit, since, filter, include_all_networks
+//   PublicRoomsResponse.kt — chunk, next_batch, prev_batch, total_estimate
 //   RoomDirectoryService.kt — getPublicRooms, visibility, alias check
 //   RoomDirectoryVisibility.kt — PRIVATE / PUBLIC
 //
@@ -40,11 +40,11 @@ RoomDirectoryVisibility visibilityFromString(const std::string& s);
 
 
 // ---- Public Rooms Params ----
-// Original: PublicRoomsParamsEntry.kt (limit, since, filter, include_all_networks, third_party_instance_id)
+// Original: PublicRoomsParams.kt (limit, since, filter, include_all_networks, third_party_instance_id)
 
 
 // ---- Public Rooms Response ----
-// Original: PublicRoomsResponseEntry.kt (chunk, next_batch, prev_batch, total_room_count_estimate)
+// Original: PublicRoomsResponse.kt (chunk, next_batch, prev_batch, total_room_count_estimate)
 
 
 // ---- Alias Availability ----
@@ -60,15 +60,15 @@ public:
     // ====== Public Rooms Search ======
 
     // Build the POST /publicRooms request body.
-    // Original: getPublicRooms(server, PublicRoomsParamsEntry) → POST /publicRooms
-    std::string buildPublicRoomsRequest(const PublicRoomsParamsEntry& params) const;
+    // Original: getPublicRooms(server, PublicRoomsParams) → POST /publicRooms
+    std::string buildPublicRoomsRequest(const PublicRoomsParams& params) const;
 
     // Parse POST /publicRooms response.
-    // Original: PublicRoomsResponseEntry.chunk
-    PublicRoomsResponseEntry parsePublicRoomsResponse(const std::string& json) const;
+    // Original: PublicRoomsResponse.chunk
+    PublicRoomsResponse parsePublicRoomsResponse(const std::string& json) const;
 
     // Accumulate paginated results (merge multiple pages).
-    void accumulateResults(PublicRoomsResponseEntry& existing, const PublicRoomsResponseEntry& nextPage) const;
+    void accumulateResults(PublicRoomsResponse& existing, const PublicRoomsResponse& nextPage) const;
 
     // ====== Room Directory Visibility ======
 
@@ -120,7 +120,7 @@ public:
     std::string roomsToJson(const std::vector<PublicRoom>& rooms) const;
 
     // Export response as JSON.
-    std::string responseToJson(const PublicRoomsResponseEntry& resp) const;
+    std::string responseToJson(const PublicRoomsResponse& resp) const;
 
     // Export alias result as JSON.
     std::string aliasResultToJson(const AliasAvailabilityResult& result) const;

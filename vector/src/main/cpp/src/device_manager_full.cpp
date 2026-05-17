@@ -40,10 +40,10 @@ bool DeviceManager::extractBool(const std::string& json, const std::string& key)
 DeviceManager::DeviceManager() {}
 
 // ====== Device List Parsing ======
-// Original: ManagedDevicesListResponse.kt — {"devices":[{"device_id":"...","display_name":"...",...}]}
+// Original: DevicesListResponse.kt — {"devices":[{"device_id":"...","display_name":"...",...}]}
 
-ManagedDevicesListResponse DeviceManager::parseDevicesList(const std::string& json) {
-    ManagedDevicesListResponse resp;
+DevicesListResponse DeviceManager::parseDevicesList(const std::string& json) {
+    DevicesListResponse resp;
 
     size_t pos = json.find("\"devices\"");
     if (pos == std::string::npos) return resp;
@@ -66,7 +66,7 @@ ManagedDevicesListResponse DeviceManager::parseDevicesList(const std::string& js
         }
         std::string devJson = json.substr(objStart, pos - objStart);
 
-        ManagedDeviceInfo dev;
+        DeviceInfo dev;
         dev.userId = extractStr(devJson, "user_id");
         dev.deviceId = extractStr(devJson, "device_id");
         dev.displayName = extractStr(devJson, "display_name");
@@ -87,8 +87,8 @@ ManagedDevicesListResponse DeviceManager::parseDevicesList(const std::string& js
 }
 
 // Original: fetchDeviceInfo(deviceId) — single device
-ManagedDeviceInfo DeviceManager::parseDeviceInfo(const std::string& deviceId, const std::string& json) {
-    ManagedDeviceInfo dev;
+DeviceInfo DeviceManager::parseDeviceInfo(const std::string& deviceId, const std::string& json) {
+    DeviceInfo dev;
     dev.deviceId = deviceId;
     dev.userId = extractStr(json, "user_id");
     dev.displayName = extractStr(json, "display_name");
@@ -100,11 +100,11 @@ ManagedDeviceInfo DeviceManager::parseDeviceInfo(const std::string& deviceId, co
     return dev;
 }
 
-// Original: getCryptoDeviceInfo(userId, deviceId) → ManagedCryptoDeviceInfo
-ManagedCryptoDeviceInfo DeviceManager::parseCryptoDeviceInfo(const std::string& deviceId,
+// Original: getCryptoDeviceInfo(userId, deviceId) → CryptoDeviceInfo
+CryptoDeviceInfo DeviceManager::parseCryptoDeviceInfo(const std::string& deviceId,
                                                        const std::string& userId,
                                                        const std::string& json) {
-    ManagedCryptoDeviceInfo dev;
+    CryptoDeviceInfo dev;
     dev.deviceId = deviceId;
     dev.userId = userId;
     dev.isBlocked = extractBool(json, "blocked");
@@ -298,51 +298,51 @@ bool DeviceManager::satisfiesMinVersion(const std::string& clientVersion, const 
 
 // ====== Sorting & Filtering ======
 
-void DeviceManager::sortDevices(std::vector<ManagedDeviceInfo>& devices, DeviceSortMode mode) const {
+void DeviceManager::sortDevices(std::vector<DeviceInfo>& devices, DeviceSortMode mode) const {
     switch (mode) {
         case DeviceSortMode::BY_NAME:
-            std::sort(devices.begin(), devices.end(), [](const ManagedDeviceInfo& a, const ManagedDeviceInfo& b) {
+            std::sort(devices.begin(), devices.end(), [](const DeviceInfo& a, const DeviceInfo& b) {
                 return a.displayName < b.displayName;
             });
             break;
         case DeviceSortMode::BY_LAST_SEEN:
-            std::sort(devices.begin(), devices.end(), [](const ManagedDeviceInfo& a, const ManagedDeviceInfo& b) {
+            std::sort(devices.begin(), devices.end(), [](const DeviceInfo& a, const DeviceInfo& b) {
                 return a.lastSeenTs > b.lastSeenTs;
             });
             break;
         case DeviceSortMode::BY_TRUST_LEVEL:
-            std::sort(devices.begin(), devices.end(), [](const ManagedDeviceInfo& a, const ManagedDeviceInfo& b) {
+            std::sort(devices.begin(), devices.end(), [](const DeviceInfo& a, const DeviceInfo& b) {
                 return a.displayName < b.displayName; // Just alpha for basic devices
             });
             break;
     }
 }
 
-void DeviceManager::sortCryptoDevices(std::vector<ManagedCryptoDeviceInfo>& devices, DeviceSortMode mode) const {
+void DeviceManager::sortCryptoDevices(std::vector<CryptoDeviceInfo>& devices, DeviceSortMode mode) const {
     switch (mode) {
         case DeviceSortMode::BY_NAME:
-            std::sort(devices.begin(), devices.end(), [](const ManagedCryptoDeviceInfo& a, const ManagedCryptoDeviceInfo& b) {
+            std::sort(devices.begin(), devices.end(), [](const CryptoDeviceInfo& a, const CryptoDeviceInfo& b) {
                 return a.displayName() < b.displayName();
             });
             break;
         case DeviceSortMode::BY_TRUST_LEVEL:
-            std::sort(devices.begin(), devices.end(), [](const ManagedCryptoDeviceInfo& a, const ManagedCryptoDeviceInfo& b) {
+            std::sort(devices.begin(), devices.end(), [](const CryptoDeviceInfo& a, const CryptoDeviceInfo& b) {
                 // Verified first
                 if (a.isVerified() != b.isVerified()) return a.isVerified();
                 return a.displayName() < b.displayName();
             });
             break;
         case DeviceSortMode::BY_LAST_SEEN:
-            std::sort(devices.begin(), devices.end(), [](const ManagedCryptoDeviceInfo& a, const ManagedCryptoDeviceInfo& b) {
+            std::sort(devices.begin(), devices.end(), [](const CryptoDeviceInfo& a, const CryptoDeviceInfo& b) {
                 return a.firstTimeSeenLocalTs > b.firstTimeSeenLocalTs;
             });
             break;
     }
 }
 
-std::vector<ManagedDeviceInfo> DeviceManager::filterDevices(const std::vector<ManagedDeviceInfo>& devices,
+std::vector<DeviceInfo> DeviceManager::filterDevices(const std::vector<DeviceInfo>& devices,
                                                       const DeviceFilter& filter) const {
-    std::vector<ManagedDeviceInfo> result;
+    std::vector<DeviceInfo> result;
     for (const auto& dev : devices) {
         if (filter.inactiveOnly && !isDeviceInactive(dev.lastSeenTs, filter.inactivityDays)) continue;
         result.push_back(dev);
@@ -350,7 +350,7 @@ std::vector<ManagedDeviceInfo> DeviceManager::filterDevices(const std::vector<Ma
 
     // Current device first
     if (filter.currentDeviceFirst && !filter.currentDeviceId.empty()) {
-        std::sort(result.begin(), result.end(), [&](const ManagedDeviceInfo& a, const ManagedDeviceInfo& b) {
+        std::sort(result.begin(), result.end(), [&](const DeviceInfo& a, const DeviceInfo& b) {
             if (a.deviceId == filter.currentDeviceId) return true;
             if (b.deviceId == filter.currentDeviceId) return false;
             return a.deviceId < b.deviceId;
@@ -362,7 +362,7 @@ std::vector<ManagedDeviceInfo> DeviceManager::filterDevices(const std::vector<Ma
 
 // ====== Serialization ======
 
-std::string DeviceManager::deviceToJson(const ManagedDeviceInfo& device) const {
+std::string DeviceManager::deviceToJson(const DeviceInfo& device) const {
     auto esc = [](const std::string& s) -> std::string {
         std::string out;
         for (char c : s) { if (c == '"') out += "\\\""; else out += c; }
@@ -382,7 +382,7 @@ std::string DeviceManager::deviceToJson(const ManagedDeviceInfo& device) const {
     return os.str();
 }
 
-std::string DeviceManager::cryptoDeviceToJson(const ManagedCryptoDeviceInfo& device) const {
+std::string DeviceManager::cryptoDeviceToJson(const CryptoDeviceInfo& device) const {
     auto esc = [](const std::string& s) -> std::string {
         std::string out;
         for (char c : s) { if (c == '"') out += "\\\""; else out += c; }
@@ -406,7 +406,7 @@ std::string DeviceManager::cryptoDeviceToJson(const ManagedCryptoDeviceInfo& dev
     return os.str();
 }
 
-std::string DeviceManager::devicesToJson(const std::vector<ManagedDeviceInfo>& devices) const {
+std::string DeviceManager::devicesToJson(const std::vector<DeviceInfo>& devices) const {
     std::ostringstream os; os << "[";
     for (size_t i = 0; i < devices.size(); i++) {
         if (i > 0) os << ","; os << deviceToJson(devices[i]);
@@ -415,7 +415,7 @@ std::string DeviceManager::devicesToJson(const std::vector<ManagedDeviceInfo>& d
     return os.str();
 }
 
-std::string DeviceManager::cryptoDevicesToJson(const std::vector<ManagedCryptoDeviceInfo>& devices) const {
+std::string DeviceManager::cryptoDevicesToJson(const std::vector<CryptoDeviceInfo>& devices) const {
     std::ostringstream os; os << "[";
     for (size_t i = 0; i < devices.size(); i++) {
         if (i > 0) os << ","; os << cryptoDeviceToJson(devices[i]);

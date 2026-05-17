@@ -12,14 +12,14 @@ namespace progressive {
 // Device Manager — full device management (Element Android port)
 //
 // Based on original Element Android sources:
-//   ManagedDeviceInfo.kt — basic device info (user_id, device_id, display_name,
+//   DeviceInfo.kt — basic device info (user_id, device_id, display_name,
 //     last_seen_ts, last_seen_ip, last_seen_user_agent)
-//   ManagedCryptoDeviceInfo.kt — crypto device (algorithms, keys, signatures,
+//   CryptoDeviceInfo.kt — crypto device (algorithms, keys, signatures,
 //     trustLevel, fingerprint/identityKey extraction)
 //   DeviceTrustLevel.kt — crossSigningVerified + locallyVerified
 //   CryptoService.kt — fetchDevicesList, getMyDevicesInfo,
 //     setDeviceName, deleteDevice, getUserDevices, getCryptoDeviceInfo
-//   ManagedDevicesListResponse.kt — /devices API response
+//   DevicesListResponse.kt — /devices API response
 //
 // Covers:
 //   1. Device list fetching/parsing (/devices API)
@@ -48,73 +48,18 @@ struct DeviceTrustLevel {
 };
 
 // ---- Device Info ----
-// Original: ManagedDeviceInfo.kt (userId, deviceId, displayName, lastSeenTs,
+// Original: DeviceInfo.kt (userId, deviceId, displayName, lastSeenTs,
 //   lastSeenIp, lastSeenUserAgent, unstableLastSeenUserAgent)
 
-struct ManagedDeviceInfo {
-    std::string userId;              // @alice:example.org
-    std::string deviceId;            // ABCDEFGHIJ
-    std::string displayName;         // "Alice's Phone"
-    int64_t lastSeenTs = 0;         // Epoch millis
-    std::string lastSeenIp;          // "192.168.1.1"
-    std::string lastSeenUserAgent;   // Browser/OS info
-    bool valid = false;
-
-    // Original: getBestLastSeenUserAgent()
-    std::string getBestLastSeenUserAgent() const {
-        return lastSeenUserAgent;
-    }
-
-    // Original: DatedObject.date
-    int64_t date() const { return lastSeenTs; }
-};
 
 // ---- Crypto Device Info ----
-// Original: ManagedCryptoDeviceInfo.kt (deviceId, userId, algorithms, keys,
+// Original: CryptoDeviceInfo.kt (deviceId, userId, algorithms, keys,
 //   signatures, unsigned, trustLevel, isBlocked, firstTimeSeenLocalTs)
 
-struct ManagedCryptoDeviceInfo {
-    std::string deviceId;
-    std::string userId;
-    std::vector<std::string> algorithms;
-    std::unordered_map<std::string, std::string> keys;           // "ed25519:DEV" → key
-    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> signatures;
-    std::string unsignedDisplayName;     // unsigned.deviceDisplayName
-    DeviceTrustLevel trustLevel;
-    bool isBlocked = false;
-    int64_t firstTimeSeenLocalTs = 0;
-    bool valid = false;
-
-    // Original: fingerprint()
-    std::string fingerprint() const {
-        if (deviceId.empty()) return "";
-        auto it = keys.find("ed25519:" + deviceId);
-        return (it != keys.end()) ? it->second : "";
-    }
-
-    // Original: identityKey()
-    std::string identityKey() const {
-        if (deviceId.empty()) return "";
-        auto it = keys.find("curve25519:" + deviceId);
-        return (it != keys.end()) ? it->second : "";
-    }
-
-    // Original: displayName()
-    std::string displayName() const { return unsignedDisplayName; }
-
-    // Original: isVerified / isCrossSigningVerified / isUnknown
-    bool isVerified() const { return trustLevel.isVerified(); }
-    bool isCrossSigningVerified() const { return trustLevel.isCrossSigningVerified(); }
-    bool isUnknown() const { return trustLevel.isUnknown(); }
-};
 
 // ---- Devices List Response ----
-// Original: ManagedDevicesListResponse (devices: List<ManagedDeviceInfo>)
+// Original: DevicesListResponse (devices: List<DeviceInfo>)
 
-struct ManagedDevicesListResponse {
-    std::vector<ManagedDeviceInfo> devices;
-    int totalCount = 0;
-};
 
 // ---- Device Deletion Request ----
 
@@ -161,16 +106,16 @@ public:
     // ====== Device List ======
 
     // Parse /devices API response.
-    // Original: CryptoService.fetchDevicesList() → ManagedDevicesListResponse
-    ManagedDevicesListResponse parseDevicesList(const std::string& json);
+    // Original: CryptoService.fetchDevicesList() → DevicesListResponse
+    DevicesListResponse parseDevicesList(const std::string& json);
 
     // Parse a single device info from JSON.
-    // Original: CryptoService.fetchDeviceInfo(deviceId) → ManagedDeviceInfo
-    ManagedDeviceInfo parseDeviceInfo(const std::string& deviceId, const std::string& json);
+    // Original: CryptoService.fetchDeviceInfo(deviceId) → DeviceInfo
+    DeviceInfo parseDeviceInfo(const std::string& deviceId, const std::string& json);
 
     // Parse crypto device info from JSON.
-    // Original: getCryptoDeviceInfo(userId, deviceId) → ManagedCryptoDeviceInfo
-    ManagedCryptoDeviceInfo parseCryptoDeviceInfo(const std::string& deviceId, const std::string& userId, const std::string& json);
+    // Original: getCryptoDeviceInfo(userId, deviceId) → CryptoDeviceInfo
+    CryptoDeviceInfo parseCryptoDeviceInfo(const std::string& deviceId, const std::string& userId, const std::string& json);
 
     // ====== Device Rename ======
 
@@ -226,24 +171,24 @@ public:
     // ====== Sorting & Filtering ======
 
     // Sort device list.
-    void sortDevices(std::vector<ManagedDeviceInfo>& devices, DeviceSortMode mode) const;
-    void sortCryptoDevices(std::vector<ManagedCryptoDeviceInfo>& devices, DeviceSortMode mode) const;
+    void sortDevices(std::vector<DeviceInfo>& devices, DeviceSortMode mode) const;
+    void sortCryptoDevices(std::vector<CryptoDeviceInfo>& devices, DeviceSortMode mode) const;
 
     // Filter device list.
-    std::vector<ManagedDeviceInfo> filterDevices(const std::vector<ManagedDeviceInfo>& devices,
+    std::vector<DeviceInfo> filterDevices(const std::vector<DeviceInfo>& devices,
                                            const DeviceFilter& filter) const;
 
     // ====== Serialization ======
 
     // Export device info as JSON.
-    std::string deviceToJson(const ManagedDeviceInfo& device) const;
+    std::string deviceToJson(const DeviceInfo& device) const;
 
     // Export crypto device info as JSON.
-    std::string cryptoDeviceToJson(const ManagedCryptoDeviceInfo& device) const;
+    std::string cryptoDeviceToJson(const CryptoDeviceInfo& device) const;
 
     // Export device list as JSON array.
-    std::string devicesToJson(const std::vector<ManagedDeviceInfo>& devices) const;
-    std::string cryptoDevicesToJson(const std::vector<ManagedCryptoDeviceInfo>& devices) const;
+    std::string devicesToJson(const std::vector<DeviceInfo>& devices) const;
+    std::string cryptoDevicesToJson(const std::vector<CryptoDeviceInfo>& devices) const;
 
     // Export device trust level as JSON.
     std::string trustLevelToJson(const DeviceTrustLevel& level) const;

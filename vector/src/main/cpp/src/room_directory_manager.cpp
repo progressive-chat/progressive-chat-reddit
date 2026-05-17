@@ -50,9 +50,9 @@ bool RoomDirectoryManager::extractBool(const std::string& json, const std::strin
 RoomDirectoryManager::RoomDirectoryManager() {}
 
 // ====== Public Rooms Search ======
-// Original: getPublicRooms(server, PublicRoomsParamsEntry)
+// Original: getPublicRooms(server, PublicRoomsParams)
 
-std::string RoomDirectoryManager::buildPublicRoomsRequest(const PublicRoomsParamsEntry& params) const {
+std::string RoomDirectoryManager::buildPublicRoomsRequest(const PublicRoomsParams& params) const {
     std::ostringstream os;
     os << R"({"limit":)" << params.limit;
 
@@ -76,9 +76,9 @@ std::string RoomDirectoryManager::buildPublicRoomsRequest(const PublicRoomsParam
     return os.str();
 }
 
-// Original: PublicRoomsResponseEntry — {"chunk":[{...}],"next_batch":"...","prev_batch":"...","total_room_count_estimate":42}
-PublicRoomsResponseEntry RoomDirectoryManager::parsePublicRoomsResponse(const std::string& json) const {
-    PublicRoomsResponseEntry resp;
+// Original: PublicRoomsResponse — {"chunk":[{...}],"next_batch":"...","prev_batch":"...","total_room_count_estimate":42}
+PublicRoomsResponse RoomDirectoryManager::parsePublicRoomsResponse(const std::string& json) const {
+    PublicRoomsResponse resp;
 
     resp.nextBatch = extractStr(json, "next_batch");
     resp.prevBatch = extractStr(json, "prev_batch");
@@ -147,7 +147,7 @@ PublicRoomsResponseEntry RoomDirectoryManager::parsePublicRoomsResponse(const st
     return resp;
 }
 
-void RoomDirectoryManager::accumulateResults(PublicRoomsResponseEntry& existing, const PublicRoomsResponseEntry& nextPage) const {
+void RoomDirectoryManager::accumulateResults(PublicRoomsResponse& existing, const PublicRoomsResponse& nextPage) const {
     existing.chunk.insert(existing.chunk.end(), nextPage.chunk.begin(), nextPage.chunk.end());
     existing.nextBatch = nextPage.nextBatch;
     existing.prevBatch = nextPage.prevBatch;
@@ -307,7 +307,7 @@ std::string RoomDirectoryManager::roomsToJson(const std::vector<PublicRoom>& roo
     return os.str();
 }
 
-std::string RoomDirectoryManager::responseToJson(const PublicRoomsResponseEntry& resp) const {
+std::string RoomDirectoryManager::responseToJson(const PublicRoomsResponse& resp) const {
     std::ostringstream os;
     os << R"({"rooms":)" << roomsToJson(resp.chunk)
        << R"(,"next_batch":")" << resp.nextBatch
