@@ -358,15 +358,15 @@ static void test_is_poll_ended() {
 
 // ==== Event classifier ====
 static void test_classify_event_message() {
-    auto type = progressive::classifyEvent("m.room.message", "m.text");
-    auto desc = progressive::getEventTypeDescription(type);
+    auto type = progressive::__classifyEvent_disabled("m.room.message", "m.text");
+    auto desc = progressive::__getEventTypeDescription_disabled(type);
     ASSERT_TRUE(!desc.empty());
 }
 
 // ==== Edit history ====
 static void test_get_edit_badge_text() {
-    ASSERT_STREQ(progressive::getEditBadgeText(0), "");
-    ASSERT_TRUE(progressive::getEditBadgeText(3).find("3") != std::string::npos);
+    ASSERT_STREQ(progressive::formatBadgeText(0), "");
+    ASSERT_TRUE(progressive::formatBadgeText(3).find("3") != std::string::npos);
 }
 
 // ==== Room counter ====
@@ -395,8 +395,8 @@ static void test_build_room_permalink() {
 
 // ==== Well-known discovery ====
 static void test_needs_well_known_discovery() {
-    ASSERT_TRUE(progressive::needsWellKnownDiscovery("https://matrix.org"));
-    ASSERT_FALSE(progressive::needsWellKnownDiscovery("https://matrix-client.matrix.org"));
+    ASSERT_TRUE(progressive::needsWellKnownLookup("https://matrix.org"));
+    ASSERT_FALSE(progressive::needsWellKnownLookup("https://matrix-client.matrix.org"));
 }
 
 // ==== Olm account (identity keys) ====
