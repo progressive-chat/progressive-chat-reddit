@@ -60,6 +60,10 @@ import javax.inject.Inject
 
 internal class RoomSummaryDataSource @Inject constructor(
         @SessionDatabase private val monarchy: Monarchy,
+        private val roomSummaryMapper: RoomSummaryMapper,
+        private val localRoomSummaryMapper: LocalRoomSummaryMapper,
+        private val queryStringValueProcessor: QueryStringValueProcessor,
+)
 ) {
 
     companion object {
