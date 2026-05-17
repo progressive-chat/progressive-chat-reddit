@@ -3768,17 +3768,6 @@ JNI_FUNC(jstring, nativeSearchRoomList)(JNIEnv* env, jclass, jstring jRoomsJson,
     return env->NewStringUTF(os.str().c_str());
 }
     // Format: "Alice, Bob and 3 others online"
-    auto readId = jStr(env, jReadReceiptId);
-
-    auto result = progressive::computeThreadUnreadCount(eventIds, readId, highlightIds);
-    std::ostringstream os;
-    os << R"({"total":)" << result.totalReplies
-       << R"(,"unread":)" << result.unreadReplies
-       << R"(,"highlight":)" << result.highlightReplies
-       << R"(,"has_unread":)" << (result.hasUnread ? "true" : "false") << "}";
-    return env->NewStringUTF(os.str().c_str());
-}
-
 // --- Event Classifier ---
 
 JNI_FUNC(jboolean, nativeIsStateEvent)(JNIEnv* env, jclass, jstring jEventType) {
