@@ -31,14 +31,10 @@ namespace progressive {
 // Original: RoomHistoryVisibility.kt (WORLD_READABLE, SHARED, INVITED, JOINED)
 
 
-const char* historyVisibilityToString(RoomHistoryVisibility v);
-RoomHistoryVisibility historyVisibilityFromString(const std::string& s);
 
 // ---- Room Join Rules ----
 
 
-const char* joinRuleToString(RoomJoinRules rule);
-RoomJoinRules joinRuleFromString(const std::string& s);
 
 // ---- Membership State (for visibility checks) ----
 
@@ -51,36 +47,27 @@ RoomJoinRules joinRuleFromString(const std::string& s);
 
 // Check if history can be shared with new members.
 // Per MSC3061: only WORLD_READABLE and SHARED allow sharing.
-bool shouldShareHistory(RoomHistoryVisibility visibility);
 
 // Check if a member can see an event based on history_visibility.
 // Takes: history visibility, member's state when event was sent, member's current state.
-bool canSeeEvent(RoomHistoryVisibility visibility, Membership memberStateAtEventTime,
                   Membership memberCurrentState);
 
 // Check if a non-member can see events.
-bool canNonMemberSeeEvents(RoomHistoryVisibility visibility);
 
 // Get the effective visibility for a given membership.
-std::string getVisibilityLabel(RoomHistoryVisibility visibility);
 
 // Get a human-readable description of what the visibility means.
-std::string getVisibilityDescription(RoomHistoryVisibility visibility);
 
 // ---- Room State Builder ----
 // Original: Build m.room.history_visibility state event content
 
 // Build history_visibility state event content.
-std::string buildHistoryVisibilityContent(RoomHistoryVisibility visibility);
 
 // Build join_rules state event content.
-std::string buildJoinRulesContent(RoomJoinRules rule);
 
 // Parse history visibility from state event content.
-RoomHistoryVisibility parseHistoryVisibility(const std::string& contentJson);
 
 // Parse join rules from state event content.
-RoomJoinRules parseJoinRules(const std::string& contentJson);
 
 // ---- Room State Manager ----
 
