@@ -3477,7 +3477,7 @@ object ProgressiveNative {
         """{"user_id":"$userId","presence":"offline","last_active_ago_ms":0}"""
 
     // --- Matrix Error fallback ---
-    @JvmStatic fun nativeGetRetryAfterMsFallback(errorJson: String): Long = 3000L
+    @JvmStatic fun nativeGetRetryAfterMsFallback(_errorJson: String): Long = 3000L
 
     // --- OpenID Token fallback ---
     @JvmStatic fun nativeParseOpenIdTokenFallback(json: String): String = "{}"
@@ -4665,7 +4665,7 @@ object ProgressiveNative {
         val admin = Regex(""""admin_contact":"([^"]+)"""").find(errorJson)?.groupValues?.getOrNull(1) ?: ""
         return """{"type":"$code","body":"$msg","is_resource_limit":$code=="M_RESOURCE_LIMIT_EXCEEDED","is_consent":$code=="M_CONSENT_NOT_GIVEN","is_rate_limit":$code=="M_LIMIT_EXCEEDED","limit_type":"unknown","admin_contact":"$admin","consent_uri":"","retry_after_ms":0,"banner_color":"#2196F3"}"""
     }
-    @JvmStatic fun nativeServerNoticeFormatLimitFallback(errorJson: String, mode: Int): String =
+    @JvmStatic fun nativeServerNoticeFormatLimitFallback(_errorJson: String, mode: Int): String =
         if (mode == 1) "This homeserver has exceeded a resource limit. Please contact your service administrator."
         else "This homeserver is approaching a resource limit."
     @JvmStatic fun nativeServerNoticeGetDescriptionFallback(errorCode: String): String = when(errorCode) {
