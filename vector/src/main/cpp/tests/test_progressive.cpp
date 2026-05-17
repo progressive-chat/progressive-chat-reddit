@@ -358,8 +358,8 @@ static void test_is_poll_ended() {
 
 // ==== Event classifier ====
 static void test_classify_event_message() {
-    auto type = progressive::__classifyEvent_disabled("m.room.message", "m.text");
-    auto desc = progressive::__getEventTypeDescription_disabled(type);
+    auto type = progressive::classifyEvent("m.room.message", "m.text");
+    auto desc = progressive::getEventTypeDescription(type);
     ASSERT_TRUE(!desc.empty());
 }
 
@@ -445,14 +445,14 @@ static void test_compute_device_fingerprint() {
 
 // ==== Membership formatting ====
 static void test_format_membership_join() {
-    auto result = progressive::formatMembership(progressive::Membership::Join);
+    auto result = progressive::formatMemberState(progressive::MemberState::Join);
     ASSERT_TRUE(!result.empty());
 }
 
 static void test_is_active_member() {
-    ASSERT_TRUE(progressive::isActiveMember(progressive::Membership::Join));
-    ASSERT_FALSE(progressive::isActiveMember(progressive::Membership::Leave));
-    ASSERT_FALSE(progressive::isActiveMember(progressive::Membership::Ban));
+    ASSERT_TRUE(progressive::isActiveMember(progressive::MemberState::Join));
+    ASSERT_FALSE(progressive::isActiveMember(progressive::MemberState::Leave));
+    ASSERT_FALSE(progressive::isActiveMember(progressive::MemberState::Ban));
 }
 
 // ==== URL parsing ====
@@ -2118,9 +2118,9 @@ static void test_room_visibility_should_share() {
 
 static void test_room_visibility_can_see() {
     ASSERT_TRUE(progressive::canSeeEvent(progressive::RoomHistoryVisibility::WORLD_READABLE,
-        progressive::MembershipState::NONE, progressive::MembershipState::NONE));
+        progressive::MemberStateState::NONE, progressive::MemberStateState::NONE));
     ASSERT_FALSE(progressive::canSeeEvent(progressive::RoomHistoryVisibility::JOINED,
-        progressive::MembershipState::LEAVE, progressive::MembershipState::NONE));
+        progressive::MemberStateState::LEAVE, progressive::MemberStateState::NONE));
 }
 
 static void test_room_visibility_join_rules() {
