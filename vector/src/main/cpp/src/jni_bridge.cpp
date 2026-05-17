@@ -3474,43 +3474,6 @@ JNI_FUNC(jstring, nativeCanonicalizeJson)(JNIEnv* env, jclass, jstring jJson) {
     auto result = progressive::canonicalizeJson(jStr(env, jJson));
     return env->NewStringUTF(result.c_str());
 }
-
-// --- Chunked Uploader ---
-static progressive::ChunkedUploader g_uploader;
-
-JNI_FUNC(void, nativeUploaderSetChunkSizeMb)(JNIEnv* env, jclass, jint jMb) {
-    g_uploader.setChunkSizeMb(jMb);
-}
-
-JNI_FUNC(jint, nativeUploaderComputeChunks)(JNIEnv* env, jclass, jlong jFileSize) {
-    return g_uploader.computeChunks(jFileSize);
-}
-
-JNI_FUNC(jstring, nativeUploaderGetChunkInfo)(JNIEnv* env, jclass, jint jIndex) {
-    auto chunk = g_uploader.getChunkInfo(jIndex);
-    std::ostringstream os;
-    os << R"({"offset":)" << chunk.offset
-       << R"(,"size":)" << chunk.chunkSize
-       << R"(,"total_size":)" << chunk.totalSize
-       << R"(,"index":)" << chunk.chunkIndex
-       << R"(,"total":)" << chunk.totalChunks
-       << R"(,"is_last":)" << (chunk.isLast ? "true" : "false") << "}";
-    return env->NewStringUTF(os.str().c_str());
-}
-
-JNI_FUNC(jstring, nativeUploaderContentRange)(JNIEnv* env, jclass, jint jIndex) {
-    auto chunk = g_uploader.getChunkInfo(jIndex);
-    auto result = progressive::ChunkedUploader::formatContentRange(chunk);
-    return env->NewStringUTF(result.c_str());
-}
-
-JNI_FUNC(void, nativeUploaderAdvance)(JNIEnv*, jclass) { g_uploader.advanceChunk(); }
-JNI_FUNC(void, nativeUploaderCancel)(JNIEnv*, jclass) { g_uploader.cancel(); }
-JNI_FUNC(void, nativeUploaderReset)(JNIEnv*, jclass) { g_uploader.reset(); }
-
-JNI_FUNC(jstring, nativeUploaderProgress)(JNIEnv* env, jclass) {
-    auto p = g_uploader.progress();
-    std::ostringstream os;
     os << R"({"uploaded":)" << p.bytesUploaded
        << R"(,"total":)" << p.totalBytes
        << R"(,"chunks":)" << p.chunksCompleted
@@ -3814,18 +3777,6 @@ JNI_FUNC(jstring, nativeComputePollResults)(JNIEnv* env, jclass, jstring jPollJs
     auto json = jStr(env, jPollJson);
     progressive::PollResult result;
     // ... (implementation in previous commit)
-    auto qPos = json.find("\"question\"");
-    if (qPos != std::string::npos) {
-        qPos = json.find('"', qPos + 10);
-        if (qPos != std::string::npos) {
-            qPos++; size_t e = qPos;
-            while (e < json.size() && json[e] != '"') e++;
-            result.question = json.substr(qPos, e - qPos);
-        }
-    }
-    result.isEnded = jExtractBool(json, "closed");
-    auto optsPos = json.find("\"options\"");
-    if (optsPos != std::string::npos) {
         optsPos = json.find('[', optsPos);
         if (optsPos != std::string::npos) {
             optsPos++;
