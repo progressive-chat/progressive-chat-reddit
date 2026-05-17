@@ -38,6 +38,7 @@
 #include "progressive/canonical_json.hpp"
 #include "progressive/event_encryption.hpp"
 #include "progressive/chunked_upload.hpp"
+#include "progressive/audio_engine.hpp"
 #include <cstring>
 
 // ==== SHA-256 verification (E2EE foundation) ====
@@ -774,7 +775,7 @@ static void test_widget_manager_create() {
     ASSERT_STREQ(error.c_str(), "");
     ASSERT_EQ(mgr.widgetCount(), 1);
 
-    progressive::WidgetInfo w;
+    progressive::WidgetEntry w;
     ASSERT_TRUE(mgr.getWidget("widget_1", w));
     ASSERT_STREQ(w.widgetId.c_str(), "widget_1");
     ASSERT_STREQ(w.name.c_str(), "Test Widget");
@@ -813,7 +814,7 @@ static void test_widget_manager_minimized() {
     std::string error;
     mgr.createWidget("widget_1", "m.jitsi", "https://safe.example.org/w", "Jitsi", false, error);
 
-    progressive::WidgetInfo w;
+    progressive::WidgetEntry w;
     mgr.getWidget("widget_1", w);
     ASSERT_FALSE(w.isMinimized);
 
