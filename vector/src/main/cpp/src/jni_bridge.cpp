@@ -1745,7 +1745,7 @@ JNI_FUNC(jstring, nativeParseWellKnown)(JNIEnv* env, jclass, jstring jJson) {
     std::ostringstream os;
     os << R"({"homeserver_url":")" << result.baseUrl
        << R"(","identity_server":")" << result.idServer
-       << R"(","valid":)" << (result.valid ? "true" : "false") << "}";
+       << R"(","valid":)" << (!result.baseUrl.empty() ? "true" : "false") << "}";
     return env->NewStringUTF(os.str().c_str());
 }
 
@@ -3747,19 +3747,6 @@ JNI_FUNC(jstring, nativeSearchRoomList)(JNIEnv* env, jclass, jstring jRoomsJson,
     return env->NewStringUTF(os.str().c_str());
 }
     };
-    auto eventIds = parseStrArray(jStr(env, jEventIdsJson));
-    auto highlightIds = parseStrArray(jStr(env, jHighlightIdsJson));
-    auto readId = jStr(env, jReadReceiptId);
-
-    auto result = progressive::computeThreadUnreadCount(eventIds, readId, highlightIds);
-    std::ostringstream os;
-    os << R"({"total":)" << result.totalReplies
-       << R"(,"unread":)" << result.unreadReplies
-       << R"(,"highlight":)" << result.highlightReplies
-       << R"(,"has_unread":)" << (result.hasUnread ? "true" : "false") << "}";
-    return env->NewStringUTF(os.str().c_str());
-}
-
 // --- Event Classifier ---
 
         if (qPos != std::string::npos) {
