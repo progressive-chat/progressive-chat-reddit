@@ -5606,7 +5606,8 @@ JNI_FUNC(jboolean, nativeDraftHasDraft)(JNIEnv* env, jclass, jstring jRoomId) {
     return getDraftMgr()->hasDraft(jStr(env, jRoomId)) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jboolean, nativeDraftAutoSave)(JNIEnv* env, jclass, jstring jRoomId, jstring jText) {
-    return getDraftMgr()->autoSaveIfQualified(jStr(env, jRoomId), jStr(env, jText)) ? JNI_TRUE : JNI_FALSE;
+    getDraftMgr()->autoSaveIfQualified(jStr(env, jRoomId), jStr(env, jText));
+    return JNI_TRUE;
 }
 JNI_FUNC(jstring, nativeDraftStripPrefix)(JNIEnv* env, jclass, jstring jText) {
     return env->NewStringUTF(getDraftMgr()->stripDraftPrefix(jStr(env, jText)).c_str());
@@ -5621,7 +5622,7 @@ JNI_FUNC(jstring, nativeRoomStateParseJoinRules)(JNIEnv* env, jclass, jstring jC
 }
 JNI_FUNC(jboolean, nativeRoomStateShouldShare)(JNIEnv* env, jclass, jstring jContent) {
     auto vis = progressive::parseRoomHistoryVisibilityContent(jStr(env, jContent));
-    return progressive::shouldShareHistory(vis) ? JNI_TRUE : JNI_FALSE;
+    return progressive::canShareHistory(progressive::roomHistoryVisibilityToString(vis.historyVisibility)) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jboolean, nativeRoomStateIsPublic)(JNIEnv* env, jclass, jstring jRoomId) {
     return getRoomStateMgr()->isPublicRoom(jStr(env, jRoomId)) ? JNI_TRUE : JNI_FALSE;
@@ -5630,7 +5631,7 @@ JNI_FUNC(jboolean, nativeRoomStateIsInviteOnly)(JNIEnv* env, jclass, jstring jRo
     return getRoomStateMgr()->isInviteOnly(jStr(env, jRoomId)) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(void, nativeRoomStateSetVisibility)(JNIEnv* env, jclass, jstring jRoomId, jint jVis) {
-    getRoomStateMgr()->setHistoryVisibility(jStr(env, jRoomId), static_cast<progressive::RoomHistoryVisibility>(jVis));
+    getRoomStateMgr()->setHistoryVisibility(jStr(env, jRoomId), static_cast<progressive::RSM_RoomHistoryVisibility>(static_cast<int>(static_cast<progressive::RoomHistoryVisibility>(jVis))));
 }
 JNI_FUNC(void, nativeRoomStateSetJoinRule)(JNIEnv* env, jclass, jstring jRoomId, jint jRule) {
     getRoomStateMgr()->setJoinRule(jStr(env, jRoomId), static_cast<progressive::RoomJoinRule>(jRule));
