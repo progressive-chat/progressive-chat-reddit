@@ -185,6 +185,7 @@
 #include "progressive/identity_server_manager.hpp"
 #include "progressive/device_manager_full.hpp"
 #include "progressive/offline_cache.hpp"
+#include "progressive/oidc_manager.hpp"
 #include "progressive/pin_manager.hpp"
 #include "progressive/widget_manager.hpp"
 #include "progressive/text_undo_manager.hpp"
@@ -1170,7 +1171,7 @@ JNI_FUNC(jstring, nativeAddBreadcrumb)(JNIEnv* env, jclass, jstring jJson, jstri
     auto result = progressive::addBreadcrumb(jStr(env, jJson), jStr(env, jRoom));
     return env->NewStringUTF(result.c_str());
 }
-JNI_FUNC(jboolean, nativeIsValidUserId)(JNIEnv*, jclass, jstring jId) {
+JNI_FUNC(jboolean, nativeIsValidUserId)(JNIEnv* env, jclass, jstring jId) {
     return progressive::isValidUserId(jStr(nullptr, jId));
 }
 JNI_FUNC(jstring, nativeServerNameFromMxid)(JNIEnv* env, jclass, jstring jMxid) {
@@ -1334,7 +1335,7 @@ JNI_FUNC(jboolean, nativeDbOpen)(JNIEnv* env, jclass, jstring jPath) {
     return g_eventDb.open(jStr(env, jPath)) ? JNI_TRUE : JNI_FALSE;
 }
 
-JNI_FUNC(void, nativeDbClose)(JNIEnv*, jclass) {
+JNI_FUNC(void, nativeDbClose)(JNIEnv* env, jclass) {
     g_eventDb.close();
 }
 
@@ -1369,7 +1370,7 @@ JNI_FUNC(void, nativeDbClearRoom)(JNIEnv* env, jclass, jstring jRoomId) {
     g_eventDb.clearRoom(jStr(env, jRoomId));
 }
 
-JNI_FUNC(jint, nativeDbCount)(JNIEnv*, jclass) {
+JNI_FUNC(jint, nativeDbCount)(JNIEnv* env, jclass) {
     return g_eventDb.count();
 }
 
@@ -2768,7 +2769,7 @@ JNI_FUNC(jstring, nativeMegolmDecrypt)(JNIEnv* env, jclass, jstring jRoom, jstri
     return env->NewStringUTF(result.c_str());
 }
 
-JNI_FUNC(jint, nativeMegolmSessionCount)(JNIEnv*, jclass) {
+JNI_FUNC(jint, nativeMegolmSessionCount)(JNIEnv* env, jclass) {
     return g_megolmManager.sessionCount();
 }
 
@@ -3111,12 +3112,12 @@ JNI_FUNC(jstring, nativeBackupProgressJson)(JNIEnv* env, jclass) {
 JNI_FUNC(void, nativeBackupSetTotalKeys)(JNIEnv* env, jclass, jint jCount) {
     getBackupMgr()->setTotalKeys(jCount);
 }
-JNI_FUNC(void, nativeBackupAdvanceUploaded)(JNIEnv*, jclass) { getBackupMgr()->advanceUploaded(1); }
-JNI_FUNC(void, nativeBackupAdvanceDownloaded)(JNIEnv*, jclass) { getBackupMgr()->advanceDownloaded(1); }
-JNI_FUNC(void, nativeBackupAdvanceDecrypted)(JNIEnv*, jclass) { getBackupMgr()->advanceDecrypted(1); }
-JNI_FUNC(void, nativeBackupAdvanceImported)(JNIEnv*, jclass) { getBackupMgr()->advanceImported(1); }
-JNI_FUNC(void, nativeBackupMarkComplete)(JNIEnv*, jclass) { getBackupMgr()->markComplete(); }
-JNI_FUNC(void, nativeBackupReset)(JNIEnv*, jclass) { g_backupMgr.reset(new progressive::KeyBackupManager()); }
+JNI_FUNC(void, nativeBackupAdvanceUploaded)(JNIEnv* env, jclass) { getBackupMgr()->advanceUploaded(1); }
+JNI_FUNC(void, nativeBackupAdvanceDownloaded)(JNIEnv* env, jclass) { getBackupMgr()->advanceDownloaded(1); }
+JNI_FUNC(void, nativeBackupAdvanceDecrypted)(JNIEnv* env, jclass) { getBackupMgr()->advanceDecrypted(1); }
+JNI_FUNC(void, nativeBackupAdvanceImported)(JNIEnv* env, jclass) { getBackupMgr()->advanceImported(1); }
+JNI_FUNC(void, nativeBackupMarkComplete)(JNIEnv* env, jclass) { getBackupMgr()->markComplete(); }
+JNI_FUNC(void, nativeBackupReset)(JNIEnv* env, jclass) { g_backupMgr.reset(new progressive::KeyBackupManager()); }
 JNI_FUNC(jstring, nativeExtractHtmlTitle)(JNIEnv* env, jclass, jstring jHtml) {
     auto result = progressive::extractHtmlTitle(jStr(env, jHtml));
     return env->NewStringUTF(result.c_str());
@@ -3746,9 +3747,9 @@ JNI_FUNC(jstring, nativeUploaderContentRange)(JNIEnv* env, jclass, jint jIndex) 
     auto result = progressive::ChunkedUploader::formatContentRange(chunk);
     return env->NewStringUTF(result.c_str());
 }
-JNI_FUNC(void, nativeUploaderAdvance)(JNIEnv*, jclass) { g_uploader.advanceChunk(); }
-JNI_FUNC(void, nativeUploaderCancel)(JNIEnv*, jclass) { g_uploader.cancel(); }
-JNI_FUNC(void, nativeUploaderReset)(JNIEnv*, jclass) { g_uploader.reset(); }
+JNI_FUNC(void, nativeUploaderAdvance)(JNIEnv* env, jclass) { g_uploader.advanceChunk(); }
+JNI_FUNC(void, nativeUploaderCancel)(JNIEnv* env, jclass) { g_uploader.cancel(); }
+JNI_FUNC(void, nativeUploaderReset)(JNIEnv* env, jclass) { g_uploader.reset(); }
 JNI_FUNC(jstring, nativeUploaderProgress)(JNIEnv* env, jclass) {
     auto p = g_uploader.progress();
     std::ostringstream os;
@@ -4345,7 +4346,7 @@ JNI_FUNC(jstring, nativeSignEvent)(JNIEnv* env, jclass, jstring jEventJson) {
 JNI_FUNC(jboolean, nativeVerifyEventSignature)(JNIEnv* env, jclass, jstring jEventJson, jstring jSignKeyB64) {
     return progressive::verifyEventSignature(jStr(env, jEventJson), jStr(env, jSignKeyB64)) ? JNI_TRUE : JNI_FALSE;
 }
-JNI_FUNC(void, nativeSasDestroy)(JNIEnv*, jclass) {
+JNI_FUNC(void, nativeSasDestroy)(JNIEnv* env, jclass) {
     progressive::sasDestroy(g_sas);
 }
 JNI_FUNC(jstring, nativeParseJsonStringValue)(JNIEnv* env, jclass, jstring jJson, jstring jKey) {
@@ -4579,7 +4580,7 @@ JNI_FUNC(jstring, nativeBase58Encode)(JNIEnv* env, jclass, jbyteArray jData) {
     auto r = progressive::base58Encode(input);
     return env->NewStringUTF(r.c_str());
 }
-JNI_FUNC(jboolean, nativeTlsBridgeAvailable)(JNIEnv*, jclass) {
+JNI_FUNC(jboolean, nativeTlsBridgeAvailable)(JNIEnv* env, jclass) {
     return progressive::tlsBridgeAvailable() ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jstring, nativeCreateRoomPresetToString)(JNIEnv* env, jclass, jint jPreset) {
@@ -4639,7 +4640,7 @@ JNI_FUNC(jstring, nativeLiveLocationFormatGeoUri)(JNIEnv* env, jclass, jdouble j
     auto r = progressive::formatGeoUri(c);
     return env->NewStringUTF(r.c_str());
 }
-JNI_FUNC(jdouble, nativeLiveLocationDistance)(JNIEnv*, jclass, jdouble jLat1, jdouble jLon1, jdouble jLat2, jdouble jLon2) {
+JNI_FUNC(jdouble, nativeLiveLocationDistance)(JNIEnv* env, jclass, jdouble jLat1, jdouble jLon1, jdouble jLat2, jdouble jLon2) {
     // Use inline haversine via the manager's clustering (static utility)
     progressive::GeoCoordinate a; a.latitude = jLat1; a.longitude = jLon1;
     progressive::GeoCoordinate b; b.latitude = jLat2; b.longitude = jLon2;
@@ -4800,7 +4801,7 @@ JNI_FUNC(void, nativeCallSetMuted)(JNIEnv* env, jclass, jstring jCallId, jboolea
 JNI_FUNC(void, nativeCallSetVideo)(JNIEnv* env, jclass, jstring jCallId, jboolean jOn) {
     getCallMgr()->setVideoEnabled(jStr(env, jCallId), jOn);
 }
-JNI_FUNC(void, nativeCallReset)(JNIEnv*, jclass) {
+JNI_FUNC(void, nativeCallReset)(JNIEnv* env, jclass) {
     g_callMgr.reset(new progressive::CallManager());
 }
 JNI_FUNC(jboolean, nativeThreadIsRoot)(JNIEnv* env, jclass, jstring jContent, jstring jEventId) {
@@ -4842,7 +4843,7 @@ JNI_FUNC(jstring, nativeThreadGetUnreadState)(JNIEnv* env, jclass, jstring jThre
     auto state = getThreadMgr()->getUnreadState(jStr(env, jThreadId));
     return env->NewStringUTF(getThreadMgr()->unreadStateToJson(state).c_str());
 }
-JNI_FUNC(jint, nativeThreadTotalUnread)(JNIEnv*, jclass) {
+JNI_FUNC(jint, nativeThreadTotalUnread)(JNIEnv* env, jclass) {
     return getThreadMgr()->getTotalUnreadCount();
 }
 JNI_FUNC(jstring, nativeThreadFormatCount)(JNIEnv* env, jclass, jint jCount) {
@@ -4858,7 +4859,7 @@ JNI_FUNC(jstring, nativeThreadGetNotifications)(JNIEnv* env, jclass) {
     os << "]";
     return env->NewStringUTF(os.str().c_str());
 }
-JNI_FUNC(void, nativeThreadReset)(JNIEnv*, jclass) {
+JNI_FUNC(void, nativeThreadReset)(JNIEnv* env, jclass) {
     g_threadMgr.reset(new progressive::ThreadManager());
 }
 JNI_FUNC(jstring, nativePollBuildStart)(JNIEnv* env, jclass, jstring jQuestion, jstring jOptionsJson,
@@ -5007,7 +5008,7 @@ JNI_FUNC(jstring, nativeSpaceSearch)(JNIEnv* env, jclass, jstring jSpaceId, jstr
     auto results = getSpaceGraph()->searchSpaceRooms(jStr(env, jSpaceId), jStr(env, jQuery));
     return env->NewStringUTF(getSpaceGraph()->flatListToJson(results).c_str());
 }
-JNI_FUNC(void, nativeSpaceReset)(JNIEnv*, jclass) {
+JNI_FUNC(void, nativeSpaceReset)(JNIEnv* env, jclass) {
     g_spaceGraph.reset(new progressive::SpaceGraph());
 }
 JNI_FUNC(jstring, nativePinEvent)(JNIEnv* env, jclass, jstring jRoomId, jstring jEventId,
@@ -5046,10 +5047,10 @@ JNI_FUNC(jboolean, nativePinIsPinned)(JNIEnv* env, jclass, jstring jRoomId, jstr
 JNI_FUNC(jint, nativePinCount)(JNIEnv* env, jclass, jstring jRoomId) {
     return getPinMgr()->getPinnedCount(jStr(env, jRoomId));
 }
-JNI_FUNC(jboolean, nativePinCanManage)(JNIEnv*, jclass, jint jPowerLevel) {
+JNI_FUNC(jboolean, nativePinCanManage)(JNIEnv* env, jclass, jint jPowerLevel) {
     return getPinMgr()->canManagePins(jPowerLevel) ? JNI_TRUE : JNI_FALSE;
 }
-JNI_FUNC(void, nativePinReset)(JNIEnv*, jclass) {
+JNI_FUNC(void, nativePinReset)(JNIEnv* env, jclass) {
     g_pinMgr.reset(new progressive::PinManagerFull());
 }
 JNI_FUNC(jstring, nativeMediaViewerParse)(JNIEnv* env, jclass, jstring jContentJson) {
@@ -5075,11 +5076,11 @@ JNI_FUNC(jstring, nativeMediaViewerParse)(JNIEnv* env, jclass, jstring jContentJ
        << "}";
     return env->NewStringUTF(os.str().c_str());
 }
-JNI_FUNC(jstring, nativeMediaViewerFormatSize)(JNIEnv*, jclass, jlong jBytes) {
+JNI_FUNC(jstring, nativeMediaViewerFormatSize)(JNIEnv* env, jclass, jlong jBytes) {
     auto r = progressive::formatMediaSize(jBytes);
     return env->NewStringUTF(r.c_str());
 }
-JNI_FUNC(jstring, nativeMediaViewerFormatDuration)(JNIEnv*, jclass, jint jMs) {
+JNI_FUNC(jstring, nativeMediaViewerFormatDuration)(JNIEnv* env, jclass, jint jMs) {
     auto r = progressive::formatMediaDuration(jMs);
     return env->NewStringUTF(r.c_str());
 }
@@ -5108,7 +5109,7 @@ JNI_FUNC(jstring, nativeMediaViewerDownloadUrl)(JNIEnv* env, jclass, jstring jMx
     auto r = progressive::resolveMxcDownloadUrl(jStr(env, jMxcUrl), jStr(env, jHomeServer));
     return env->NewStringUTF(r.c_str());
 }
-JNI_FUNC(jint, nativeMediaViewerExifRotation)(JNIEnv*, jclass, jint jRaw) {
+JNI_FUNC(jint, nativeMediaViewerExifRotation)(JNIEnv* env, jclass, jint jRaw) {
     return progressive::exifRotationDegrees(progressive::exifFromRaw(jRaw));
 }
 JNI_FUNC(jboolean, nativeMediaViewerCanThumbnail)(JNIEnv* env, jclass, jstring jMime) {
@@ -5247,10 +5248,10 @@ JNI_FUNC(jstring, nativeUserDirAvatarInit)(JNIEnv* env, jclass, jstring jDisplay
 JNI_FUNC(jboolean, nativeUserDirIsValidQuery)(JNIEnv* env, jclass, jstring jQ) {
     return getUserDir()->isValidSearchQuery(jStr(env, jQ)) ? JNI_TRUE : JNI_FALSE;
 }
-JNI_FUNC(void, nativeProfileStart)(JNIEnv*, jclass) { progressive::Profiler::instance().startProfiling(); }
-JNI_FUNC(void, nativeProfileStop)(JNIEnv*, jclass) { progressive::Profiler::instance().stopProfiling(); }
-JNI_FUNC(void, nativeProfileReset)(JNIEnv*, jclass) { progressive::Profiler::instance().reset(); }
-JNI_FUNC(jboolean, nativeProfileIsActive)(JNIEnv*, jclass) {
+JNI_FUNC(void, nativeProfileStart)(JNIEnv* env, jclass) { progressive::Profiler::instance().startProfiling(); }
+JNI_FUNC(void, nativeProfileStop)(JNIEnv* env, jclass) { progressive::Profiler::instance().stopProfiling(); }
+JNI_FUNC(void, nativeProfileReset)(JNIEnv* env, jclass) { progressive::Profiler::instance().reset(); }
+JNI_FUNC(jboolean, nativeProfileIsActive)(JNIEnv* env, jclass) {
     return progressive::Profiler::instance().isProfiling() ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jstring, nativeProfileReport)(JNIEnv* env, jclass) {
@@ -5275,7 +5276,7 @@ JNI_FUNC(jstring, nativeProfileMemory)(JNIEnv* env, jclass) {
 JNI_FUNC(jint, nativeProfileStartAction)(JNIEnv* env, jclass, jstring jName, jboolean jCold) {
     return progressive::Profiler::instance().startAction(jStr(env, jName), "", jCold);
 }
-JNI_FUNC(jlong, nativeProfileStopAction)(JNIEnv*, jclass, jint jIdx) {
+JNI_FUNC(jlong, nativeProfileStopAction)(JNIEnv* env, jclass, jint jIdx) {
     return progressive::Profiler::instance().stopAction(jIdx);
 }
 JNI_FUNC(void, nativeProfileSetBudget)(JNIEnv* env, jclass, jstring jPattern, jlong jBudgetNs) {
@@ -5324,7 +5325,7 @@ JNI_FUNC(jstring, nativeDeviceGetTrustLabel)(JNIEnv* env, jclass, jboolean jCros
 JNI_FUNC(jstring, nativeDeviceFormatLastSeen)(JNIEnv* env, jclass, jlong jTs) {
     return env->NewStringUTF(getDeviceMgr()->formatLastSeen(jTs).c_str());
 }
-JNI_FUNC(jboolean, nativeDeviceIsInactive)(JNIEnv*, jclass, jlong jTs, jint jDays) {
+JNI_FUNC(jboolean, nativeDeviceIsInactive)(JNIEnv* env, jclass, jlong jTs, jint jDays) {
     return getDeviceMgr()->isDeviceInactive(jTs, jDays) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jboolean, nativeDeviceSatisfiesVersion)(JNIEnv* env, jclass, jstring jVer, jstring jMin) {
@@ -5408,13 +5409,13 @@ JNI_FUNC(jstring, nativeSessionGetActive)(JNIEnv* env, jclass) {
         return env->NewStringUTF(getSessionMgrFull()->sessionToJson(info).c_str());
     return env->NewStringUTF("{}");
 }
-JNI_FUNC(jboolean, nativeSessionHasActive)(JNIEnv*, jclass) {
+JNI_FUNC(jboolean, nativeSessionHasActive)(JNIEnv* env, jclass) {
     return getSessionMgrFull()->hasActiveSession() ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jstring, nativeSessionGetAll)(JNIEnv* env, jclass) {
     return env->NewStringUTF(getSessionMgrFull()->allSessionsToJson().c_str());
 }
-JNI_FUNC(jint, nativeSessionCount)(JNIEnv*, jclass) {
+JNI_FUNC(jint, nativeSessionCount)(JNIEnv* env, jclass) {
     return getSessionMgrFull()->sessionCount();
 }
 JNI_FUNC(jstring, nativeServerNoticeParse)(JNIEnv* env, jclass, jstring jErrorJson) {
@@ -5437,7 +5438,7 @@ JNI_FUNC(jboolean, nativeServerNoticeIsRateLimit)(JNIEnv* env, jclass, jstring j
 JNI_FUNC(jboolean, nativeServerNoticeIsConsent)(JNIEnv* env, jclass, jstring jCode) {
     return getServerNotice()->isConsentError(jStr(env, jCode)) ? JNI_TRUE : JNI_FALSE;
 }
-JNI_FUNC(jstring, nativeServerNoticeFormatDowntime)(JNIEnv*, jclass, jlong jMs) {
+JNI_FUNC(jstring, nativeServerNoticeFormatDowntime)(JNIEnv* env, jclass, jlong jMs) {
     return env->NewStringUTF(getServerNotice()->formatDowntime(jMs).c_str());
 }
 JNI_FUNC(jstring, nativeServerNoticeGetBanner)(JNIEnv* env, jclass, jstring jErrorJson) {
@@ -5467,19 +5468,19 @@ JNI_FUNC(jstring, nativeUploadBuildContent)(JNIEnv* env, jclass, jstring jAttach
     a.valid = true;
     return env->NewStringUTF(getUploadMgr()->buildMediaContent(a, jStr(env, jMxcUrl)).c_str());
 }
-JNI_FUNC(jboolean, nativeUploadIsSizeValid)(JNIEnv*, jclass, jlong jSize) {
+JNI_FUNC(jboolean, nativeUploadIsSizeValid)(JNIEnv* env, jclass, jlong jSize) {
     return getUploadMgr()->isFileSizeValid(jSize) ? JNI_TRUE : JNI_FALSE;
 }
-JNI_FUNC(jstring, nativeUploadFormatSizeWarning)(JNIEnv*, jclass, jlong jSize, jlong jMax) {
+JNI_FUNC(jstring, nativeUploadFormatSizeWarning)(JNIEnv* env, jclass, jlong jSize, jlong jMax) {
     return env->NewStringUTF(getUploadMgr()->formatSizeLimitWarning(jSize, jMax).c_str());
 }
 JNI_FUNC(jstring, nativeUploadGetProgress)(JNIEnv* env, jclass) {
     return env->NewStringUTF(getUploadMgr()->progressToJson().c_str());
 }
-JNI_FUNC(void, nativeUploadResetProgress)(JNIEnv*, jclass, jlong jTotal) {
+JNI_FUNC(void, nativeUploadResetProgress)(JNIEnv* env, jclass, jlong jTotal) {
     getUploadMgr()->resetProgress(jTotal);
 }
-JNI_FUNC(void, nativeUploadSetMaxSize)(JNIEnv*, jclass, jlong jMax) {
+JNI_FUNC(void, nativeUploadSetMaxSize)(JNIEnv* env, jclass, jlong jMax) {
     getUploadMgr()->setMaxFileSize(jMax);
 }
 JNI_FUNC(jstring, nativeIdentityParse3pid)(JNIEnv* env, jclass, jstring jInput) {
@@ -5555,10 +5556,10 @@ JNI_FUNC(jstring, nativeRelationBuildThread)(JNIEnv* env, jclass, jstring jEvent
 JNI_FUNC(jstring, nativeRelationBuildAnnotation)(JNIEnv* env, jclass, jstring jEventId, jstring jKey) {
     return env->NewStringUTF(getRelationsMgr()->buildAnnotationRelation(jStr(env, jEventId), jStr(env, jKey)).c_str());
 }
-JNI_FUNC(jboolean, nativeCrossSigningIsInit)(JNIEnv*, jclass) {
+JNI_FUNC(jboolean, nativeCrossSigningIsInit)(JNIEnv* env, jclass) {
     return getCrossSigningMgr()->isInitialized() ? JNI_TRUE : JNI_FALSE;
 }
-JNI_FUNC(jboolean, nativeCrossSigningCanSign)(JNIEnv*, jclass) {
+JNI_FUNC(jboolean, nativeCrossSigningCanSign)(JNIEnv* env, jclass) {
     return getCrossSigningMgr()->canCrossSign() ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jstring, nativeCrossSigningBuildKeys)(JNIEnv* env, jclass, jstring jUserId, jstring jMsk, jstring jUsk, jstring jSsk) {
@@ -5576,7 +5577,7 @@ JNI_FUNC(jstring, nativeCrossSigningImportKeys)(JNIEnv* env, jclass, jstring jMs
     auto result = getCrossSigningMgr()->importPrivateKeys(jStr(env, jMsk), jStr(env, jUsk), jStr(env, jSsk));
     return env->NewStringUTF(getCrossSigningMgr()->trustResultToJson(result).c_str());
 }
-JNI_FUNC(void, nativeCrossSigningTrustMaster)(JNIEnv*, jclass) {
+JNI_FUNC(void, nativeCrossSigningTrustMaster)(JNIEnv* env, jclass) {
     getCrossSigningMgr()->markMyMasterKeyAsTrusted();
 }
 JNI_FUNC(void, nativeDraftSave)(JNIEnv* env, jclass, jstring jRoomId, jstring jContent, jint jType, jstring jLinkedId) {
@@ -5685,25 +5686,25 @@ JNI_FUNC(void, nativeOverlaySetConfig)(JNIEnv* env, jclass, jstring jJson) {
     if (cfg.foregroundExtendedMs == 0) cfg.foregroundExtendedMs = 3000;
     getOverlayEngine()->setConfig(cfg);
 }
-JNI_FUNC(jint, nativeOverlayTouchDown)(JNIEnv*, jclass, jdouble jX, jdouble jY, jint jPtrId, jlong jTimeNs) {
+JNI_FUNC(jint, nativeOverlayTouchDown)(JNIEnv* env, jclass, jdouble jX, jdouble jY, jint jPtrId, jlong jTimeNs) {
     return static_cast<jint>(getOverlayEngine()->touchDown(jX, jY, jPtrId, jTimeNs));
 }
-JNI_FUNC(jint, nativeOverlayTouchMove)(JNIEnv*, jclass, jdouble jX, jdouble jY, jint jPtrId, jlong jTimeNs) {
+JNI_FUNC(jint, nativeOverlayTouchMove)(JNIEnv* env, jclass, jdouble jX, jdouble jY, jint jPtrId, jlong jTimeNs) {
     return static_cast<jint>(getOverlayEngine()->touchMove(jX, jY, jPtrId, jTimeNs));
 }
-JNI_FUNC(jint, nativeOverlayTouchUp)(JNIEnv*, jclass, jint jPtrId, jlong jTimeNs) {
+JNI_FUNC(jint, nativeOverlayTouchUp)(JNIEnv* env, jclass, jint jPtrId, jlong jTimeNs) {
     return static_cast<jint>(getOverlayEngine()->touchUp(jPtrId, jTimeNs));
 }
-JNI_FUNC(jint, nativeOverlayBack)(JNIEnv*, jclass, jlong jTimeNs) {
+JNI_FUNC(jint, nativeOverlayBack)(JNIEnv* env, jclass, jlong jTimeNs) {
     return static_cast<jint>(getOverlayEngine()->backPressed(jTimeNs));
 }
-JNI_FUNC(jint, nativeOverlayTick)(JNIEnv*, jclass, jlong jTimeNs) {
+JNI_FUNC(jint, nativeOverlayTick)(JNIEnv* env, jclass, jlong jTimeNs) {
     return static_cast<jint>(getOverlayEngine()->timerTick(jTimeNs));
 }
 JNI_FUNC(jstring, nativeOverlayGetState)(JNIEnv* env, jclass) {
     return env->NewStringUTF(getOverlayEngine()->stateToJson().c_str());
 }
-JNI_FUNC(void, nativeOverlaySetSafetyMode)(JNIEnv*, jclass, jint jMode) {
+JNI_FUNC(void, nativeOverlaySetSafetyMode)(JNIEnv* env, jclass, jint jMode) {
     getOverlayEngine()->setSafetyMode(static_cast<progressive::OverlaySafetyMode>(jMode));
 }
 JNI_FUNC(void, nativeOverlaySetSafetyPerms)(JNIEnv* env, jclass, jstring jJson) {
@@ -5719,7 +5720,7 @@ JNI_FUNC(void, nativeOverlaySetSafetyPerms)(JNIEnv* env, jclass, jstring jJson) 
     perms.showSensitiveContent = jExtractBool(json, "show_sensitive");
     getOverlayEngine()->setSafetyPermissions(perms);
 }
-JNI_FUNC(jboolean, nativeOverlayIsTouchAllowed)(JNIEnv*, jclass, jint jAction) {
+JNI_FUNC(jboolean, nativeOverlayIsTouchAllowed)(JNIEnv* env, jclass, jint jAction) {
     return getOverlayEngine()->isTouchAllowed(static_cast<progressive::TouchAction>(jAction)) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jstring, nativeOverlaySafetyToJson)(JNIEnv* env, jclass) {
@@ -5731,7 +5732,7 @@ JNI_FUNC(void, nativeComposerSetText)(JNIEnv* env, jclass, jstring jText) {
 JNI_FUNC(jstring, nativeComposerGetState)(JNIEnv* env, jclass) {
     return env->NewStringUTF(getComposerMgr()->stateToJson().c_str());
 }
-JNI_FUNC(void, nativeComposerEnterRegular)(JNIEnv*, jclass) { getComposerMgr()->enterRegularMode(); }
+JNI_FUNC(void, nativeComposerEnterRegular)(JNIEnv* env, jclass) { getComposerMgr()->enterRegularMode(); }
 JNI_FUNC(void, nativeComposerEnterEdit)(JNIEnv* env, jclass, jstring jEvtId) { getComposerMgr()->enterEditMode(jStr(env, jEvtId)); }
 JNI_FUNC(void, nativeComposerEnterQuote)(JNIEnv* env, jclass, jstring jEvtId) { getComposerMgr()->enterQuoteMode(jStr(env, jEvtId)); }
 JNI_FUNC(void, nativeComposerEnterReply)(JNIEnv* env, jclass, jstring jEvtId) { getComposerMgr()->enterReplyMode(jStr(env, jEvtId)); }
@@ -5859,7 +5860,7 @@ JNI_FUNC(jstring, nativeCacheGetPlan)(JNIEnv* env, jclass) {
 JNI_FUNC(jstring, nativeCacheGetStats)(JNIEnv* env, jclass) {
     return env->NewStringUTF(getCacheMgr()->statsToJson().c_str());
 }
-JNI_FUNC(jstring, nativeCacheGetPressure)(JNIEnv*, jclass, jlong jAvail, jlong jReserved) {
+JNI_FUNC(jstring, nativeCacheGetPressure)(JNIEnv* env, jclass, jlong jAvail, jlong jReserved) {
     auto p = getCacheMgr()->getPressure(jAvail, jReserved);
     return env->NewStringUTF(getCacheMgr()->pressureToJson(p).c_str());
 }
