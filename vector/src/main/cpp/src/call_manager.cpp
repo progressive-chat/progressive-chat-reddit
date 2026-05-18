@@ -209,7 +209,7 @@ ParsedIceCandidate parseParsedIceCandidateLine(const std::string& candidateLine,
 
 // ====== Call Notification ======
 
-CallNotification formatCallNotification(const CallInfo& call) {
+CallNotification formatCallNotification(const CallSession& call) {
     CallNotification notif;
     notif.isVideo = call.type == CallType::VIDEO;
     notif.state = call.state;
@@ -278,14 +278,14 @@ bool CallManager::isValidStateTransition(CallManagerCallState from, CallManagerC
     return false;
 }
 
-CallInfo* CallManager::findCall(const std::string& callId) {
+CallSession* CallManager::findCall(const std::string& callId) {
     for (auto& c : calls_) {
         if (c.callId == callId) return &c;
     }
     return nullptr;
 }
 
-const CallInfo* CallManager::findCall(const std::string& callId) const {
+const CallSession* CallManager::findCall(const std::string& callId) const {
     for (const auto& c : calls_) {
         if (c.callId == callId) return &c;
     }
@@ -303,7 +303,7 @@ std::string CallManager::startOutgoingCall(const std::string& roomId, const std:
         return "";
     }
 
-    CallInfo call;
+    CallSession call;
     call.callId = generateCallId();
     call.roomId = roomId;
     call.calleeId = calleeId;
@@ -340,7 +340,7 @@ std::string CallManager::handleIncomingCall(const std::string& callId, const std
         // Busy — can't accept another call in same room
     }
 
-    CallInfo call;
+    CallSession call;
     call.callId = callId;
     call.roomId = roomId;
     call.callerId = callerId;
@@ -497,14 +497,14 @@ void CallManager::setRemoteVideo(const std::string& callId, bool hasVideo) {
 
 // ====== Call Queries ======
 
-bool CallManager::getCall(const std::string& callId, CallInfo& out) const {
+bool CallManager::getCall(const std::string& callId, CallSession& out) const {
     auto* call = findCall(callId);
     if (!call) return false;
     out = *call;
     return true;
 }
 
-bool CallManager::getActiveCall(CallInfo& out) const {
+bool CallManager::getActiveCall(CallSession& out) const {
     for (const auto& c : calls_) {
         if (c.state == CallManagerCallState::CONNECTED) {
             out = c;
@@ -514,7 +514,7 @@ bool CallManager::getActiveCall(CallInfo& out) const {
     return false;
 }
 
-bool CallManager::getIncomingCall(CallInfo& out) const {
+bool CallManager::getIncomingCall(CallSession& out) const {
     for (const auto& c : calls_) {
         if (c.state == CallManagerCallState::RINGING && c.isIncoming) {
             out = c;
@@ -524,8 +524,8 @@ bool CallManager::getIncomingCall(CallInfo& out) const {
     return false;
 }
 
-std::vector<CallInfo> CallManager::getRoomCalls(const std::string& roomId) const {
-    std::vector<CallInfo> result;
+std::vector<CallSession> CallManager::getRoomCalls(const std::string& roomId) const {
+    std::vector<CallSession> result;
     for (const auto& c : calls_) {
         if (c.roomId == roomId) result.push_back(c);
     }
@@ -576,7 +576,7 @@ std::string CallManager::formatCallDuration(int seconds) const {
 
 // ====== Serialization ======
 
-std::string CallManager::callToJson(const CallInfo& call) const {
+std::string CallManager::callToJson(const CallSession& call) const {
     std::ostringstream os;
     os << R"({"call_id":")" << call.callId
        << R"(","room_id":")" << call.roomId
