@@ -2056,6 +2056,10 @@ object ProgressiveNative {
     @JvmStatic external fun nativeFormatDuration(totalSeconds: Long): String
     @JvmStatic external fun nativeFormatDurationWithUnits(totalSeconds: Long, appendSeconds: Boolean): String
 
+    // --- Content / Reply Utilities ---
+
+    @JvmStatic external fun nativeEnsureCorrectFormattedBodyInTextReply(newFormattedBody: String, newBody: String, originalFormattedBody: String): String
+
     // --- Permalink Parser (updated) ---
 
     @JvmStatic external fun nativeParsePermalinkFull(url: String): String

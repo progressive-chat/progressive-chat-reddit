@@ -6039,6 +6039,16 @@ JNI_FUNC(jstring, nativeFormatDurationWithUnits)(JNIEnv* env, jclass, jlong jTot
     return env->NewStringUTF(result.c_str());
 }
 
+// ============================================================
+// Content Utils — reply text formatting
+// ============================================================
+
+JNI_FUNC(jstring, nativeEnsureCorrectFormattedBodyInTextReply)(JNIEnv* env, jclass, jstring jNewFormatted, jstring jNewBody, jstring jOriginalFormatted) {
+    auto result = progressive::ensureCorrectFormattedBodyInTextReply(
+        jStr(env, jNewFormatted), jStr(env, jNewBody), jStr(env, jOriginalFormatted));
+    return env->NewStringUTF(result.c_str());
+}
+
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* /*reserved*/) {
     JNIEnv* env = nullptr;
     if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK)

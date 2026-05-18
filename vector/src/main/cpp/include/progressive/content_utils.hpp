@@ -144,6 +144,17 @@ std::string buildReplyWithImageContent(
 
 bool hasTextWithImage(const std::string& contentJson);
 
+// Ensure correct formatted body in edited text reply.
+// Per Matrix spec v1.4, edited events may lack formatted_body even when
+// the original had one. This reconstructs the <mx-reply> wrapper for display.
+// Original Kotlin (ContentUtils.kt:ensureCorrectFormattedBodyInTextReply):
+//   Takes the original formatted_body's <mx-reply> wrapper and merges
+//   it with the new body text so the message still renders as a reply.
+std::string ensureCorrectFormattedBodyInTextReply(
+    const std::string& newFormattedBody,
+    const std::string& newBody,
+    const std::string& originalFormattedBody);
+
 // ---- MIME Type Constants & Detection (from MimeTypes.kt 48L) ----
 namespace MimeTypes {
     constexpr const char* Any = "*/*";

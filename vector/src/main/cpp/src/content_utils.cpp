@@ -549,4 +549,25 @@ bool isEditionEvent(const std::string& contentJson) {
     return !getEditedTargetEventId(contentJson).empty();
 }
 
+std::string ensureCorrectFormattedBodyInTextReply(
+    const std::string& newFormattedBody,
+    const std::string& newBody,
+    const std::string& originalFormattedBody) {
+
+    const char* MX_REPLY_END_TAG = "</mx-reply>";
+
+    // Only fix if new formatted_body is missing the reply end tag
+    // while the original had one
+    if (newFormattedBody.empty()) return newBody;
+    if (newFormattedBody.find(MX_REPLY_END_TAG) != std::string::npos) return newFormattedBody;
+    if (originalFormattedBody.find(MX_REPLY_END_TAG) == std::string::npos) return newFormattedBody;
+
+    // Merge: take original's <mx-reply>... wrapper + new body
+    auto endPos = originalFormattedBody.rfind(MX_REPLY_END_TAG);
+    if (endPos == std::string::npos) return newFormattedBody;
+    endPos += strlen(MX_REPLY_END_TAG);
+
+    return originalFormattedBody.substr(0, endPos) + newBody;
+}
+
 } // namespace progressive
