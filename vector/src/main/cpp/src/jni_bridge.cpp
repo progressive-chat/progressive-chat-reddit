@@ -52,6 +52,7 @@
 #include "progressive/url_tools.hpp"
 #include "progressive/notif_priority.hpp"
 #include "progressive/matrix_patterns.hpp"
+#include "progressive/content_utils.hpp"
 #include "progressive/desync_detector.hpp"
 #include "progressive/latency_stats.hpp"
 #include "progressive/string_utils.hpp"
@@ -3206,29 +3207,29 @@ JNI_FUNC(jstring, nativeGetCallState)(JNIEnv* env, jclass, jstring jContentJson)
     return env->NewStringUTF(result.c_str());
 }
 JNI_FUNC(jboolean, nativeIsPublicRoom)(JNIEnv* env, jclass, jstring jStateJson) {
-    auto rules = progressive::parseJoinRules(jStr(env, jStateJson));
+    auto rules = progressive::parseRoomJoinRulesContent(jStr(env, jStateJson));
     return progressive::isPublicRoom(rules) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jboolean, nativeIsInviteOnly)(JNIEnv* env, jclass, jstring jStateJson) {
-    auto rules = progressive::parseJoinRules(jStr(env, jStateJson));
+    auto rules = progressive::parseRoomJoinRulesContent(jStr(env, jStateJson));
     return progressive::isInviteOnly(rules) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jstring, nativeJoinRuleToString)(JNIEnv* env, jclass, jstring jStateJson) {
-    auto rules = progressive::parseJoinRules(jStr(env, jStateJson));
-    auto result = progressive::joinRuleToString(rules.rule);
+    auto rules = progressive::parseRoomJoinRulesContent(jStr(env, jStateJson));
+    auto result = progressive::roomJoinRulesToString(rules.joinRules);
     return env->NewStringUTF(result.c_str());
 }
 JNI_FUNC(jboolean, nativeIsHistoryPubliclyVisible)(JNIEnv* env, jclass, jstring jStateJson) {
-    auto vis = progressive::parseHistoryVisibility(jStr(env, jStateJson));
+    auto vis = progressive::parseRoomHistoryVisibilityContent(jStr(env, jStateJson));
     return progressive::isHistoryPubliclyVisible(vis) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jstring, nativeHistoryVisibilityToString)(JNIEnv* env, jclass, jstring jStateJson) {
-    auto vis = progressive::parseHistoryVisibility(jStr(env, jStateJson));
-    auto result = progressive::historyVisibilityToString(vis.visibility);
+    auto vis = progressive::parseRoomHistoryVisibilityContent(jStr(env, jStateJson));
+    auto result = progressive::roomHistoryVisibilityToString(vis.historyVisibility);
     return env->NewStringUTF(result.c_str());
 }
 JNI_FUNC(jboolean, nativeAreGuestsAllowed)(JNIEnv* env, jclass, jstring jStateJson) {
-    auto access = progressive::parseGuestAccess(jStr(env, jStateJson));
+    auto access = progressive::parseRoomGuestAccessContent(jStr(env, jStateJson));
     return progressive::areGuestsAllowed(access) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jboolean, nativeIsRoomUpgraded)(JNIEnv* env, jclass, jstring jStateJson) {
@@ -3379,10 +3380,10 @@ JNI_FUNC(jstring, nativeGetTrustLabel)(JNIEnv* env, jclass, jstring jLevel) {
     return env->NewStringUTF(result.c_str());
 }
 JNI_FUNC(jboolean, nativeIsMxcUri)(JNIEnv* env, jclass, jstring jUrl) {
-    return progressive::isMxcUri(jStr(env, jUrl)) ? JNI_TRUE : JNI_FALSE;
+    return progressive::isMxcUrl(jStr(env, jUrl)) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jstring, nativeExtractMxcServerName)(JNIEnv* env, jclass, jstring jMxcUrl) {
-    auto result = progressive::extractMxcServerName(jStr(env, jMxcUrl));
+    auto result = progressive::extractServerNameFromId(jStr(env, jMxcUrl));
     return env->NewStringUTF(result.c_str());
 }
 JNI_FUNC(jstring, nativeExtractMxcMediaId)(JNIEnv* env, jclass, jstring jMxcUrl) {
@@ -3514,21 +3515,21 @@ JNI_FUNC(jstring, nativeNormalizeMimeType)(JNIEnv* env, jclass, jstring jMime) {
     return env->NewStringUTF(result.c_str());
 }
 JNI_FUNC(jstring, nativeParseJoinRules)(JNIEnv* env, jclass, jstring jContentJson) {
-    auto rules = progressive::parseJoinRules(jStr(env, jContentJson));
+    auto rules = progressive::parseRoomJoinRulesContent(jStr(env, jContentJson));
     std::ostringstream os;
-    os << R"({"rule":")" << progressive::joinRuleToString(rules.rule) << "\"}";
+    os << R"({"rule":")" << progressive::roomJoinRulesToString(rules.joinRules) << "\"}";
     return env->NewStringUTF(os.str().c_str());
 }
 JNI_FUNC(jstring, nativeParseHistoryVisibility)(JNIEnv* env, jclass, jstring jContentJson) {
-    auto vis = progressive::parseHistoryVisibility(jStr(env, jContentJson));
+    auto vis = progressive::parseRoomHistoryVisibilityContent(jStr(env, jContentJson));
     std::ostringstream os;
-    os << R"({"visibility":")" << progressive::historyVisibilityToString(vis.visibility) << "\"}";
+    os << R"({"visibility":")" << progressive::roomHistoryVisibilityToString(vis.historyVisibility) << "\"}";
     return env->NewStringUTF(os.str().c_str());
 }
 JNI_FUNC(jstring, nativeParseGuestAccess)(JNIEnv* env, jclass, jstring jContentJson) {
-    auto access = progressive::parseGuestAccess(jStr(env, jContentJson));
+    auto access = progressive::parseRoomGuestAccessContent(jStr(env, jContentJson));
     std::ostringstream os;
-    os << R"({"access":")" << progressive::guestAccessToString(access.access) << "\"}";
+    os << R"({"access":")" << progressive::guestAccessToString(access.guestAccess) << "\"}";
     return env->NewStringUTF(os.str().c_str());
 }
 JNI_FUNC(jboolean, nativeIsKnownPushRuleKind)(JNIEnv* env, jclass, jstring jKind) {
@@ -5614,15 +5615,15 @@ JNI_FUNC(jstring, nativeDraftStripPrefix)(JNIEnv* env, jclass, jstring jText) {
     return env->NewStringUTF(getDraftMgr()->stripDraftPrefix(jStr(env, jText)).c_str());
 }
 JNI_FUNC(jstring, nativeRoomStateParseVisibility)(JNIEnv* env, jclass, jstring jContent) {
-    auto vis = progressive::parseHistoryVisibility(jStr(env, jContent));
-    return env->NewStringUTF(progressive::historyVisibilityToString(vis));
+    auto vis = progressive::parseRoomHistoryVisibilityContent(jStr(env, jContent));
+    return env->NewStringUTF(progressive::roomHistoryVisibilityToString(vis));
 }
 JNI_FUNC(jstring, nativeRoomStateParseJoinRules)(JNIEnv* env, jclass, jstring jContent) {
-    auto rule = progressive::parseJoinRules(jStr(env, jContent));
-    return env->NewStringUTF(progressive::joinRuleToString(rule));
+    auto rule = progressive::parseRoomJoinRulesContent(jStr(env, jContent));
+    return env->NewStringUTF(progressive::roomJoinRulesToString(rule));
 }
 JNI_FUNC(jboolean, nativeRoomStateShouldShare)(JNIEnv* env, jclass, jstring jContent) {
-    auto vis = progressive::parseHistoryVisibility(jStr(env, jContent));
+    auto vis = progressive::parseRoomHistoryVisibilityContent(jStr(env, jContent));
     return progressive::shouldShareHistory(vis) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jboolean, nativeRoomStateIsPublic)(JNIEnv* env, jclass, jstring jRoomId) {

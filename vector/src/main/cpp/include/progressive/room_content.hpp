@@ -591,6 +591,24 @@ RoomGuestAccessContent parseRoomGuestAccessContent(const std::string& contentJso
 // userIsMember: true if the user is already in the room
 // isMemberOfAllowedRoom: true if user belongs to a room in the allowed list (for restricted joins)
 bool canJoinRoom(const RoomJoinRulesContent& rules, bool userIsInvited,
-                 bool userIsMember, bool isMemberOfAllowedRoom);
+                  bool userIsMember, bool isMemberOfAllowedRoom);
+
+// Join rule convenience checks
+inline bool isPublicRoom(const RoomJoinRulesContent& rules) {
+    return rules.joinRules == RoomJoinRules::PUBLIC;
+}
+inline bool isInviteOnly(const RoomJoinRulesContent& rules) {
+    return rules.joinRules == RoomJoinRules::INVITE || rules.joinRules == RoomJoinRules::PRIVATE;
+}
+
+// History visibility convenience checks
+inline bool isHistoryPubliclyVisible(const RoomHistoryVisibilityContent& vis) {
+    return vis.historyVisibility == RoomHistoryVisibility::WORLD_READABLE;
+}
+
+// Guest access convenience check
+inline bool areGuestsAllowed(const RoomGuestAccessContent& access) {
+    return access.guestAccess == GuestAccess::CAN_JOIN;
+}
 
 } // namespace progressive
