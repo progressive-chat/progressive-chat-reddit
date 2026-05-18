@@ -5334,7 +5334,7 @@ JNI_FUNC(jboolean, nativeDeviceSatisfiesVersion)(JNIEnv* env, jclass, jstring jV
 }
 JNI_FUNC(jstring, nativeRoomDirBuildSearch)(JNIEnv* env, jclass, jstring jTerm, jint jLimit, jstring jSince) {
     progressive::PublicRoomsParams p;
-    p.filter.searchTerm = jStr(env, jTerm);
+    p.filter = jStr(env, jTerm);
     p.limit = jLimit;
     p.since = jStr(env, jSince);
     return env->NewStringUTF(getRoomDir()->buildPublicRoomsRequest(p).c_str());
@@ -5388,7 +5388,7 @@ JNI_FUNC(jstring, nativeSessionCreate)(JNIEnv* env, jclass, jstring jCredsJson, 
     std::string error;
     auto sid = getSessionMgrFull()->createSession(creds, config, static_cast<progressive::SessionLoginType>(jLoginType), error);
     if (sid.empty()) return env->NewStringUTF(("{\"error\":\"" + error + "\"}").c_str());
-    progressive::SessionInfo info; getSessionMgrFull()->getSession(sid, info);
+    progressive::SavedSessionInfo info; getSessionMgrFull()->getSession(sid, info);
     return env->NewStringUTF(getSessionMgrFull()->sessionToJson(info).c_str());
 }
 JNI_FUNC(jboolean, nativeSessionOpen)(JNIEnv* env, jclass, jstring jSid) {
@@ -5405,7 +5405,7 @@ JNI_FUNC(jboolean, nativeSessionSetActive)(JNIEnv* env, jclass, jstring jSid) {
     return getSessionMgrFull()->setActiveSession(jStr(env, jSid)) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(jstring, nativeSessionGetActive)(JNIEnv* env, jclass) {
-    progressive::SessionInfo info;
+    progressive::SavedSessionInfo info;
     if (getSessionMgrFull()->getActiveSession(info))
         return env->NewStringUTF(getSessionMgrFull()->sessionToJson(info).c_str());
     return env->NewStringUTF("{}");
