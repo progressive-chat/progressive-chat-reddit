@@ -207,6 +207,7 @@
 #include "progressive/event_relations_manager.hpp"
 #include "progressive/composer_manager.hpp"
 #include "progressive/media_upload_manager.hpp"
+#include "progressive/media_viewer.hpp"
 #include "progressive/key_backup_manager.hpp"
 #include <sstream>
 #include <chrono>
@@ -435,10 +436,10 @@ static progressive::WidgetManager* getWidgetMgr() {
     }
     return g_widgetMgr.get();
 }
-static std::unique_ptr<progressive::PinManager> g_pinMgr;
+static std::unique_ptr<progressive::PinManagerFull> g_pinMgr;
 
-static progressive::PinManager* getPinMgr() {
-    if (!g_pinMgr) g_pinMgr.reset(new progressive::PinManager());
+static progressive::PinManagerFull* getPinMgr() {
+    if (!g_pinMgr) g_pinMgr.reset(new progressive::PinManagerFull());
     return g_pinMgr.get();
 }
 static std::unique_ptr<progressive::CallManager> g_callMgr;
@@ -5049,7 +5050,7 @@ JNI_FUNC(jboolean, nativePinCanManage)(JNIEnv*, jclass, jint jPowerLevel) {
     return getPinMgr()->canManagePins(jPowerLevel) ? JNI_TRUE : JNI_FALSE;
 }
 JNI_FUNC(void, nativePinReset)(JNIEnv*, jclass) {
-    g_pinMgr.reset(new progressive::PinManager());
+    g_pinMgr.reset(new progressive::PinManagerFull());
 }
 JNI_FUNC(jstring, nativeMediaViewerParse)(JNIEnv* env, jclass, jstring jContentJson) {
     auto info = progressive::parseMediaInfo(jStr(env, jContentJson));
