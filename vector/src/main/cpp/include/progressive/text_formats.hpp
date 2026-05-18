@@ -38,16 +38,10 @@ int utf8CharCount(const std::string& text);
 // Check if text contains only emoji (for emoji-only messages).
 bool isEmojiOnly(const std::string& text);
 
-// Format a count to short decimal: 1000→"1k", 1000000→"1M", etc.
-// Ported from im.vector.app.core.utils.TextUtils.formatCountToShortDecimal
-std::string formatCountToShortDecimal(int64_t value);
-
 // Format duration as HH:MM:SS or MM:SS.
-// Ported from im.vector.app.core.utils.TextUtils.formatDuration
 std::string formatDuration(int64_t totalSeconds);
 
 // Format duration with units: "1h 30min 15sec"
-// Ported from im.vector.app.core.utils.TextUtils.formatDurationWithUnits
 std::string formatDurationWithUnits(int64_t totalSeconds, bool appendSeconds = true);
 
 } // namespace progressive

@@ -118,36 +118,6 @@ bool isEmojiOnly(const std::string& text) {
     return true;
 }
 
-std::string formatCountToShortDecimal(int64_t value) {
-    try {
-        if (value < 0) return "-" + formatCountToShortDecimal(-value);
-        if (value < 1000) return std::to_string(value);
-
-        struct Suffix { int64_t threshold; std::string suffix; };
-        static const Suffix suffixes[] = {
-            {1000000000, "G"},
-            {1000000, "M"},
-            {1000, "k"},
-        };
-
-        for (auto& s : suffixes) {
-            if (value >= s.threshold) {
-                int64_t truncated = value / (s.threshold / 10);
-                bool hasDecimal = truncated < 100 && (truncated % 10) != 0;
-                if (hasDecimal) {
-                    auto str = std::to_string(truncated / 10) + "." + std::to_string(truncated % 10) + s.suffix;
-                    return str;
-                } else {
-                    return std::to_string(truncated / 10) + s.suffix;
-                }
-            }
-        }
-        return std::to_string(value);
-    } catch (...) {
-        return std::to_string(value);
-    }
-}
-
 std::string formatDuration(int64_t totalSeconds) {
     int64_t hours = totalSeconds / 3600;
     int64_t minutes = (totalSeconds % 3600) / 60;
