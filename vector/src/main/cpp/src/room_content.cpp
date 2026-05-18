@@ -553,4 +553,29 @@ bool isServerAllowed(const std::string& serverName, const RoomServerAclContent& 
     return false;
 }
 
+bool canJoinRoom(const RoomJoinRulesContent& rules, bool userIsInvited,
+                 bool userIsMember, bool isMemberOfAllowedRoom) {
+    // Already in the room
+    if (userIsMember) return true;
+    // Invited users can always join
+    if (userIsInvited) return true;
+
+    using JR = RoomJoinRules;
+    switch (rules.joinRule) {
+        case JR::PUBLIC:
+            return true;
+        case JR::INVITE:
+        case JR::PRIVATE:
+            return false;
+        case JR::KNOCK:
+            return true; // can knock (request to join)
+        case JR::RESTRICTED:
+            // Can join if member of an allowed room/space
+            return isMemberOfAllowedRoom;
+        case JR::KNOCK_RESTRICTED:
+            return isMemberOfAllowedRoom;
+    }
+    return false;
+}
+
 } // namespace progressive

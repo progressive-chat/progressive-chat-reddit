@@ -6023,6 +6023,15 @@ JNI_FUNC(jboolean, nativeIsServerAllowed)(JNIEnv* env, jclass, jstring jServerNa
 }
 
 // ============================================================
+// Room Join Rules — can user join this room?
+// ============================================================
+
+JNI_FUNC(jboolean, nativeCanJoinRoom)(JNIEnv* env, jclass, jstring jJoinRulesJson, jboolean jIsInvited, jboolean jIsMember, jboolean jIsMemberOfAllowedRoom) {
+    auto rules = progressive::parseRoomJoinRulesContent(jStr(env, jJoinRulesJson));
+    return progressive::canJoinRoom(rules, jIsInvited, jIsMember, jIsMemberOfAllowedRoom) ? JNI_TRUE : JNI_FALSE;
+}
+
+// ============================================================
 // Text Format Utilities (ported from TextUtils.kt)
 // ============================================================
 

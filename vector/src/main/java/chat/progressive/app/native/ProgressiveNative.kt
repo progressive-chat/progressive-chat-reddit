@@ -514,6 +514,7 @@ object ProgressiveNative {
 
     @JvmStatic external fun nativeWildcardMatch(pattern: String, value: String): Boolean
     @JvmStatic external fun nativeIsServerAllowed(serverName: String, aclJson: String): Boolean
+    @JvmStatic external fun nativeCanJoinRoom(joinRulesJson: String, isInvited: Boolean, isMember: Boolean, isMemberOfAllowedRoom: Boolean): Boolean
 
     // --- Notification Formatter ---
 

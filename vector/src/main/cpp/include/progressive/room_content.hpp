@@ -586,4 +586,11 @@ RoomJoinRulesContent parseRoomJoinRulesContent(const std::string& contentJson);
 RoomHistoryVisibilityContent parseRoomHistoryVisibilityContent(const std::string& contentJson);
 RoomGuestAccessContent parseRoomGuestAccessContent(const std::string& contentJson);
 
+// Evaluate whether a user can join a room based on join rules.
+// userIsInvited: true if the user has a pending invite
+// userIsMember: true if the user is already in the room
+// isMemberOfAllowedRoom: true if user belongs to a room in the allowed list (for restricted joins)
+bool canJoinRoom(const RoomJoinRulesContent& rules, bool userIsInvited,
+                 bool userIsMember, bool isMemberOfAllowedRoom);
+
 } // namespace progressive
