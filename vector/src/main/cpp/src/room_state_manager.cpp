@@ -1,4 +1,5 @@
 #include "progressive/room_state_manager.hpp"
+#include "progressive/room_content.hpp"
 #include <sstream>
 #include <algorithm>
 
@@ -102,80 +103,80 @@ std::string buildJoinRulesContent(RoomJoinRule rule) {
     return joinRuleFromString(rule);
 }
 
-// ====== RoomStateManager ======
+// ====== progressive::RoomStateManager ======
 
-RoomStateManager::RoomStateManager() {}
+progressive::RoomStateManager::progressive::RoomStateManager() {}
 
-RoomStateSummary& RoomStateManager::getOrCreateState(const std::string& roomId) {
+progressive::RoomStateSummary& progressive::RoomStateManager::getOrCreateState(const std::string& roomId) {
     auto it = rooms_.find(roomId);
     if (it == rooms_.end()) {
-        RoomStateSummary s;
+        progressive::RoomStateSummary s;
         s.roomId = roomId;
         rooms_[roomId] = s;
     }
     return rooms_[roomId];
 }
 
-void RoomStateManager::setHistoryVisibility(const std::string& roomId, RSM_RoomHistoryVisibility visibility) {
+void progressive::RoomStateManager::setHistoryVisibility(const std::string& roomId, RSM_RoomHistoryVisibility visibility) {
     auto& state = getOrCreateState(roomId);
     state.historyVisibility = visibility;
     state.isWorldReadable = (visibility == RSM_RoomHistoryVisibility::WORLD_READABLE);
     state.canShareHistory = shouldShareHistory(visibility);
 }
 
-void RoomStateManager::setJoinRule(const std::string& roomId, RoomJoinRule rule) {
+void progressive::RoomStateManager::setJoinRule(const std::string& roomId, RoomJoinRule rule) {
     auto& state = getOrCreateState(roomId);
     state.joinRule = rule;
     state.isPublicRoom = (rule == RoomJoinRule::PUBLIC);
 }
 
-void RoomStateManager::setRoomName(const std::string& roomId, const std::string& name) {
+void progressive::RoomStateManager::setRoomName(const std::string& roomId, const std::string& name) {
     getOrCreateState(roomId).roomName = name;
 }
 
-void RoomStateManager::setEncrypted(const std::string& roomId, bool encrypted) {
+void progressive::RoomStateManager::setEncrypted(const std::string& roomId, bool encrypted) {
     getOrCreateState(roomId).isEncrypted = encrypted;
 }
 
-void RoomStateManager::setMemberCount(const std::string& roomId, int count) {
+void progressive::RoomStateManager::setMemberCount(const std::string& roomId, int count) {
     getOrCreateState(roomId).memberCount = count;
 }
 
-RoomStateSummary RoomStateManager::getRoomState(const std::string& roomId) const {
+progressive::RoomStateSummary progressive::RoomStateManager::getRoomState(const std::string& roomId) const {
     auto it = rooms_.find(roomId);
     if (it != rooms_.end()) return it->second;
-    RoomStateSummary s;
+    progressive::RoomStateSummary s;
     s.roomId = roomId;
     return s;
 }
 
-bool RoomStateManager::canShareRoomHistory(const std::string& roomId) const {
+bool progressive::RoomStateManager::canShareRoomHistory(const std::string& roomId) const {
     auto state = getRoomState(roomId);
     return state.canShareHistory;
 }
 
-bool RoomStateManager::isPublicRoom(const std::string& roomId) const {
+bool progressive::RoomStateManager::isPublicRoom(const std::string& roomId) const {
     return getRoomState(roomId).isPublicRoom;
 }
 
-bool RoomStateManager::isWorldReadable(const std::string& roomId) const {
+bool progressive::RoomStateManager::isWorldReadable(const std::string& roomId) const {
     return getRoomState(roomId).isWorldReadable;
 }
 
-bool RoomStateManager::isInviteOnly(const std::string& roomId) const {
+bool progressive::RoomStateManager::isInviteOnly(const std::string& roomId) const {
     return getRoomState(roomId).joinRule == RoomJoinRule::INVITE;
 }
 
-bool RoomStateManager::areGuestsAllowed(const std::string& roomId) const {
+bool progressive::RoomStateManager::areGuestsAllowed(const std::string& roomId) const {
     auto state = getRoomState(roomId);
     return state.isPublicRoom && state.isWorldReadable;
 }
 
-void RoomStateManager::clear() { rooms_.clear(); }
+void progressive::RoomStateManager::clear() { rooms_.clear(); }
 
 // ====== Serialization ======
 
-std::string RoomStateManager::roomStateToJson(const RoomStateSummary& state) const {
+std::string progressive::RoomStateManager::roomStateToJson(const progressive::RoomStateSummary& state) const {
     auto esc = [](const std::string& s) -> std::string {
         std::string out;
         for (char c : s) { if (c == '"') out += "\\\""; else out += c; }

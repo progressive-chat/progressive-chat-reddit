@@ -1,4 +1,5 @@
 #include "progressive/sync_filter.hpp"
+#include "progressive/sync_utils.hpp"
 #include <sstream>
 
 namespace progressive {
@@ -140,7 +141,7 @@ std::string RoomSyncFilter::toJson() const {
 //       RoomEventFilter(lazyLoadMembers = lazyLoadMembersForStateEvents, types = supportedStateTypes).orNullIfEmpty()
 
 RoomSyncFilter buildRoomSyncFilter(
-    const RoomSyncFilterParams& params,
+    const SyncFilterParams& params,
     bool canUseThreadReadReceiptsAndNotifications
 ) {
     RoomSyncFilter filter;
@@ -175,7 +176,7 @@ RoomSyncFilter buildRoomSyncFilter(
 }
 
 RoomSyncFilter getDefaultRoomSyncFilter() {
-    RoomSyncFilterParams params;
+    SyncFilterParams params;
     params.lazyLoadMembersForMessageEvents = true;
     params.lazyLoadMembersForStateEvents = true;
 
