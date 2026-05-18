@@ -84,6 +84,8 @@ bool isTypingExpired(const ComposerTypingState& state, int64_t nowMs, int64_t ti
 // Format typing indicator: "Alice is typing...", "Alice and Bob are typing...", "3 people are typing..."
 std::string formatTypingText(const std::vector<std::string>& names);
 
+enum class DraftType { REGULAR = 0, REPLY = 1, EDIT = 2, QUOTE = 3 };
+using UserDraft = MessageDraft;
 } // namespace progressive
 
 #endif // PROGRESSIVE_DRAFT_MANAGER_HPP

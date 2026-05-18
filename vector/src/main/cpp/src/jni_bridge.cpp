@@ -5457,7 +5457,7 @@ JNI_FUNC(jstring, nativeUploadParseResponse)(JNIEnv* env, jclass, jstring jJson)
 }
 JNI_FUNC(jstring, nativeUploadBuildContent)(JNIEnv* env, jclass, jstring jAttachmentJson, jstring jMxcUrl) {
     auto json = jStr(env, jAttachmentJson);
-    progressive::ContentAttachmentData a;
+    progressive::MediaContentAttachmentData a;
     a.size = jExtractInt(json, "size");
     a.duration = jExtractInt(json, "duration");
     a.height = jExtractInt(json, "height");
@@ -5465,7 +5465,7 @@ JNI_FUNC(jstring, nativeUploadBuildContent)(JNIEnv* env, jclass, jstring jAttach
     a.exifOrientation = static_cast<int>(jExtractInt(json, "exif_orientation"));
     a.name = jExtractStr(json, "name");
     a.mimeType = jExtractStr(json, "mime_type");
-    a.type = progressive::ContentAttachmentData::detectType(a.mimeType);
+    a.type = progressive::MediaMediaContentAttachmentData::detectType(a.mimeType);
     a.valid = true;
     return env->NewStringUTF(getUploadMgr()->buildMediaContent(a, jStr(env, jMxcUrl)).c_str());
 }
@@ -5485,23 +5485,23 @@ JNI_FUNC(void, nativeUploadSetMaxSize)(JNIEnv* env, jclass, jlong jMax) {
     getUploadMgr()->setMaxFileSize(jMax);
 }
 JNI_FUNC(jstring, nativeIdentityParse3pid)(JNIEnv* env, jclass, jstring jInput) {
-    auto pid = progressive::ThreePid::parse(jStr(env, jInput));
+    auto pid = progressive::IS_ThreePid::parse(jStr(env, jInput));
     return env->NewStringUTF(getIdentityMgr()->threePidToJson(pid).c_str());
 }
 JNI_FUNC(jstring, nativeIdentityBuildBind)(JNIEnv* env, jclass, jstring jInput) {
-    auto pid = progressive::ThreePid::parse(jStr(env, jInput));
+    auto pid = progressive::IS_ThreePid::parse(jStr(env, jInput));
     return env->NewStringUTF(getIdentityMgr()->buildBindRequest(pid).c_str());
 }
 JNI_FUNC(jstring, nativeIdentityBuildLookup)(JNIEnv* env, jclass, jstring jPidsJson) {
     auto json = jStr(env, jPidsJson);
-    std::vector<progressive::ThreePid> pids;
+    std::vector<progressive::IS_ThreePid> pids;
     size_t p = 0;
     while ((p = json.find("\"", p)) != std::string::npos) {
         p++; size_t e = p;
         while (e < json.size() && json[e] != '"') e++;
         std::string v = json.substr(p, e - p);
         if (!v.empty() && v != "[" && v != "]" && v != ",") {
-            auto pid = progressive::ThreePid::parse(v);
+            auto pid = progressive::IS_ThreePid::parse(v);
             if (pid.valid) pids.push_back(pid);
         }
         p = e + 1;
