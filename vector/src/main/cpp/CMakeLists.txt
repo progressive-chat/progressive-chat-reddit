@@ -106,9 +106,6 @@ add_library(
     src/event_utils.cpp
     src/room_directory.cpp
     src/widget_utils.cpp
-    src/server_notice_manager.cpp
-    src/room_state_manager.cpp
-    src/device_manager_full.cpp
     src/cross_signing_manager.cpp
     src/content_utils.cpp
     src/composer_manager.cpp
