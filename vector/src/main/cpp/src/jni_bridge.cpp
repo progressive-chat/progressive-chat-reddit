@@ -177,6 +177,7 @@
 #include "progressive/identity_server_manager.hpp"
 #include "progressive/device_manager_full.hpp"
 #include "progressive/offline_cache.hpp"
+#include "progressive/pin_manager.hpp"
 #include "progressive/widget_manager.hpp"
 #include "progressive/text_undo_manager.hpp"
 #include "progressive/thread_manager.hpp"
