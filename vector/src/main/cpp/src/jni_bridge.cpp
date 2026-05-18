@@ -5591,9 +5591,12 @@ JNI_FUNC(void, nativeDraftSave)(JNIEnv* env, jclass, jstring jRoomId, jstring jC
     draft.roomId = jStr(env, jRoomId); getDraftMgr()->saveDraft(draft);
 }
 JNI_FUNC(jstring, nativeDraftGet)(JNIEnv* env, jclass, jstring jRoomId) {
-    progressive::UserDraft draft;
-    auto* d = getDraftMgr()->getDraft(jStr(env, jRoomId)); if (d) { draft = *d;
-        return env->NewStringUTF(getDraftMgr()->draftToJson(draft).c_str());
+    auto* d = getDraftMgr()->getDraft(jStr(env, jRoomId));
+    if (d) {
+        std::ostringstream os;
+        os << R"({"roomId":")" << d->roomId << R"(","text":")" << d->text << "}";
+        return env->NewStringUTF(os.str().c_str());
+    }
     return env->NewStringUTF("{}");
 }
 JNI_FUNC(void, nativeDraftDelete)(JNIEnv* env, jclass, jstring jRoomId) {
