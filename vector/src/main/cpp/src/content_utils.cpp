@@ -86,7 +86,7 @@ std::string buildMxcUri(const std::string& serverName, const std::string& mediaI
 MessageType parseMessageType(const std::string& contentJson) {
     // Extract msgtype field:
     // {"msgtype":"m.text","body":"Hello"}
-    auto search = "\"msgtype\":\"";
+    std::string search = "\"msgtype\":\"";
     auto pos = contentJson.find(search);
     if (pos == std::string::npos) {
         search = "\"msgtype\": \"";
@@ -120,7 +120,7 @@ MessageContent parseMessageContent(const std::string& contentJson) {
 
     // Helper: extract string field
     auto extractStr = [&](const std::string& field) -> std::string {
-        auto search = "\"" + field + "\":\"";
+        std::string search = "\"" + field + "\":\"";
         auto pos = contentJson.find(search);
         if (pos == std::string::npos) {
             search = "\"" + field + "\": \"";
@@ -135,7 +135,7 @@ MessageContent parseMessageContent(const std::string& contentJson) {
 
     // Helper: extract int field
     auto extractInt = [&](const std::string& field) -> int {
-        auto search = "\"" + field + "\":";
+        std::string search = "\"" + field + "\":";
         auto pos = contentJson.find(search);
         if (pos == std::string::npos) return 0;
         pos += search.size();
@@ -512,7 +512,7 @@ std::string getTextEditableContent(const std::string& contentJson,
     // First, try to get the latest edited body
     std::string body;
     auto extractStr = [](const std::string& json, const std::string& key) -> std::string {
-        auto search = "\"" + key + "\":\"";
+        std::string search = "\"" + key + "\":\"";
         auto pos = json.find(search);
         if (pos == std::string::npos) {
             search = "\"" + key + "\": \"";
