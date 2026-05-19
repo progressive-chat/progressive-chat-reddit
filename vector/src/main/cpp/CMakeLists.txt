@@ -14,7 +14,6 @@ add_library(
     src/translate.cpp
     src/proxy.cpp
     src/yggdrasil.cpp
-    src/markdown.cpp
     src/matrix_api.cpp
     src/account_data_utils.cpp
     src/account_export.cpp
