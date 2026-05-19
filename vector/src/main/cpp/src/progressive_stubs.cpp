@@ -111,6 +111,45 @@ bool RoomStateManager::isInviteOnly(const std::string& roomId) const { return {}
 bool RoomStateManager::areGuestsAllowed(const std::string& roomId) const { return {}; }
 std::string RoomStateManager::roomStateToJson(const RoomStateSummary& state) const { return {}; }
 void RoomStateManager::clear() {}
+ServerNoticeInfo ServerNoticeManager::parseMatrixError(const std::string& errorJson) { return {}; }
+ServerNoticeInfo ServerNoticeManager::parseServerNoticeContent(const std::string& contentJson) { return {}; }
+bool ServerNoticeManager::isServerNoticeRoom(const std::string& roomTagsJson) { return {}; }
+bool ServerNoticeManager::isServerNoticeTag(const std::string& tagName) { return {}; }
+std::string ServerNoticeManager::formatResourceLimitError(const ServerNoticeInfo& info, ResourceLimitMode mode) { return {}; }
+std::string ServerNoticeManager::formatAdminContactLink(const std::string& adminUri) { return {}; }
+std::string ServerNoticeManager::formatAdminContactText(const std::string& adminUri) { return {}; }
+std::string ServerNoticeManager::formatConsentRequired(const ServerNoticeInfo& info) { return {}; }
+std::string ServerNoticeManager::formatRateLimitMessage(const ServerNoticeInfo& info) { return {}; }
+std::string ServerNoticeManager::getErrorCodeDescription(const std::string& errorCode) { return {}; }
+bool ServerNoticeManager::isResourceLimitError(const std::string& errorCode) { return {}; }
+bool ServerNoticeManager::isRateLimitError(const std::string& errorCode) { return {}; }
+bool ServerNoticeManager::isConsentError(const std::string& errorCode) { return {}; }
+bool ServerNoticeManager::isLogoutError(const std::string& errorCode) { return {}; }
+bool ServerNoticeManager::isUserDeactivatedError(const std::string& errorCode) { return {}; }
+std::string ServerNoticeManager::getBannerColor(const ServerNoticeInfo& info) { return {}; }
+std::string ServerNoticeManager::formatDowntime(int64_t retryAfterMs) { return {}; }
+std::string ServerNoticeManager::formatServerNotice(const ServerNoticeInfo& info) { return {}; }
+std::string ServerNoticeManager::serverNoticeToJson(const ServerNoticeInfo& info) { return {}; }
+std::string ServerNoticeManager::resourceLimitToJson(const ServerNoticeInfo& info) { return {}; }
+std::string ServerNoticeManager::extractStr(const std::string& json, const std::string& key) { return {}; }
+int64_t ServerNoticeManager::extractInt(const std::string& json, const std::string& key) { return {}; }
+bool ServerNoticeManager::extractBool(const std::string& json, const std::string& key) { return {}; }
+void SpaceGraph::setRoot(const std::string& spaceId, const std::string& name, const std::string& topic, const std::string& avatarUrl) {}
+void SpaceGraph::addChild(const std::string& parentId, const SpaceChildEntry& child) {}
+void SpaceGraph::setNodeMetadata(const std::string& roomId, const std::string& name, const std::string& topic, const std::string& avatarUrl, const std::string& joinRule, bool isJoined) {}
+void SpaceGraph::addParent(const std::string& roomId, const SpaceParentEntry& parent) {}
+void SpaceGraph::setOrder(const std::string& parentId, const std::string& childId, const std::string& order) {}
+SpaceGraphResult SpaceGraph::traverse(const SpaceTraversalOptions& options) const { return {}; }
+int SpaceGraph::getDepth(const std::string& roomId) const { return {}; }
+bool SpaceGraph::isInSpace(const std::string& spaceId, const std::string& roomId) const { return {}; }
+int SpaceGraph::deepestDepth() const { return {}; }
+std::string SpaceGraph::spaceToTreeJson(const std::string& spaceId, int maxDepth) const { return {}; }
+std::string SpaceGraph::flatListToJson(const std::vector<SpaceNode>& nodes) const { return {}; }
+std::string SpaceGraph::graphResultToJson(const SpaceGraphResult& result) const { return {}; }
+void SpaceGraph::clear() {}
+void SpaceGraph::traverseBFS(const SpaceTraversalOptions& options, SpaceGraphResult& result) const {}
+void SpaceGraph::traverseDFS(const std::string& nodeId, int depth, const SpaceTraversalOptions& options, SpaceGraphResult& result, std::unordered_set<std::string>& visited) {}
+std::string SpaceGraph::nodeToJson(const std::string& nodeId, int depthLeft, std::unordered_set<std::string>& visited) const { return {}; }
 
 
 // Free functions from content_utils
@@ -130,7 +169,12 @@ DeviceManager::DeviceManager() {}
 PollManager::PollManager() {}
 RoomDirectoryManager::RoomDirectoryManager() {}
 RoomStateManager::RoomStateManager() {}
+ServerNoticeManager::ServerNoticeManager() {}
+SpaceGraph::SpaceGraph() {}
 SpaceChildEntry parseSpaceChild(const std::string& stateKey, const std::string& contentJson) { return {}; }
 std::string resolveMxcThumbnailUrl(const std::string& mxcUrl, const std::string& homeServerUrl, int width, int height, const std::string& method) { return ""; }
+std::vector<SpaceNode> SpaceGraph::getChildren(const std::string& spaceId) const { return {}; }
+std::vector<std::string> SpaceGraph::getParents(const std::string& roomId) const { return {}; }
+std::vector<SpaceNode> SpaceGraph::searchSpaceRooms(const std::string& spaceId, const std::string& query) const { return {}; }
 const char* visibilityToString(RoomDirectoryVisibility) { return ""; }
 } // namespace progressive
