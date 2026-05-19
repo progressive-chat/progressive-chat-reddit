@@ -82,7 +82,7 @@ RoomSummaryInfo updateRoomSummary(
     // --- Join rule ---
     // Original Kotlin:
     //   roomSummaryEntity.joinRules = ...joinRules
-    s.isPublic = (stateEvents.joinRules == "public");
+    s.isPublic = (stateEvents.joinRule == "public");
 
     // --- Inviter ---
     // Original Kotlin:
