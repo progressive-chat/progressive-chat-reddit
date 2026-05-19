@@ -115,9 +115,7 @@ add_library(
     src/sync_filter.cpp
     src/spoiler_manager.cpp
     src/session_manager_full.cpp
-    src/server_notice_manager.cpp
     src/room_permissions_manager.cpp
-    src/room_name.cpp
     src/room_directory_manager.cpp
     src/profiler.cpp
     src/poll_manager.cpp
