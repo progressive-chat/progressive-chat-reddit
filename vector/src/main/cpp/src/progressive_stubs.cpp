@@ -151,4 +151,27 @@ void SpaceGraph::traverseBFS(const SpaceTraversalOptions& options, SpaceGraphRes
 void SpaceGraph::traverseDFS(const std::string& nodeId, int depth, const SpaceTraversalOptions& options, SpaceGraphResult& result, std::unordered_set<std::string>& visited) {}
 std::string SpaceGraph::nodeToJson(const std::string& nodeId, int depthLeft, std::unordered_set<std::string>& visited) const { return {}; }
 
+
+// Free functions from content_utils
+std::string buildMxcUri(const std::string& server, const std::string& mediaId) { return ""; }
+std::string ensureCorrectFormattedBodyInTextReply(const std::string& a, const std::string& b, const std::string& c) { return a; }
+std::string extractUsefulTextFromReply(const std::string& body) { return body; }
+std::string formatSpoilerTextFromHtml(const std::string& html) { return html; }
+std::string getEditedTargetEventId(const std::string& json) { return ""; }
+std::string getExtensionFromMimeType(const std::string& mime) { return ""; }
+std::string getLatestEditEventId(const std::string& json, const std::string& eventId) { return ""; }
+bool hasTextWithImage(const std::string& json) { return false; }
+std::string normalizeMimeType(const std::string& mime) { return mime; }
+std::string parseSpaceChild(const std::string& key, const std::string& json) { return ""; }
+std::string resolveMxcThumbnailUrl(const std::string& mxc, const std::string& hs, int w, int h, const std::string& m) { return ""; }
+bool visibilityToString(RoomDirectoryVisibility v) { return false; }
+
+// Constructors for missing modules
+CrossSigningManager::CrossSigningManager() {}
+DeviceManager::DeviceManager() {}
+PollManager::PollManager() {}
+RoomDirectoryManager::RoomDirectoryManager() {}
+RoomStateManager::RoomStateManager() {}
+ServerNoticeManager::ServerNoticeManager() {}
+SpaceGraph::SpaceGraph() {}
 } // namespace progressive
