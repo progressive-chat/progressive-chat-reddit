@@ -107,10 +107,10 @@ std::string buildJoinRulesContent(RoomJoinRule rule) {
 
 progressive::RoomStateManager::progressive::RoomStateManager() {}
 
-progressive::RoomStateSummary& progressive::RoomStateManager::getOrCreateState(const std::string& roomId) {
+progressive::progressive::RoomStateSummary& progressive::RoomStateManager::getOrCreateState(const std::string& roomId) {
     auto it = rooms_.find(roomId);
     if (it == rooms_.end()) {
-        progressive::RoomStateSummary s;
+        progressive::progressive::RoomStateSummary s;
         s.roomId = roomId;
         rooms_[roomId] = s;
     }
@@ -142,10 +142,10 @@ void progressive::RoomStateManager::setMemberCount(const std::string& roomId, in
     getOrCreateState(roomId).memberCount = count;
 }
 
-progressive::RoomStateSummary progressive::RoomStateManager::getRoomState(const std::string& roomId) const {
+progressive::progressive::RoomStateSummary progressive::RoomStateManager::getRoomState(const std::string& roomId) const {
     auto it = rooms_.find(roomId);
     if (it != rooms_.end()) return it->second;
-    progressive::RoomStateSummary s;
+    progressive::progressive::RoomStateSummary s;
     s.roomId = roomId;
     return s;
 }
@@ -176,7 +176,7 @@ void progressive::RoomStateManager::clear() { rooms_.clear(); }
 
 // ====== Serialization ======
 
-std::string progressive::RoomStateManager::roomStateToJson(const progressive::RoomStateSummary& state) const {
+std::string progressive::RoomStateManager::roomStateToJson(const progressive::progressive::RoomStateSummary& state) const {
     auto esc = [](const std::string& s) -> std::string {
         std::string out;
         for (char c : s) { if (c == '"') out += "\\\""; else out += c; }

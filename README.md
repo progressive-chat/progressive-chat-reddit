@@ -8,6 +8,8 @@ Currently an active fork of [Element](https://github.com/element-hq) Classic ([e
 
 **Website:** [progressive.chat](https://progressive.chat)
 
+> 💬 **Chat with the author:** Join [#community:progressive.chat](https://matrix.to/#/#community:progressive.chat) on Matrix
+
 ## The Vision
 
 - **Pure C++ core** for maximum performance and portability
