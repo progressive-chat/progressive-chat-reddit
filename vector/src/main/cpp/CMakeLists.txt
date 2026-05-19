@@ -162,7 +162,6 @@ add_library(
     src/event_models.cpp
     src/federation_version.cpp
     src/report_utils.cpp
-    src/webrtc_utils.cpp
     src/message_retry.cpp
     src/sync_utils.cpp
     src/event_display.cpp
