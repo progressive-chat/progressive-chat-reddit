@@ -6,9 +6,9 @@
 
 namespace progressive {
 
-CallSession parseCallInvite(const std::string& eventContentJson, const std::string& eventId,
+CallInfo parseCallInvite(const std::string& eventContentJson, const std::string& eventId,
     const std::string& roomId, const std::string& senderId) {
-    CallSession call;
+    CallInfo call;
     call.callId      = parseJsonStringValue(eventContentJson, "call_id");
     if (call.callId.empty()) call.callId = eventId;
     call.roomId      = roomId;
@@ -119,7 +119,7 @@ std::string buildCallHangupContent(const std::string& callId, const std::string&
     return json.str();
 }
 
-std::string formatCallNotification(const CallSession& call) {
+std::string formatCallNotification(const CallInfo& call) {
     std::ostringstream out;
     out << (call.isVideo ? "Video" : "Voice") << " call";
     if (call.isIncoming) out << " from " << call.callerName;

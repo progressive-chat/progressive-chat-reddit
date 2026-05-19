@@ -106,6 +106,7 @@ add_library(
     src/event_utils.cpp
     src/room_directory.cpp
     src/widget_utils.cpp
+    src/webrtc_utils.cpp
     src/sso_utils.cpp
     src/backup_utils.cpp
     src/device_manager.cpp
