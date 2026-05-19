@@ -295,6 +295,17 @@ ParsedDevicesListResponse parseDeviceListsResponse(const std::string& json);
 //   fun parse(syncStrategy, workingFile): SyncResponse
 //   The parser extracts next_batch, presence, account_data, etc. from a stored
 //   initial sync file to allow incremental sync to resume.
+enum class InitialSyncStepType { DOWNLOADING = 0, IMPORTING_ACCOUNT = 1, IMPORTING_DEFERRED_KEYS = 2 };
+
+struct InitialSyncStep {
+    InitialSyncStepType type = InitialSyncStepType::DOWNLOADING;
+    int percentProgress = 0;
+};
+
+struct IncrementalSyncParsing {
+    int rooms = 0;
+    int toDevice = 0;
+};
 InitialSyncStep parseInitialSyncMetadata(const std::string& json);
 
 // Serialize top-level sync response (for caching)
@@ -311,17 +322,6 @@ struct SyncState {
     bool afterPause = false;             // for RUNNING state
 };
 
-enum class InitialSyncStepType { DOWNLOADING = 0, IMPORTING_ACCOUNT = 1, IMPORTING_DEFERRED_KEYS = 2 };
-
-struct InitialSyncStep {
-    InitialSyncStepType type = InitialSyncStepType::DOWNLOADING;
-    int percentProgress = 0;
-};
-
-struct IncrementalSyncParsing {
-    int rooms = 0;
-    int toDevice = 0;
-};
 
 enum class SyncRequestStateType { IDLE = 0, INITIAL_PROGRESS = 1, INCREMENTAL_IDLE = 2, INCREMENTAL_PARSING = 3, INCREMENTAL_ERROR = 4, INCREMENTAL_DONE = 5 };
 
