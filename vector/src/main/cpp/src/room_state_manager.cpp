@@ -87,30 +87,28 @@ std::string getVisibilityDescription(RSM_RoomHistoryVisibility visibility) {
 
 // ====== Content Builders ======
 
+static std::string roomHistoryVisibilityToString(RSM_RoomHistoryVisibility vis) { switch(vis) { case RSM_RoomHistoryVisibility::WORLD_READABLE: return "world_readable"; case RSM_RoomHistoryVisibility::SHARED: return "shared"; case RSM_RoomHistoryVisibility::INVITED: return "invited"; case RSM_RoomHistoryVisibility::JOINED: return "joined"; } return "joined"; }
+
 std::string buildHistoryVisibilityContent(RSM_RoomHistoryVisibility visibility) {
     return R"({"history_visibility":")" + std::string(roomHistoryVisibilityToString(visibility)) + R"("})";
 }
+
+static std::string roomJoinRulesToString(RoomJoinRule rule) { switch(rule) { case RoomJoinRule::PUBLIC: return "public"; case RoomJoinRule::KNOCK: return "knock"; case RoomJoinRule::INVITE: return "invite"; case RoomJoinRule::PRIVATE: return "private"; case RoomJoinRule::RESTRICTED: return "restricted"; } return "invite"; }
 
 std::string buildJoinRulesContent(RoomJoinRule rule) {
     return R"({"join_rule":")" + std::string(roomJoinRulesToString(rule)) + R"("})";
 }
 
-    auto vis = extractStr(contentJson, "history_visibility");
-    return historyVisibilityFromString(vis);
-}
 
-    auto rule = extractStr(contentJson, "join_rule");
-    return joinRuleFromString(rule);
-}
 
 // ====== progressive::RoomStateManager ======
 
-progressive::RoomStateManager::progressive::RoomStateManager() {}
+RoomStateManager::RoomStateManager() {}
 
-progressive::progressive::RSM_RoomStateSummary& progressive::RoomStateManager::getOrCreateState(const std::string& roomId) {
+RoomStateSummary& progressive::RoomStateManager::getOrCreateState(const std::string& roomId) {
     auto it = rooms_.find(roomId);
     if (it == rooms_.end()) {
-        progressive::progressive::RSM_RoomStateSummary s;
+        RoomStateSummary s;
         s.roomId = roomId;
         rooms_[roomId] = s;
     }
@@ -118,14 +116,28 @@ progressive::progressive::RSM_RoomStateSummary& progressive::RoomStateManager::g
 }
 
 void progressive::RoomStateManager::setHistoryVisibility(const std::string& roomId, RSM_RoomHistoryVisibility visibility) {
-    auto& state = getOrCreateState(roomId);
+    auto it = rooms_.find(roomId);
+    if (it == rooms_.end()) {
+        RoomStateSummary s;
+        s.roomId = roomId;
+        rooms_[roomId] = s;
+        it = rooms_.find(roomId);
+    }
+    auto& state = it->second;
     state.historyVisibility = visibility;
     state.isWorldReadable = (visibility == RSM_RoomHistoryVisibility::WORLD_READABLE);
     state.canShareHistory = shouldShareHistory(visibility);
 }
 
 void progressive::RoomStateManager::setJoinRule(const std::string& roomId, RoomJoinRule rule) {
-    auto& state = getOrCreateState(roomId);
+    auto it = rooms_.find(roomId);
+    if (it == rooms_.end()) {
+        RoomStateSummary s;
+        s.roomId = roomId;
+        rooms_[roomId] = s;
+        it = rooms_.find(roomId);
+    }
+    auto& state = it->second;
     state.joinRules = rule;
     state.isPublicRoom = (rule == RoomJoinRule::PUBLIC);
 }
@@ -142,10 +154,10 @@ void progressive::RoomStateManager::setMemberCount(const std::string& roomId, in
     getOrCreateState(roomId).memberCount = count;
 }
 
-progressive::progressive::RSM_RoomStateSummary progressive::RoomStateManager::getRoomState(const std::string& roomId) const {
+RoomStateSummary progressive::RoomStateManager::getRoomState(const std::string& roomId) const {
     auto it = rooms_.find(roomId);
     if (it != rooms_.end()) return it->second;
-    progressive::progressive::RSM_RoomStateSummary s;
+    RoomStateSummary s;
     s.roomId = roomId;
     return s;
 }
@@ -176,7 +188,7 @@ void progressive::RoomStateManager::clear() { rooms_.clear(); }
 
 // ====== Serialization ======
 
-std::string progressive::RoomStateManager::roomStateToJson(const progressive::progressive::RSM_RoomStateSummary& state) const {
+std::string progressive::RoomStateManager::roomStateToJson(const RoomStateSummary& state) const {
     auto esc = [](const std::string& s) -> std::string {
         std::string out;
         for (char c : s) { if (c == '"') out += "\\\""; else out += c; }
