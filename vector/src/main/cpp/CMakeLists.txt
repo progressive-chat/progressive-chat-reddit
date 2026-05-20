@@ -131,7 +131,6 @@ add_library(
     src/webrtc_utils.cpp
     src/sso_utils.cpp
     src/backup_utils.cpp
-    src/presence_utils.cpp
     src/room_permissions.cpp
     src/room_summary.cpp
     src/room_tombstone.cpp
