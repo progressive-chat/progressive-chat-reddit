@@ -4,6 +4,19 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <unordered_map>
+
+// Original Kotlin: AvatarChangeReason
+enum class AvatarChangeReason {
+    USER_CHANGE,
+    PROFILE_SYNC,
+    ROOM_CREATE,
+    UNKNOWN
+};
+
+const char* avatarChangeReasonToString(AvatarChangeReason r);
+AvatarChangeReason avatarChangeReasonFromString(const std::string& s);
+
 
 namespace progressive {
 
@@ -15,6 +28,9 @@ struct AvatarEntry {
     bool isCurrent = false;
     std::string setDate;       // formatted: "May 13, 2026"
     std::string removedDate;   // formatted or "" if active
+    std::string url;           // avatar URL (alias for mxcUrl)
+    std::string setBy;         // userId who set this avatar
+    std::string setAt;         // formatted timestamp string
 };
 
 class AvatarHistory {
@@ -38,6 +54,32 @@ public:
 
     // Export as JSON.
     std::string exportJson() const;
+
+
+    // Track an avatar change with full context and reason.
+        // Original Kotlin: trackAvatarChange(url, setBy, timestamp, reason)
+        void trackAvatarChange(const std::string& url, const std::string& setBy,
+                               int64_t timestamp, AvatarChangeReason reason);
+    
+        // Get avatar history as-is (unsorted).
+        // Original Kotlin: getAvatarHistory()
+        std::vector<AvatarEntry> getAvatarHistory() const;
+    
+        // Format avatar history as human-readable text.
+        // Original Kotlin: formatAvatarHistory()
+        std::string formatAvatarHistory() const;
+    
+        // Get the previous avatar URL (before current).
+        // Original Kotlin: getPreviousAvatar()
+        std::string getPreviousAvatar() const;
+    
+        // Check if avatar has changed from initial/default state.
+        // Original Kotlin: isAvatarChanged()
+        bool isAvatarChanged() const;
+    
+        // Get the current avatar URL as a string.
+        // Original Kotlin: currentUrl
+        std::string currentUrl() const;
 
 private:
     std::vector<AvatarEntry> entries_;
