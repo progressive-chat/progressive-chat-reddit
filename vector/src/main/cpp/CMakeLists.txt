@@ -106,7 +106,6 @@ add_library(
     src/server_notice_manager.cpp
     src/room_name.cpp
     src/decryptor_utils.cpp
-    src/cross_signing_manager.cpp
     src/content_utils.cpp
     src/widget_manager.cpp
     src/user_directory.cpp
