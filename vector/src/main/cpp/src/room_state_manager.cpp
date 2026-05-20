@@ -104,7 +104,6 @@ std::string buildJoinRulesContent(RoomJoinRule rule) {
 // ====== progressive::RoomStateManager ======
 
 RoomStateManager::RoomStateManager() {}
-}
 
 void progressive::RoomStateManager::setHistoryVisibility(const std::string& roomId, RSM_RoomHistoryVisibility visibility) {
     auto it = rooms_.find(roomId);
