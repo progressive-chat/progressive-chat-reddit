@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include "progressive/device_manager_full.hpp"
 #include <unordered_map>
 #include "progressive/event_models.hpp"
 
@@ -21,6 +22,8 @@ struct DeviceInfo {
     std::string lastSeenIp;          // "last_seen_ip" key
     std::string lastSeenUserAgent;   // "last_seen_user_agent" key
 
+    bool valid = false;
+
     // Original Kotlin: getBestLastSeenUserAgent()
     std::string getBestLastSeenUserAgent() const { return lastSeenUserAgent; }
 };
@@ -29,6 +32,7 @@ struct DeviceInfo {
 //   data class DevicesListResponse(@Json(name="devices") devices: List<DeviceInfo>?)
 struct DevicesListResponse {
     std::vector<DeviceInfo> devices;
+    int totalCount = 0;
 };
 
 // Original Kotlin (UnsignedDeviceInfo.kt:25-31):
@@ -62,13 +66,13 @@ struct CryptoDeviceInfo {
     std::unordered_map<std::string, std::string> keys;           // "ed25519:deviceId" → key
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> signatures; // userId → keyType → sig
     UnsignedDeviceInfo unsignedInfo;
-    DeviceVerification trustLevel = DeviceVerification::UNKNOWN;
+    DeviceTrustLevel trustLevel;
     bool isBlocked = false;
-    int64_t firstTimeSeenLocalTs = 0;
+    bool valid = false;
 
     // Original Kotlin: isVerified / isCrossSigningVerified / isUnknown
-    bool isVerified() const { return trustLevel == DeviceVerification::VERIFIED; }
-    bool isUnknown() const { return trustLevel == DeviceVerification::UNKNOWN; }
+    bool isVerified() const { return trustLevel.isVerified(); }
+    bool isUnknown() const { return !trustLevel.crossSigningVerified && !trustLevel.locallyVerified.has_value(); }
 
     // Original Kotlin: fingerprint()
     std::string fingerprint() const {
