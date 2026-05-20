@@ -82,7 +82,7 @@ DevicesListResponse DeviceManager::parseDevicesList(const std::string& json) {
         if (dev.valid) resp.devices.push_back(dev);
     }
 
-    resp.devices.size() = static_cast<int>(resp.devices.size());
+    resp.totalCount = static_cast<int>(resp.devices.size());
     return resp;
 }
 
@@ -232,15 +232,21 @@ bool DeviceManager::requiresUia(const std::string& deleteResponseJson) const {
 // ====== Device Verification ======
 
 std::string DeviceManager::formatTrustLevel(const DeviceVerification& level) const {
-    if (level.crossSigningVerified) return "Cross-signing verified";
-    if (level.locallyVerified) return "Locally verified";
-    return "Not verified";
+    switch (level) {
+        case DeviceVerification::VERIFIED: return "Cross-signing verified";
+        case DeviceVerification::BLOCKED: return "Blocked";
+        case DeviceVerification::UNVERIFIED: return "Locally verified";
+        default: return "Not verified";
+    }
 }
 
 std::string DeviceManager::getTrustLabel(const DeviceVerification& level) const {
-    if (level.crossSigningVerified) return "Verified";
-    if (level.locallyVerified) return "Verified (local)";
-    return "Not verified";
+    switch (level) {
+        case DeviceVerification::VERIFIED: return "Verified";
+        case DeviceVerification::BLOCKED: return "Blocked";
+        case DeviceVerification::UNVERIFIED: return "Verified (local)";
+        default: return "Not verified";
+    }
 }
 
 // ====== Device Fingerprint ======
@@ -429,10 +435,9 @@ std::string DeviceManager::cryptoDevicesToJson(const std::vector<CryptoDeviceInf
 
 std::string DeviceManager::trustLevelToJson(const DeviceVerification& level) const {
     std::ostringstream os;
-    os << R"({"cross_signing_verified":)" << (level.crossSigningVerified ? "true" : "false")
-       << R"(,"locally_verified":)" << (level.locallyVerified ? "true" : "false")
-       << R"(,"is_verified":)" << (level.isVerified() ? "true" : "false")
-       << R"(,"label":")" << getTrustLabel(level) << R"(")";
+    os << R"({"level":)" << static_cast<int>(level);
+    os << R"(,"is_verified":)" << (level == DeviceVerification::VERIFIED ? "true" : "false");
+    os << R"(,"label":")" << getTrustLabel(level) << R"(")";
     os << "}";
     return os.str();
 }
