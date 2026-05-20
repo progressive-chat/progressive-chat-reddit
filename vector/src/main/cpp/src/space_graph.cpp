@@ -264,7 +264,7 @@ void SpaceGraph::traverseDFS(const std::string& nodeId, int depth,
     }
 }
 
-SpaceGraphResult SpaceGraph::traverse(const SpaceTraversalOptions& options) {
+SpaceGraphResult SpaceGraph::traverse(const SpaceTraversalOptions& options) const {
     SpaceGraphResult result;
 
     if (rootId_.empty()) return result;
@@ -1049,19 +1049,19 @@ SpaceValidationResult validateSpaceRelationships(
             if (childRoom == roomMap.end()) continue;
 
             // Add parent name
-            if (std::find(childRoom->second.directParentNames.begin(),
-                          childRoom->second.directParentNames.end(),
+            if (std::find(childRoom->second->directParentNames.begin(),
+                          childRoom->second->directParentNames.end(),
                           parentIt->second->displayName)
-                == childRoom->second.directParentNames.end()) {
-                childRoom->second.directParentNames.push_back(parentIt->second->displayName);
+                == childRoom->second->directParentNames.end()) {
+                childRoom->second->directParentNames.push_back(parentIt->second->displayName);
             }
 
             // Add all transitive parent IDs
             for (const auto& pid : flattenParents) {
-                if (std::find(childRoom->second.flattenParentIds.begin(),
-                              childRoom->second.flattenParentIds.end(), pid)
-                    == childRoom->second.flattenParentIds.end()) {
-                    childRoom->second.flattenParentIds.push_back(pid);
+                if (std::find(childRoom->second->flattenParentIds.begin(),
+                              childRoom->second->flattenParentIds.end(), pid)
+                    == childRoom->second->flattenParentIds.end()) {
+                    childRoom->second->flattenParentIds.push_back(pid);
                 }
             }
         }
