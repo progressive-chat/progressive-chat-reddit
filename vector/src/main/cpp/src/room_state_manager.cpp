@@ -105,8 +105,6 @@ std::string buildJoinRulesContent(RoomJoinRule rule) {
 
 RoomStateManager::RoomStateManager() {}
 
-RoomStateSummary& progressive::RoomStateManager::getOrCreateState(const std::string& roomId) {
-    auto it = rooms_.find(roomId);
     if (it == rooms_.end()) {
         RoomStateSummary s;
         s.roomId = roomId;
