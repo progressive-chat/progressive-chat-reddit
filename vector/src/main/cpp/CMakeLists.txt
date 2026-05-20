@@ -105,8 +105,6 @@ add_library(
     src/sync_handler.cpp
     src/server_notice_manager.cpp
     src/room_name.cpp
-    src/room_directory_manager.cpp
-    src/device_manager_full.cpp
     src/decryptor_utils.cpp
     src/cross_signing_manager.cpp
     src/content_utils.cpp
