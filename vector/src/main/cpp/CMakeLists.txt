@@ -103,12 +103,9 @@ add_library(
     src/widget_utils.cpp
     src/voice_broadcast.cpp
     src/sync_handler.cpp
-    src/space_graph.cpp
     src/server_notice_manager.cpp
-    src/room_state_manager.cpp
     src/room_name.cpp
     src/room_directory_manager.cpp
-    src/poll_manager.cpp
     src/login_flow.cpp
     src/device_manager_full.cpp
     src/decryptor_utils.cpp
