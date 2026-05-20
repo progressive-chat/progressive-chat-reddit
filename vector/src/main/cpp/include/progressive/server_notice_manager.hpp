@@ -92,6 +92,9 @@ struct MatrixErrorCodes {
 
 // ---- Server Notice Manager ----
 
+
+
+
 class ServerNoticeManager {
 public:
     ServerNoticeManager();
