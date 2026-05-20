@@ -73,14 +73,14 @@ std::string formatCrossSigningStatus(const CrossSigningStatus& status) {
     return out.str();
 }
 
-std::string getCrossSigningStorageKey(CrossSigningKey keyType, const std::string& userId) {
+std::string getCrossSigningStorageKey(CrossSigningKeyType keyType, const std::string& userId) {
     // Original Kotlin (CrossSigningService.kt:45):
     //   private fun storageKey(type: CrossSigningKey): String = "mx_secret_${type.name.lowercase()}_$userId"
     std::string typeStr;
     switch (keyType) {
-        case CrossSigningKey::Master:      typeStr = "master"; break;
-        case CrossSigningKey::SelfSigning: typeStr = "self_signing"; break;
-        case CrossSigningKey::UserSigning: typeStr = "user_signing"; break;
+        case CrossSigningKeyType::Master:      typeStr = "master"; break;
+        case CrossSigningKeyType::SelfSigning: typeStr = "self_signing"; break;
+        case CrossSigningKeyType::UserSigning: typeStr = "user_signing"; break;
         default:                           typeStr = "unknown";
     }
     return "mx_secret_" + typeStr + "_" + userId;
