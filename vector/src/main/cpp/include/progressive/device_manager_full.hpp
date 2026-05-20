@@ -141,10 +141,10 @@ public:
 
     // Format device trust level for display.
     // Original: DeviceTrustLevel.isVerified() / isCrossSigningVerified()
-    std::string formatTrustLevel(const DeviceTrustLevel& level) const;
+    std::string formatTrustLevel(const DeviceVerification& level) const;
 
     // Get trust label for UI ("Verified", "Cross-signing verified", "Not verified").
-    std::string getTrustLabel(const DeviceTrustLevel& level) const;
+    std::string getTrustLabel(const DeviceVerification& level) const;
 
     // ====== Device Fingerprint ======
 
@@ -191,7 +191,7 @@ public:
     std::string cryptoDevicesToJson(const std::vector<CryptoDeviceInfo>& devices) const;
 
     // Export device trust level as JSON.
-    std::string trustLevelToJson(const DeviceTrustLevel& level) const;
+    std::string trustLevelToJson(const DeviceVerification& level) const;
 
 private:
     // JSON extraction helpers.

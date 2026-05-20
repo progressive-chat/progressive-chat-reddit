@@ -157,8 +157,11 @@ CryptoDeviceInfo DeviceManager::parseCryptoDeviceInfo(const std::string& deviceI
     // Parse trust level
     auto tlJson = extractStr(json, "trust_level");
     if (!tlJson.empty()) {
-        dev.trustLevel.crossSigningVerified = tlJson.find("cross_signing_verified") != std::string::npos;
-        dev.trustLevel.locallyVerified = tlJson.find("locally_verified") != std::string::npos;
+        bool crossVerified = tlJson.find("cross_signing_verified") != std::string::npos;
+        bool localVerified = tlJson.find("locally_verified") != std::string::npos;
+        if (crossVerified) dev.trustLevel = DeviceVerification::VERIFIED;
+        else if (localVerified) dev.trustLevel = DeviceVerification::UNVERIFIED;
+        else dev.trustLevel = DeviceVerification::UNKNOWN;
     }
 
     // Parse unsigned info for display name
@@ -228,13 +231,13 @@ bool DeviceManager::requiresUia(const std::string& deleteResponseJson) const {
 
 // ====== Device Verification ======
 
-std::string DeviceManager::formatTrustLevel(const DeviceTrustLevel& level) const {
+std::string DeviceManager::formatTrustLevel(const DeviceVerification& level) const {
     if (level.crossSigningVerified) return "Cross-signing verified";
     if (level.locallyVerified) return "Locally verified";
     return "Not verified";
 }
 
-std::string DeviceManager::getTrustLabel(const DeviceTrustLevel& level) const {
+std::string DeviceManager::getTrustLabel(const DeviceVerification& level) const {
     if (level.crossSigningVerified) return "Verified";
     if (level.locallyVerified) return "Verified (local)";
     return "Not verified";
@@ -424,7 +427,7 @@ std::string DeviceManager::cryptoDevicesToJson(const std::vector<CryptoDeviceInf
     return os.str();
 }
 
-std::string DeviceManager::trustLevelToJson(const DeviceTrustLevel& level) const {
+std::string DeviceManager::trustLevelToJson(const DeviceVerification& level) const {
     std::ostringstream os;
     os << R"({"cross_signing_verified":)" << (level.crossSigningVerified ? "true" : "false")
        << R"(,"locally_verified":)" << (level.locallyVerified ? "true" : "false")

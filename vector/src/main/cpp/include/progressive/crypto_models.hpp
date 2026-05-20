@@ -19,7 +19,8 @@ struct DeviceInfo {
     std::string displayName;         // "display_name" key
     int64_t lastSeenTs = 0;          // "last_seen_ts" key
     std::string lastSeenIp;          // "last_seen_ip" key
-    std::string lastSeenUserAgent;   // "last_seen_user_agent" key
+    std::string lastSeenUserAgent;
+    bool valid = false;   // "last_seen_user_agent" key
 
     // Original Kotlin: getBestLastSeenUserAgent()
     std::string getBestLastSeenUserAgent() const { return lastSeenUserAgent; }
@@ -29,6 +30,7 @@ struct DeviceInfo {
 //   data class DevicesListResponse(@Json(name="devices") devices: List<DeviceInfo>?)
 struct DevicesListResponse {
     std::vector<DeviceInfo> devices;
+    int totalCount = 0;
 };
 
 // Original Kotlin (UnsignedDeviceInfo.kt:25-31):
@@ -65,6 +67,7 @@ struct CryptoDeviceInfo {
     DeviceVerification trustLevel = DeviceVerification::UNKNOWN;
     bool isBlocked = false;
     int64_t firstTimeSeenLocalTs = 0;
+    bool valid = false;
 
     // Original Kotlin: isVerified / isCrossSigningVerified / isUnknown
     bool isVerified() const { return trustLevel == DeviceVerification::VERIFIED; }
