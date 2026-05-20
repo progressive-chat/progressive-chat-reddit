@@ -93,7 +93,7 @@ std::string buildHistoryVisibilityContent(RSM_RoomHistoryVisibility visibility) 
     return R"({"history_visibility":")" + std::string(roomHistoryVisibilityToString(visibility)) + R"("})";
 }
 
-static std::string roomJoinRulesToString(RoomJoinRule rule) { switch(rule) { case RoomJoinRule::PUBLIC: return "public"; case RoomJoinRule::KNOCK: return "knock"; case RoomJoinRule::INVITE: return "invite"; case RoomJoinRule::PRIVATE: return "private"; case RoomJoinRule::RESTRICTED: return "restricted"; } return "invite"; }
+static std::string roomJoinRulesToString(RoomJoinRule rule) { switch(rule) { case RoomJoinRule::PUBLIC: return "public"; case RoomJoinRule::KNOCK: return "knock"; case RoomJoinRule::INVITE: return "invite"; case RoomJoinRule::PRIVATE: return "private"; } return "invite"; }
 
 std::string buildJoinRulesContent(RoomJoinRule rule) {
     return R"({"join_rule":")" + std::string(roomJoinRulesToString(rule)) + R"("})";
@@ -138,20 +138,20 @@ void progressive::RoomStateManager::setJoinRule(const std::string& roomId, RoomJ
         it = rooms_.find(roomId);
     }
     auto& state = it->second;
-    state.joinRules = rule;
+    state.joinRule = rule;
     state.isPublicRoom = (rule == RoomJoinRule::PUBLIC);
 }
 
 void progressive::RoomStateManager::setRoomName(const std::string& roomId, const std::string& name) {
-    getOrCreateState(roomId).roomName = name;
+    rooms_[roomId].roomName = name;
 }
 
 void progressive::RoomStateManager::setEncrypted(const std::string& roomId, bool encrypted) {
-    getOrCreateState(roomId).isEncrypted = encrypted;
+    rooms_[roomId].isEncrypted = encrypted;
 }
 
 void progressive::RoomStateManager::setMemberCount(const std::string& roomId, int count) {
-    getOrCreateState(roomId).memberCount = count;
+    rooms_[roomId].memberCount = count;
 }
 
 RoomStateSummary progressive::RoomStateManager::getRoomState(const std::string& roomId) const {
@@ -176,7 +176,7 @@ bool progressive::RoomStateManager::isWorldReadable(const std::string& roomId) c
 }
 
 bool progressive::RoomStateManager::isInviteOnly(const std::string& roomId) const {
-    return getRoomState(roomId).joinRules == RoomJoinRule::INVITE;
+    return getRoomState(roomId).joinRule == RoomJoinRule::INVITE;
 }
 
 bool progressive::RoomStateManager::areGuestsAllowed(const std::string& roomId) const {
@@ -200,11 +200,11 @@ std::string progressive::RoomStateManager::roomStateToJson(const RoomStateSummar
        << R"(","name":")" << esc(state.roomName)
        << R"(","history_visibility":")" << roomHistoryVisibilityToString(state.historyVisibility)
        << R"(","visibility_label":")" << getVisibilityLabel(state.historyVisibility)
-       << R"(","join_rule":")" << roomJoinRulesToString(state.joinRules)
+       << R"(","join_rule":")" << roomJoinRulesToString(state.joinRule)
        << R"(,"is_public":)" << (state.isPublicRoom ? "true" : "false")
        << R"(,"is_world_readable":)" << (state.isWorldReadable ? "true" : "false")
        << R"(,"can_share_history":)" << (state.canShareHistory ? "true" : "false")
-       << R"(,"is_invite_only":)" << (roomJoinRulesToString(state.joinRules) == std::string("invite") ? "true" : "false")
+       << R"(,"is_invite_only":)" << (roomJoinRulesToString(state.joinRule) == std::string("invite") ? "true" : "false")
        << R"(,"is_encrypted":)" << (state.isEncrypted ? "true" : "false")
        << R"(,"members":)" << state.memberCount
        << "}";
