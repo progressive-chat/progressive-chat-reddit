@@ -107,7 +107,7 @@ CI builds F-Droid arm32 (armeabi-v7a, works on all devices). Requires Android SD
 
 ## Versioning
 
-Current version: **v0.1.5**. Before 1.0.0, all bets are off — rapid iteration is the priority.
+Current version: **v0.2.0**. Before 1.0.0, all bets are off — rapid iteration is the priority.
 
 ### Pre-1.0.0 (now)
 
