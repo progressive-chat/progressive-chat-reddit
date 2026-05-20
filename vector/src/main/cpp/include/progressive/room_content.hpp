@@ -387,6 +387,8 @@ struct RoomStrippedState {
     std::string roomType;                // e.g. "m.space"
     std::string membership;              // e.g. "leave"
 
+    bool valid = false;
+
     // Original Kotlin: getPrimaryAlias()
     std::string getPrimaryAlias() const {
         if (!canonicalAlias.empty()) return canonicalAlias;
@@ -447,6 +449,8 @@ struct PublicRoom {
     std::string avatarUrl;
     bool isFederated = true;
 
+    bool valid = false;
+
     // Original Kotlin: getPrimaryAlias()
     std::string getPrimaryAlias() const {
         if (!canonicalAlias.empty()) return canonicalAlias;
@@ -458,6 +462,8 @@ struct PublicRoom {
 // Original Kotlin (PublicRoomsResponse.kt:26-47):
 //   data class PublicRoomsResponse(nextBatch, prevBatch, chunk, totalRoomCountEstimate)
 struct PublicRoomsResponse {
+    bool hasMore = false;
+    int loadedCount = 0;
     std::string nextBatch;               // "next_batch" key
     std::string prevBatch;               // "prev_batch" key
     std::vector<PublicRoom> chunk;       // "chunk" key

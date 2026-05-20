@@ -60,8 +60,8 @@ std::string RoomDirectoryManager::buildPublicRoomsRequest(const PublicRoomsParam
         os << R"(,"since":")" << params.since << R"(")";
     }
 
-    if (!params.filter.searchTerm.empty()) {
-        os << R"(,"filter":{"generic_search_term":")" << params.filter.searchTerm << R"("})";
+    if (!params.searchTerm.empty()) {
+        os << R"(,"filter":{"generic_search_term":")" << params.searchTerm << R"("})";
     }
 
     if (params.includeAllNetworks) {
