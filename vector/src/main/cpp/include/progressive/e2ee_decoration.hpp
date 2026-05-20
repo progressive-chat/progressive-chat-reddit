@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include "progressive/crypto_models.hpp"
 
 namespace progressive {
 
