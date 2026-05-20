@@ -144,5 +144,6 @@ std::vector<PinnedEventInfo> getPinnedEvents(const std::string& stateContentJson
 // Original Kotlin: formatPinnedEventsMessage()
 std::string formatPinnedEventsMessage(const std::vector<PinnedEvent>& events) {
     return formatPinnedEventsText(events);
+}
 
 } // namespace progressive
