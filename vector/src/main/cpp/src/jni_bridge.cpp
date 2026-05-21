@@ -6048,6 +6048,48 @@ JNI_FUNC(jstring, nativeEnsureCorrectFormattedBodyInTextReply)(JNIEnv* env, jcla
     return env->NewStringUTF(result.c_str());
 }
 
+// ============================================================
+// LLM (Large Language Model) Integration
+// ============================================================
+
+JNI_FUNC(jstring, nativeBuildLlmRequest)(JNIEnv* env, jclass, jstring jPrompt, jint jProvider,
+                                          jstring jEndpoint, jstring jToken, jstring jModel,
+                                          jstring jSystem, jfloat jTemp, jint jMaxTokens) {
+    progressive::LlmConfig config;
+    config.provider = static_cast<progressive::LlmProvider>(jProvider);
+    config.apiEndpoint = jStr(env, jEndpoint);
+    config.apiToken = jStr(env, jToken);
+    config.model = jStr(env, jModel);
+    config.systemPrompt = jStr(env, jSystem);
+    config.temperature = jTemp;
+    config.maxTokens = jMaxTokens;
+    auto body = progressive::buildLlmRequestBody(config, jStr(env, jPrompt));
+    return env->NewStringUTF(body.c_str());
+}
+
+JNI_FUNC(jstring, nativeBuildLlmHeaders)(JNIEnv* env, jclass, jint jProvider, jstring jToken) {
+    progressive::LlmConfig config;
+    config.provider = static_cast<progressive::LlmProvider>(jProvider);
+    config.apiToken = jStr(env, jToken);
+    auto headers = progressive::buildLlmHeaders(config);
+    return env->NewStringUTF(headers.c_str());
+}
+
+JNI_FUNC(jstring, nativeParseLlmResponse)(JNIEnv* env, jclass, jstring jBody, jint jStatusCode, jint jProvider) {
+    auto resp = progressive::parseLlmResponse(jStr(env, jBody), jStatusCode,
+                                               static_cast<progressive::LlmProvider>(jProvider));
+    std::string json = "{\"success\":" + std::string(resp.success ? "true" : "false") + ",";
+    json += "\"text\":\"" + resp.text + "\",";
+    json += "\"errorMessage\":\"" + resp.errorMessage + "\",";
+    json += "\"tokensUsed\":" + std::to_string(resp.tokensUsed) + "}";
+    return env->NewStringUTF(json.c_str());
+}
+
+JNI_FUNC(jstring, nativeFormatLlmBroadcast)(JNIEnv* env, jclass, jstring jPrompt, jstring jResponse) {
+    auto formatted = progressive::formatLlmBroadcastMessage(jStr(env, jPrompt), jStr(env, jResponse));
+    return env->NewStringUTF(formatted.c_str());
+}
+
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* /*reserved*/) {
     JNIEnv* env = nullptr;
     if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK)
