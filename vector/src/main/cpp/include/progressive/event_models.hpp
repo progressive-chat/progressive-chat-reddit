@@ -49,6 +49,11 @@ namespace EventType {
     constexpr const char* CALL_ANSWER = "m.call.answer";
     constexpr const char* CALL_HANGUP = "m.call.hangup";
     constexpr const char* CALL_REJECT = "m.call.reject";
+    constexpr const char* CALL_SELECT_ANSWER = "m.call.select_answer";
+    constexpr const char* CALL_NEGOTIATE = "m.call.negotiate";
+    constexpr const char* CALL_REPLACES = "m.call.replaces";
+    constexpr const char* CALL_ASSERTED_IDENTITY = "m.call.asserted_identity";
+    constexpr const char* CALL_ASSERTED_IDENTITY_UNSTABLE = "org.matrix.call.asserted_identity";
 
     // Key verification
     constexpr const char* KEY_VERIFICATION_REQUEST = "m.key.verification.request";
@@ -81,7 +86,10 @@ namespace EventType {
 
     inline bool isCallEvent(const std::string& type) {
         return type == CALL_INVITE || type == CALL_CANDIDATES || type == CALL_ANSWER
-            || type == CALL_HANGUP || type == CALL_REJECT;
+            || type == CALL_HANGUP || type == CALL_REJECT
+            || type == CALL_SELECT_ANSWER || type == CALL_NEGOTIATE
+            || type == CALL_REPLACES || type == CALL_ASSERTED_IDENTITY
+            || type == CALL_ASSERTED_IDENTITY_UNSTABLE;
     }
 }
 
