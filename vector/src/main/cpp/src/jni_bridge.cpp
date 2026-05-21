@@ -37,6 +37,7 @@
 #include "progressive/room_mirror.hpp"
 #include "progressive/input_tools.hpp"
 #include "progressive/llm.hpp"
+#include "progressive/alarm_engine.hpp"
 #include "progressive/read_receipts.hpp"
 #include "progressive/room_analytics.hpp"
 #include "progressive/chat_tools.hpp"
@@ -6089,6 +6090,43 @@ JNI_FUNC(jstring, nativeFormatLlmBroadcast)(JNIEnv* env, jclass, jstring jPrompt
     auto formatted = progressive::formatLlmBroadcastMessage(jStr(env, jPrompt), jStr(env, jResponse));
     return env->NewStringUTF(formatted.c_str());
 }
+// ============================================================
+// Alarm Engine
+// ============================================================
+
+static progressive::AlarmManager g_alarmMgr;
+
+JNI_FUNC(jstring, nativeAlarmCreate)(JNIEnv* env, jclass, jstring jText) {
+    auto id = g_alarmMgr.createAlarm(jStr(env, jText));
+    return env->NewStringUTF(id.c_str());
+}
+
+JNI_FUNC(jstring, nativeAlarmGetNext)(JNIEnv* env, jclass) {
+    auto alarm = g_alarmMgr.getNextAlarm();
+    return env->NewStringUTF(g_alarmMgr.alarmsToJson().c_str());
+}
+
+JNI_FUNC(jstring, nativeAlarmListAll)(JNIEnv* env, jclass) {
+    return env->NewStringUTF(g_alarmMgr.alarmsToJson().c_str());
+}
+
+JNI_FUNC(void, nativeAlarmSnooze)(JNIEnv* env, jclass, jstring jId, jint jMinutes) {
+    g_alarmMgr.snoozeAlarm(jStr(env, jId), jMinutes);
+}
+
+JNI_FUNC(void, nativeAlarmDismiss)(JNIEnv* env, jclass, jstring jId) {
+    g_alarmMgr.dismissAlarm(jStr(env, jId));
+}
+
+JNI_FUNC(void, nativeAlarmDelete)(JNIEnv* env, jclass, jstring jId) {
+    g_alarmMgr.deleteAlarm(jStr(env, jId));
+}
+
+JNI_FUNC(void, nativeAlarmLoad)(JNIEnv* env, jclass, jstring jJson) {
+    g_alarmMgr.loadAlarmsFromJson(jStr(env, jJson));
+}
+
+
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* /*reserved*/) {
     JNIEnv* env = nullptr;
