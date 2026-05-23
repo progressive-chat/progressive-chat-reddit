@@ -219,8 +219,10 @@ add_library(
     src/oidc_auth.cpp
     src/olm.cpp
     src/openid_token.cpp
-    src/jni_bridge.cpp
-    src/eventdb.cpp
+     src/jni_bridge.cpp
+     src/reddit_client.cpp
+     src/reddit_jni_bridge.cpp
+     src/eventdb.cpp
 )
 
 # --- Download SQLite3 amalgamation at configure time ---
